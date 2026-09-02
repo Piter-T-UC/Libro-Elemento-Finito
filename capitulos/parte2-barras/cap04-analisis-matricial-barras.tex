@@ -1,0 +1,464 @@
+\chapter{Análisis Matricial de Estructuras de Barras}
+\label{cap:cap04-analisis-matricial-barras}
+
+\section{Introducción y objetivos}
+
+Antes de emprender la formulación general del método de los elementos finitos (MEF) para un sólido continuo, conviene detenerse en un caso particular extremadamente simple: una estructura compuesta por barras que sólo trabajan a esfuerzo axial. Este análisis, conocido clásicamente como \emph{análisis matricial de estructuras}, es anterior históricamente al MEF y no requiere, en rigor, ningún concepto de mecánica del medio continuo: basta con la resistencia de materiales elemental (deformación, ley de Hooke y equilibrio de fuerzas). Sin embargo, su interés en este curso es otro: permite introducir, en un contexto donde todos los pasos pueden verificarse ``a mano'', prácticamente todos los ingredientes que reaparecerán --- con mayor generalidad y abstracción --- en la formulación completa del MEF: la idea de discretizar un sistema en elementos, de calcular una matriz de rigidez elemental, de ensamblar las contribuciones de cada elemento en un sistema global, de imponer condiciones de borde y de post-procesar la solución para obtener reacciones y esfuerzos internos.
+
+En otras palabras, el objetivo de este capítulo es \emph{presentar de manera sencilla ciertos aspectos que también son propios del MEF}, usando como vehículo el elemento más simple posible: la barra sometida únicamente a fuerzas axiales.
+
+\begin{observacion}[Sistemas discretos y sistemas continuos]
+Un procedimiento natural de análisis en ingeniería consiste en subdividir un sistema complejo en partes (componentes o ``elementos'') cuyo comportamiento se comprende con claridad. Un sistema es \emph{discreto} si queda descrito por un número finito de componentes, y \emph{continuo} si requiere, en principio, un número infinito de ellos (como un sólido elástico). Los métodos de discretización --- diferenciales (diferencias finitas) o integrales (residuos ponderados, principios variacionales, de los cuales el MEF es el representante más importante) --- transforman un problema continuo en uno discreto equivalente, cuya solución se aproxima a la del problema continuo a medida que aumenta el número de elementos utilizados. El análisis matricial de barras que sigue es, precisamente, el estudio de un sistema que ya es discreto por naturaleza: una estructura de barras articuladas.
+\end{observacion}
+
+\section{El elemento de barra: deformación y tensión axial}
+\label{sec:cap04-repaso-barra}
+
+Considérese una barra prismática $(e)$, de longitud $L^{(e)}$, área de sección transversal $A^{(e)}$ y módulo de Young $E^{(e)}$, sometida únicamente a un campo de desplazamiento axial $w$ a lo largo de su eje $z$. Se denotan por $1$ y $2$ los puntos extremos de la barra, y por $w_1^{(e)}$, $w_2^{(e)}$ los desplazamientos axiales de dichos extremos (\cref{fig:cap04-elemento-barra}).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.15]
+  \draw[thick, ucblue] (0,0) -- (4,0);
+  \filldraw[ucred] (0,0) circle (2pt) node[below=5pt]{$1$};
+  \filldraw[ucred] (4,0) circle (2pt) node[below=5pt]{$2$};
+  \draw[->, thick] (4.4,-0.3) -- (5.4,-0.3) node[right]{$z$};
+  \draw[<->] (0,-0.75) -- (4,-0.75) node[midway, above]{$L^{(e)}$};
+  \draw[->, ucamber, thick] (0,0.18) -- (0.75,0.18) node[right, font=\small]{$w_1^{(e)}$};
+  \draw[->, ucamber, thick] (4,0.18) -- (4.75,0.18) node[right, font=\small]{$w_2^{(e)}$};
+  \draw[->, ucteal, thick] (0,0.68) -- (0.75,0.68) node[right, font=\small]{$F_1^{(e)}$};
+  \draw[->, ucteal, thick] (4,0.68) -- (4.75,0.68) node[right, font=\small]{$F_2^{(e)}$};
+  \node at (2,-1) {$E^{(e)},\, A^{(e)}$};
+\end{tikzpicture}
+\caption{Elemento de barra de dos nodos: desplazamientos axiales nodales $w_i^{(e)}$ (ámbar) y fuerzas nodales externas $F_i^{(e)}$ (verde) que las provocan.}
+\label{fig:cap04-elemento-barra}
+\end{figure}
+
+Como la barra es prismática, de sección constante, y está sometida únicamente a fuerzas axiales aplicadas en sus extremos (es decir, es un elemento de dos fuerzas en el sentido de la estática), el esfuerzo normal --- y por lo tanto la deformación --- es uniforme a lo largo de toda la barra. Esto permite escribir la deformación axial simplemente como el alargamiento total dividido por la longitud original:
+\begin{equation}
+\varepsilon_{zz} = \frac{\Delta L^{(e)}}{L^{(e)}} = \frac{w_2^{(e)} - w_1^{(e)}}{L^{(e)}} .
+\label{eq:cap04-deformacion-axial}
+\end{equation}
+Aplicando la ley de Hooke unidimensional (tensión axial proporcional a la deformación axial),
+\begin{equation}
+\sigma_{zz} = E^{(e)} \varepsilon_{zz} = \frac{E^{(e)}}{L^{(e)}} \left( w_2^{(e)} - w_1^{(e)} \right) .
+\label{eq:cap04-hooke-axial}
+\end{equation}
+La fuerza interna axial que se desarrolla en la barra es, por definición, $F_{\sigma}^{(e)} = A^{(e)} \sigma_{zz}$. Por equilibrio interno de la propia barra --- un elemento sin fuerzas de cuerpo, en el que la fuerza normal es constante a lo largo del eje $z$ --- esta fuerza interna debe ser igual en magnitud y opuesta en signo en ambos extremos, de modo que en el extremo $2$ actúe como tracción (saliente) y en el extremo $1$ como su reacción (entrante):
+\begin{equation}
+F_{\sigma 2}^{(e)} = -F_{\sigma 1}^{(e)} = A^{(e)}\sigma_{zz} = \frac{E^{(e)}A^{(e)}}{L^{(e)}}\left( w_2^{(e)} - w_1^{(e)} \right) = K^{(e)}\left( w_2^{(e)} - w_1^{(e)} \right),
+\label{eq:cap04-fuerza-interna}
+\end{equation}
+donde se ha definido la \emph{rigidez axial} del elemento,
+\begin{equation}
+K^{(e)} = \frac{E^{(e)}A^{(e)}}{L^{(e)}} ,
+\end{equation}
+cantidad que tiene unidades de fuerza sobre longitud y que mide cuánta fuerza axial es necesario aplicar para producir un alargamiento relativo unitario.
+
+\section{Matriz de rigidez elemental}
+\label{sec:cap04-matriz-rigidez}
+
+La \cref{eq:cap04-fuerza-interna} expresa la fuerza interna en el extremo $2$ en función de los desplazamientos de \emph{ambos} extremos; por antisimetría, lo mismo ocurre en el extremo $1$. Conviene reunir ambas relaciones en un vector de fuerzas internas axiales $\mathbf{F}_\sigma^{(e)}$ (las fuerzas que existirían en los extremos de la barra si a éstos se les impusieran los desplazamientos $w_1^{(e)}$ y $w_2^{(e)}$) y un vector de desplazamientos nodales $\mathbf{U}^{(e)}$:
+\begin{equation}
+\mathbf{F}_\sigma^{(e)} = \begin{Bmatrix} F_{\sigma 1}^{(e)} \\ F_{\sigma 2}^{(e)} \end{Bmatrix}, \qquad
+\mathbf{U}^{(e)} = \begin{Bmatrix} w_1^{(e)} \\ w_2^{(e)} \end{Bmatrix} .
+\end{equation}
+Escribiendo explícitamente $F_{\sigma 1}^{(e)} = K^{(e)}(w_1^{(e)}-w_2^{(e)})$ y $F_{\sigma 2}^{(e)} = K^{(e)}(w_2^{(e)}-w_1^{(e)})$, ambas ecuaciones se compactan en forma matricial como
+\[
+\mathbf{F}_\sigma^{(e)} = K^{(e)} \begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix} \mathbf{U}^{(e)} = \mathbf{K}^{(e)} \mathbf{U}^{(e)} .
+\]
+La matriz $\mathbf{K}^{(e)}$ así definida se denomina \textbf{matriz de rigidez elemental} de la barra. Es simétrica --- consecuencia directa del teorema de reciprocidad de Maxwell-Betti, aunque aquí se obtiene de forma inmediata por simple inspección --- y relaciona, de manera puramente cinemática-constitutiva (sin haber invocado todavía ninguna condición de equilibrio con fuerzas \emph{externas}), los desplazamientos que se imponen en los extremos de la barra con las fuerzas internas axiales que dichos desplazamientos generan.
+
+\begin{ecnimportante}{Matriz de rigidez del elemento de barra}{cap04-rigidez-barra}
+La matriz de rigidez del elemento de barra de dos nodos, de módulo de Young $E^{(e)}$, área $A^{(e)}$ y longitud $L^{(e)}$, referida a su propio eje axial, es
+\[
+\mathbf{K}^{(e)} = \frac{E^{(e)}A^{(e)}}{L^{(e)}} \begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix} .
+\]
+Es simétrica, de rango $1$ (un único valor propio no nulo, igual a $2K^{(e)}$, asociado al modo de estiramiento puro; el valor propio nulo restante corresponde al movimiento de sólido rígido de la barra, $w_1^{(e)}=w_2^{(e)}$) y sus columnas (o filas, por simetría) suman siempre cero, lo que expresa que un desplazamiento de sólido rígido no genera fuerzas internas.
+\end{ecnimportante}
+
+\subsection{Equilibrio elemental: de la matriz de rigidez a la ecuación de la barra}
+
+La \cref{eq:cap04-fuerza-interna} y su forma matricial son, hasta aquí, una relación puramente interna de la barra. Para obtener una ecuación de \emph{equilibrio} --- que es lo que en definitiva se necesita resolver --- hay que preguntarse cuáles son las fuerzas \emph{externas} $F_1^{(e)}$ y $F_2^{(e)}$ que, aplicadas en los extremos de la barra, son capaces de producir precisamente los desplazamientos $w_1^{(e)}$ y $w_2^{(e)}$ (\cref{fig:cap04-elemento-barra}). El equilibrio de fuerzas en cada nodo de la barra exige que la fuerza interna axial en ese extremo iguale a la fuerza externa aplicada en él:
+\[
+F_{\sigma 1}^{(e)} = F_1^{(e)}, \qquad F_{\sigma 2}^{(e)} = F_2^{(e)} .
+\]
+Sustituyendo la \cref{eq:cap04-fuerza-interna} en estas dos condiciones de equilibrio nodal se obtiene, en forma matricial,
+\begin{equation}
+\mathbf{K}^{(e)} \mathbf{U}^{(e)} = \mathbf{F}^{(e)}, \qquad \mathbf{F}^{(e)} = \begin{Bmatrix} F_1^{(e)} \\ F_2^{(e)} \end{Bmatrix} ,
+\label{eq:cap04-equilibrio-elemental}
+\end{equation}
+que es la \textbf{ecuación de equilibrio de la barra con carga externa}: fuerzas internas iguales a fuerzas externas en cada nodo. Nótese que esta forma de plantear el equilibrio ---igualando un trabajo o una fuerza generalizada interna con su contraparte externa, nodo a nodo--- es estructuralmente idéntica al planteamiento que se generalizará en el \hyperref[cap:cap05-ptv]{Capítulo 5} mediante el Principio de los Trabajos Virtuales: allí, la igualdad puntual de fuerzas se reemplazará por una igualdad integral de trabajos.
+
+\subsection{Carga axial distribuida}
+
+Si además de las fuerzas concentradas $F_1^{(e)}$, $F_2^{(e)}$ actúa sobre la barra una carga axial distribuida por unidad de longitud $t_z^{(e)}$ (constante), su efecto equivale, nodo a nodo, a agregar la mitad de la resultante $t_z^{(e)}L^{(e)}$ en cada extremo:
+\begin{equation}
+\mathbf{K}^{(e)}\mathbf{U}^{(e)} = \mathbf{F}^{(e)} + t_z^{(e)} L^{(e)} \begin{Bmatrix} 1/2 \\ 1/2 \end{Bmatrix} .
+\end{equation}
+Este reparto equitativo de la carga distribuida entre los dos nodos --- que se justificará rigurosamente más adelante, cuando se calcule mediante el PTV el vector de fuerzas nodales equivalentes--- es intuitivamente razonable para un elemento de dos nodos con interpolación lineal del desplazamiento: cada nodo ``resiste'' la mitad de la carga que actúa en su vecindad.
+
+\section{Ensamblaje de estructuras multibarra}
+\label{sec:cap04-ensamblaje}
+
+Considérese ahora una estructura compuesta por varias barras. Las etapas básicas de un análisis matricial son las siguientes:
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{Identificación de las barras (elementos) y numeración de sus nodos extremos} --- el ``mallado'' de la estructura (pre-proceso).
+  \item \textbf{Obtención de $\mathbf{F}_\sigma^{(e)} = \mathbf{K}^{(e)}\mathbf{U}^{(e)}$ y de $\mathbf{F}^{(e)}$} para cada elemento, según lo visto en la sección anterior.
+  \item \textbf{Ensamblaje de la estructura} a partir de las contribuciones elementales, imponiendo equilibrio en cada nodo global (equilibrio global).
+  \item \textbf{Imposición de las condiciones de borde esenciales}, lo que conduce a un sistema de ecuaciones reducido.
+  \item \textbf{Resolución del sistema reducido}, obteniéndose los desplazamientos en los extremos de cada barra.
+  \item \textbf{Cálculo de deformaciones, tensiones, fuerzas internas y reacciones} en cada barra (post-proceso).
+\end{enumerate}
+Las etapas 2 y 3 constituyen el ``cálculo'' propiamente dicho (el proceso), y --- junto con la etapa 4 --- son fácilmente automatizables; esto es, precisamente, lo que hace posible programar un análisis de este tipo de manera sistemática, sea para una estructura de barras, para un ensamblaje de vigas, o para una malla de elementos finitos de continuo bi- o tridimensionales: el procedimiento de ensamblaje es idéntico en todos los casos.
+
+\subsection{Numeración local y numeración global: conectividad}
+
+Cuando la estructura tiene varias barras, cada una posee su propia numeración local de nodos ($1$ y $2$, según la \cref{fig:cap04-elemento-barra}), mientras que la estructura completa posee una numeración global de nodos. La \emph{tabla de conectividad} de la malla asocia a cada elemento $(e)$ los nodos globales que ocupan sus posiciones locales $1$ y $2$. La compatibilidad de desplazamientos entre la numeración local y la global exige que el desplazamiento nodal local de un elemento coincida con el desplazamiento del nodo global correspondiente: si, por ejemplo, el nodo local $1$ del elemento $(e)$ coincide con el nodo global $i$, entonces $w_1^{(e)} = W_i$, donde --- siguiendo la convención de este libro --- se usa minúscula para el desplazamiento nodal \emph{elemental} (indexado $1,2$ dentro de cada barra) y mayúscula para el desplazamiento nodal \emph{global} (indexado por el número de nodo de toda la estructura).
+
+\subsection{Equilibrio global y regla de ensamblaje}
+
+El equilibrio de la estructura completa se obtiene exigiendo, en cada nodo global, que la suma de las fuerzas internas axiales que le transmiten todas las barras que concurren en él sea igual a la fuerza externa aplicada en ese nodo. Como cada $\mathbf{F}_\sigma^{(e)} = \mathbf{K}^{(e)}\mathbf{U}^{(e)}$ es lineal en los desplazamientos, esta condición de equilibrio nodal se traduce, para toda la estructura, en un sistema lineal
+\[
+\mathbf{K}\mathbf{U} = \mathbf{F},
+\]
+donde $\mathbf{K}$ (simétrica) es la matriz de rigidez global, $\mathbf{U}$ el vector de desplazamientos nodales globales y $\mathbf{F}$ el vector de fuerzas nodales externas globales. La forma práctica y sistemática de construir $\mathbf{K}$ consiste en expandir cada matriz elemental $\mathbf{K}^{(e)}$ (de tamaño $2\times2$ en el caso de la barra) a una matriz del tamaño de la estructura completa, colocando cada uno de sus cuatro coeficientes en la fila y columna global que le corresponde según la conectividad del elemento, y rellenando con ceros el resto; la matriz global se obtiene sumando (superponiendo) estas matrices expandidas de todos los elementos.
+
+\begin{ecnimportante}{Regla de ensamblaje}{cap04-regla-ensamblaje}
+Sea $\widehat{\mathbf{K}}^{(e)}$ la matriz de rigidez elemental $\mathbf{K}^{(e)}$ expandida al tamaño de la matriz de rigidez global $\mathbf{K}$, colocando cada coeficiente $K^{(e)}_{ab}$ ($a,b=1,2$, numeración local) en la posición $(i,j)$ de la matriz global que corresponde a los nodos globales $i,j$ conectados por las posiciones locales $a,b$ del elemento $(e)$, y ceros en todas las demás posiciones. Entonces
+\[
+\mathbf{K} = \sum_{e} \widehat{\mathbf{K}}^{(e)}, \qquad \mathbf{F} = \sum_e \widehat{\mathbf{F}}^{(e)},
+\]
+es decir, la matriz (y el vector de fuerzas) de rigidez global se obtienen por \textbf{superposición de las contribuciones elementales expandidas}. Este procedimiento de ensamblaje --- puramente algebraico y consecuencia directa del equilibrio nodal --- es válido para elementos finitos de cualquier tipo (viga, placa, sólidos 2D o 3D, etc.), no sólo para el elemento de barra.
+\end{ecnimportante}
+
+A modo de ilustración, para una estructura de tres barras y cuatro nodos globales con conectividad barra~$1$: nodos $1$--$3$, barra~$2$: nodos $2$--$3$ y barra~$3$: nodos $3$--$4$ (la que se resuelve en el \cref{ej:cap04-tres-barras}), la expansión de cada matriz elemental $2\times2$ a la matriz global $4\times4$ toma la forma
+\[
+\widehat{\mathbf{K}}^{(1)} =
+\begin{bmatrix}
+K^{(1)}_{11} & 0 & K^{(1)}_{12} & 0 \\
+0 & 0 & 0 & 0 \\
+K^{(1)}_{21} & 0 & K^{(1)}_{22} & 0 \\
+0 & 0 & 0 & 0
+\end{bmatrix}, \quad
+\widehat{\mathbf{K}}^{(2)} =
+\begin{bmatrix}
+0 & 0 & 0 & 0 \\
+0 & K^{(2)}_{11} & K^{(2)}_{12} & 0 \\
+0 & K^{(2)}_{21} & K^{(2)}_{22} & 0 \\
+0 & 0 & 0 & 0
+\end{bmatrix}, \quad
+\widehat{\mathbf{K}}^{(3)} =
+\begin{bmatrix}
+0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 \\
+0 & 0 & K^{(3)}_{11} & K^{(3)}_{12} \\
+0 & 0 & K^{(3)}_{21} & K^{(3)}_{22}
+\end{bmatrix},
+\]
+de modo que al sumarlas, la posición $(3,3)$ --- que corresponde al nodo global $3$, común a las tres barras --- recibe la contribución de las tres, mientras que las demás posiciones sólo reciben la contribución de la barra que efectivamente conecta a esos nodos. Esta estructura ``dispersa'' (rala, con muchos ceros fuera de una banda angosta alrededor de la diagonal) es característica de las matrices de rigidez ensambladas y es explotada por los algoritmos de resolución de sistemas lineales en cualquier programa de elementos finitos.
+
+\section{Sistema reducido y condiciones de borde}
+\label{sec:cap04-sistema-reducido}
+
+El sistema global $\mathbf{K}\mathbf{U}=\mathbf{F}$ no puede resolverse tal cual: $\mathbf{K}$ es singular (su determinante es nulo, ya que la estructura, antes de aplicar restricciones, admite movimientos de sólido rígido) y, además, ni $\mathbf{U}$ ni $\mathbf{F}$ son enteramente conocidos --- algunas componentes de $\mathbf{U}$ son desplazamientos prescritos (condiciones de borde esenciales, apoyos) y las componentes de $\mathbf{F}$ asociadas a esos mismos grados de libertad son las reacciones, inicialmente desconocidas; en los grados de libertad restantes ocurre lo contrario: el desplazamiento es incógnita y la fuerza externa aplicada es dato.
+
+Para separar incógnitas de datos, se particiona el sistema global agrupando, por un lado, los grados de libertad de desplazamiento desconocido ($\mathbf{U}_U$) y, por otro, los de desplazamiento prescrito ($\mathbf{U}_F$):
+\[
+\begin{bmatrix} \mathbf{K}_{UU} & \mathbf{K}_{UF} \\ \mathbf{K}_{FU} & \mathbf{K}_{FF} \end{bmatrix}
+\begin{Bmatrix} \mathbf{U}_U \\ \mathbf{U}_F \end{Bmatrix}
+=
+\begin{Bmatrix} \mathbf{F}_U \\ \mathbf{F}_F \end{Bmatrix},
+\]
+donde $\mathbf{F}_U$ es el vector de fuerzas externas conocidas (aplicadas en los grados de libertad libres) y $\mathbf{F}_F$ el vector de reacciones incógnitas (en los grados de libertad restringidos). La primera fila de este sistema particionado,
+\[
+\mathbf{K}_{UU}\,\mathbf{U}_U + \mathbf{K}_{UF}\,\mathbf{U}_F = \mathbf{F}_U ,
+\]
+involucra únicamente incógnitas de desplazamiento del lado izquierdo (pasando el término conocido $\mathbf{K}_{UF}\mathbf{U}_F$ al lado derecho), y constituye el sistema reducido que efectivamente se resuelve.
+
+\begin{ecnimportante}{Sistema reducido de ecuaciones}{cap04-sistema-reducido}
+Separando los grados de libertad de desplazamiento desconocido ($\mathbf{U}_U$, subíndice $r$ de ``reducido'') de los prescritos ($\mathbf{U}_F$), el sistema de ecuaciones que determina los desplazamientos incógnitas es
+\[
+\mathbf{K}_r\,\mathbf{U}_r = \mathbf{F}_r, \qquad
+\mathbf{K}_r \equiv \mathbf{K}_{UU}, \qquad
+\mathbf{F}_r \equiv \mathbf{F}_U - \mathbf{K}_{UF}\,\mathbf{U}_F .
+\]
+En la práctica, $\mathbf{K}_r$ se obtiene eliminando de $\mathbf{K}$ las filas y columnas correspondientes a los grados de libertad prescritos, y $\mathbf{F}_r$ se obtiene a partir de $\mathbf{F}_U$ restando las contribuciones asociadas a los desplazamientos prescritos no nulos (si todos los apoyos tienen desplazamiento prescrito nulo, simplemente $\mathbf{F}_r=\mathbf{F}_U$). A diferencia de $\mathbf{K}$, la matriz reducida $\mathbf{K}_r$ es invertible siempre que la estructura esté adecuadamente restringida (sin posibilidad de movimiento de sólido rígido remanente), de modo que $\mathbf{U}_r = \mathbf{K}_r^{-1}\mathbf{F}_r$.
+\end{ecnimportante}
+
+\subsection{Cálculo de reacciones}
+
+Una vez resuelto el sistema reducido y conocido $\mathbf{U}_U$ en su totalidad, las reacciones se obtienen como post-proceso, evaluando la segunda fila del sistema particionado:
+\begin{equation}
+\mathbf{F}_F = \mathbf{K}_{FU}\,\mathbf{U}_U + \mathbf{K}_{FF}\,\mathbf{U}_F = \mathbf{K}_{FU}\left(\mathbf{K}_{UU}^{-1}\mathbf{F}_r\right) + \mathbf{K}_{FF}\,\mathbf{U}_F .
+\label{eq:cap04-reacciones}
+\end{equation}
+Es importante notar que este cálculo está \emph{desacoplado} del cálculo de $\mathbf{U}_U$: primero se resuelve el sistema reducido para obtener los desplazamientos incógnitas, y sólo después --- con esos desplazamientos ya disponibles --- se evalúan las reacciones mediante una simple multiplicación de matrices, sin necesidad de resolver un segundo sistema de ecuaciones. Una vez conocidos todos los desplazamientos nodales, las deformaciones, tensiones y fuerzas internas de cada barra se recuperan aplicando las \cref{eq:cap04-deformacion-axial,eq:cap04-hooke-axial,eq:cap04-fuerza-interna} elemento por elemento.
+
+\begin{ejemplo}{Sistema de tres barras colineales}{cap04-tres-barras}
+Considérese la estructura de la \cref{fig:cap04-tres-barras-colineales}: dos barras, $(1)$ y $(2)$, empotradas en un extremo (nodos globales $1$ y $2$, ambos con desplazamiento nulo) y unidas en el otro extremo a un nodo común, el nodo global $3$; a partir de este nodo, una tercera barra $(3)$ conecta con el nodo libre $4$, donde se aplica una carga axial concentrada $P$. Todos los ejes de las barras son colineales (coinciden con el eje global $z$), de modo que no es necesaria ninguna transformación de coordenadas.
+
+\begin{center}
+\begin{tikzpicture}[>=Stealth, scale=1.05]
+  \begin{scope}[shift={(0,0)}, rotate=90]
+    \draw[thick] (-0.7,0) -- (0.7,0);
+    \foreach \x in {-0.7,-0.5,...,0.5} \draw (\x,0) -- (\x+0.2,0.35);
+  \end{scope}
+  \draw[thick, ucblue] (0,0.4) -- (2.6,0.15);
+  \draw[thick, ucblue] (0,-0.4) -- (2.6,0.15);
+  \draw[thick, ucblue] (2.6,0.15) -- (5.0,0.15);
+  \filldraw[ucred] (0,0.4) circle (2pt) node[above left=1pt, font=\small]{$1$};
+  \filldraw[ucred] (0,-0.4) circle (2pt) node[below left=1pt, font=\small]{$2$};
+  \filldraw[ucred] (2.6,0.15) circle (2pt) node[above=3pt, font=\small]{$3$};
+  \filldraw[ucred] (5.0,0.15) circle (2pt) node[above=3pt, font=\small]{$4$};
+  \node[ucblue, font=\small] at (1.2,0.85) {$(1)$};
+  \node[ucblue, font=\small] at (1.2,-0.65) {$(2)$};
+  \node[ucblue, font=\small] at (3.8,0.5) {$(3)$};
+  \draw[->, ucteal, thick] (5.0,0.15) -- (6.2,0.15) node[right, font=\small]{$P$};
+  \draw[->, thick] (5.6,-0.55) -- (6.6,-0.55) node[right, font=\small]{$z$};
+\end{tikzpicture}
+\captionof{figure}{Sistema de tres barras colineales: las barras $(1)$ y $(2)$ están empotradas en la pared y en paralelo respecto del nodo $3$; la barra $(3)$ conecta en serie el nodo $3$ con el nodo libre $4$, donde actúa la carga $P$.}
+\label{fig:cap04-tres-barras-colineales}
+\end{center}
+
+\textbf{Datos.} $E^{(1)},A^{(1)},L^{(1)}$; $E^{(2)},A^{(2)},L^{(2)}=L^{(1)}$; $E^{(3)},A^{(3)},L^{(3)}$; carga $P$; apoyos $W_1=W_2=0$.
+
+\textbf{Incógnitas.} Desplazamientos $W_3$, $W_4$; reacciones $F_1$, $F_2$.
+
+\textbf{Conectividad.} Barra $1$: nodos $1$--$3$; barra $2$: nodos $2$--$3$; barra $3$: nodos $3$--$4$.
+
+\textbf{Paso 1 --- matrices elementales.} Con $K^{(e)}=E^{(e)}A^{(e)}/L^{(e)}$,
+\begin{align*}
+\begin{Bmatrix} F_{\sigma1}^{(1)} \\ F_{\sigma2}^{(1)} \end{Bmatrix} &= K^{(1)}\begin{bmatrix}1&-1\\-1&1\end{bmatrix}\begin{Bmatrix} w_1^{(1)} \\ w_2^{(1)} \end{Bmatrix}, \\[4pt]
+\begin{Bmatrix} F_{\sigma1}^{(2)} \\ F_{\sigma2}^{(2)} \end{Bmatrix} &= K^{(2)}\begin{bmatrix}1&-1\\-1&1\end{bmatrix}\begin{Bmatrix} w_1^{(2)} \\ w_2^{(2)} \end{Bmatrix}, \\[4pt]
+\begin{Bmatrix} F_{\sigma1}^{(3)} \\ F_{\sigma2}^{(3)} \end{Bmatrix} &= K^{(3)}\begin{bmatrix}1&-1\\-1&1\end{bmatrix}\begin{Bmatrix} w_1^{(3)} \\ w_2^{(3)} \end{Bmatrix} .
+\end{align*}
+
+\textbf{Paso 2 --- compatibilidad.} $w_1^{(1)}=W_1$, $w_2^{(1)}=w_1^{(2)}=w_2^{(2)}\!\!=W_3$ (nótese que $w_2^{(1)}=w_2^{(2)}$ porque \emph{ambos} nodos locales $2$ de las barras $1$ y $2$ coinciden con el nodo global $3$), $w_1^{(2)}=W_2$, $w_1^{(3)}=W_3$, $w_2^{(3)}=W_4$.
+
+\textbf{Paso 3 --- equilibrio nodal y ensamblaje.} Imponiendo equilibrio en cada nodo global (fuerza interna total = fuerza externa aplicada):
+\begin{align*}
+\text{nodo }1&: F_{\sigma1}^{(1)}=F_1, \\
+\text{nodo }2&: F_{\sigma1}^{(2)}=F_2, \\
+\text{nodo }3&: F_{\sigma2}^{(1)}+F_{\sigma2}^{(2)}+F_{\sigma1}^{(3)}=0, \\
+\text{nodo }4&: F_{\sigma2}^{(3)}=P,
+\end{align*}
+lo que, tras sustituir las relaciones elementales y aplicar la regla de ensamblaje de la \cref{eq:cap04-regla-ensamblaje}, produce el sistema global $4\times4$
+\[
+\begin{bmatrix}
+K^{(1)} & 0 & -K^{(1)} & 0 \\
+0 & K^{(2)} & -K^{(2)} & 0 \\
+-K^{(1)} & -K^{(2)} & K^{(1)}+K^{(2)}+K^{(3)} & -K^{(3)} \\
+0 & 0 & -K^{(3)} & K^{(3)}
+\end{bmatrix}
+\begin{Bmatrix} W_1 \\ W_2 \\ W_3 \\ W_4 \end{Bmatrix}
+=
+\begin{Bmatrix} F_1 \\ F_2 \\ 0 \\ P \end{Bmatrix} .
+\]
+
+\textbf{Paso 4 --- sistema reducido.} Como $W_1=W_2=0$, las columnas $1$ y $2$ no contribuyen; eliminando las filas y columnas de los grados de libertad prescritos ($1$ y $2$) queda el sistema reducido $2\times2$ en las incógnitas $W_3,W_4$:
+\[
+\begin{bmatrix} K^{(1)}+K^{(2)}+K^{(3)} & -K^{(3)} \\ -K^{(3)} & K^{(3)} \end{bmatrix}
+\begin{Bmatrix} W_3 \\ W_4 \end{Bmatrix}
+=
+\begin{Bmatrix} 0 \\ P \end{Bmatrix} .
+\]
+Resolviendo (por ejemplo, despejando $W_3$ de la primera ecuación y sustituyendo en la segunda),
+\[
+W_4 = \frac{P\left(K^{(1)}+K^{(2)}+K^{(3)}\right)}{K^{(3)}\left(K^{(1)}+K^{(2)}\right)}, \qquad
+W_3 = \frac{K^{(3)}}{K^{(1)}+K^{(2)}+K^{(3)}}\,W_4 .
+\]
+Este resultado admite una lectura física inmediata: las barras $1$ y $2$, ambas conectando la pared con el nodo $3$, actúan como dos resortes \emph{en paralelo} de rigidez combinada $K^{(1)}+K^{(2)}$; esta combinación actúa, a su vez, \emph{en serie} con la barra $3$ de rigidez $K^{(3)}$, de modo que la rigidez equivalente vista desde el nodo cargado es $K_{eq} = K^{(3)}(K^{(1)}+K^{(2)})/(K^{(3)}+K^{(1)}+K^{(2)})$ y $W_4 = P/K_{eq}$, exactamente lo obtenido.
+
+\textbf{Aplicación numérica.} Sea $E^{(1)}=E^{(3)}=200\ \mathrm{GPa}$ (acero), $E^{(2)}=70\ \mathrm{GPa}$ (aluminio), $A^{(1)}=500\ \mathrm{mm^2}$, $A^{(2)}=300\ \mathrm{mm^2}$, $A^{(3)}=200\ \mathrm{mm^2}$, $L^{(1)}=L^{(2)}=400\ \mathrm{mm}$, $L^{(3)}=600\ \mathrm{mm}$ y $P=50\ \mathrm{kN}$. Entonces
+\[
+K^{(1)} = 250\ \mathrm{kN/mm}, \quad
+K^{(2)} = 52.5\ \mathrm{kN/mm}, \quad
+K^{(3)} = 66.67\ \mathrm{kN/mm},
+\]
+de donde $K^{(1)}+K^{(2)}+K^{(3)}=369.17\ \mathrm{kN/mm}$ y
+\[
+W_4 = 0.9153\ \mathrm{mm}, \qquad W_3 = 0.1653\ \mathrm{mm} .
+\]
+Las fuerzas internas (todas de tracción, ya que $W_3,W_4>0$) resultan
+\begin{align*}
+F_{\sigma}^{(1)} &= K^{(1)}W_3 = 41.32\ \mathrm{kN}, \\
+F_{\sigma}^{(2)} &= K^{(2)}W_3 = 8.68\ \mathrm{kN}, \\
+F_{\sigma}^{(3)} &= K^{(3)}(W_4-W_3) = 50.00\ \mathrm{kN} = P,
+\end{align*}
+como debía ser: toda la carga $P$ atraviesa la barra $3$ (único camino de carga hacia el nodo libre $4$), y se reparte entre las barras $1$ y $2$ en proporción directa a sus rigideces ($F_\sigma^{(1)}/F_\sigma^{(2)} = K^{(1)}/K^{(2)} = 250/52.5 \approx 41.32/8.68$). Finalmente, las reacciones en el empotramiento son $F_1=-F_\sigma^{(1)}=-41.32\ \mathrm{kN}$ y $F_2=-F_\sigma^{(2)}=-8.68\ \mathrm{kN}$, cuya suma, $-50.00\ \mathrm{kN}$, equilibra exactamente la carga aplicada $P=50\ \mathrm{kN}$.
+\end{ejemplo}
+
+\section{Transformación de coordenadas}
+\label{sec:cap04-transformacion-coordenadas}
+
+El ejemplo anterior fue posible resolverlo trabajando directamente en el eje de la barra porque las tres barras compartían el mismo eje $z$. En una estructura general --- una cercha o armadura plana o espacial --- cada barra tiene su propia orientación, y por lo tanto su propio sistema de coordenadas local $(x_L,z_L)$ (o $(x_L,y_L,z_L)$ en 3D), con el eje $z_L$ definido, por convención, a lo largo del eje de la barra, del nodo local $1$ al nodo local $2$ (\cref{fig:cap04-rotacion-local-global}). La matriz de rigidez elemental $\mathbf{K}^{(e)}$ deducida en la \cref{sec:cap04-matriz-rigidez} está referida, naturalmente, a este sistema local: sólo ``ve'' el desplazamiento axial.
+
+Sin embargo, el equilibrio de cada nodo de la estructura debe plantearse en un único sistema de referencia común, ya que en un mismo nodo pueden concurrir barras con distinta orientación. Por simplicidad se define entonces un único sistema de coordenadas \emph{global} $(x,z)$ (o $(x,y,z)$ en 3D) para realizar el ensamblaje, y es necesario expresar la matriz de rigidez de cada barra --- calculada en su sistema local --- en este sistema global antes de ensamblar.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.3]
+  \def\dtheta{35}
+  \draw[->, thick] (0,0) -- (0,2.5) node[above]{$x$};
+  \draw[->, thick] (0,0) -- (3.5,0) node[right]{$z$};
+  \draw[->, thick, ucblue] (0,0) -- (\dtheta:3.1) node[above right, font=\small]{$z_L$};
+  \draw[->, thick, ucblue] (0,0) -- (\dtheta+90:1.4) node[above left, font=\small]{$x_L$};
+  \draw[very thick, ucred] (\dtheta:0.5) -- (\dtheta:2.8);
+  \filldraw[ucred] (\dtheta:0.5) circle (2pt) node[above=1pt, font=\small]{$1$};
+  \filldraw[ucred] (\dtheta:2.8) circle (2pt) node[above=1pt, font=\small]{$2$};
+  \draw (0.75,0) arc (0:\dtheta:0.75);
+  \node[font=\small] at (\dtheta/2:1.05) {$\theta$};
+\end{tikzpicture}
+\caption{Sistema de coordenadas local $(x_L,z_L)$ de un elemento de barra, girado un ángulo $\theta$ respecto del sistema de coordenadas global $(x,z)$. El eje $z_L$ es siempre el eje axial de la barra, orientado del nodo local $1$ al nodo local $2$.}
+\label{fig:cap04-rotacion-local-global}
+\end{figure}
+
+Sea $\mathbf{U}_L$ el vector de desplazamientos nodales de la barra (dos componentes por nodo en 2D, tres en 3D) referido al sistema local, y $\mathbf{U}$ el mismo vector referido al sistema global. Ambos se relacionan mediante una matriz de rotación (ortogonal) $\mathbf{T}_b$, propia de cada barra:
+\[
+\mathbf{U}_L = \mathbf{T}_b\,\mathbf{U} .
+\]
+Como $\mathbf{T}_b$ es ortonormal($\mathbf{T}_b^{-1}=\mathbf{T}_b^{\mathsf T}$), la transformación de fuerzas es idéntica: $\mathbf{F}_{\sigma L} = \mathbf{T}_b\,\mathbf{F}_\sigma$. En el sistema local, la relación fuerza-desplazamiento es $\mathbf{F}_{\sigma L} = \mathbf{K}_L\,\mathbf{U}_L$, con $\mathbf{K}_L$ la matriz de rigidez del elemento expandida al número total de grados de libertad por nodo (con ceros en las direcciones transversales, que no participan del comportamiento puramente axial). Sustituyendo,
+\[
+\mathbf{T}_b\,\mathbf{F}_\sigma = \mathbf{K}_L\,\mathbf{T}_b\,\mathbf{U} \quad\Longrightarrow\quad \mathbf{F}_\sigma = \underbrace{\mathbf{T}_b^{\mathsf T}\,\mathbf{K}_L\,\mathbf{T}_b}_{\displaystyle \mathbf{K}}\,\mathbf{U} ,
+\]
+donde se ha usado $\mathbf{T}_b^{-1}=\mathbf{T}_b^{\mathsf T}$ para despejar $\mathbf{F}_\sigma$. La matriz $\mathbf{K}$ así obtenida es la matriz de rigidez elemental \emph{referida al sistema de coordenadas global}, la que efectivamente se ensambla en $\mathbf{K}_{\text{global}}$ mediante la regla de la \cref{eq:cap04-regla-ensamblaje}.
+
+\begin{ecnimportante}{Transformación de la matriz de rigidez a coordenadas globales}{cap04-transformacion}
+Si $\mathbf{K}_L$ es la matriz de rigidez elemental referida al sistema de coordenadas local de la barra y $\mathbf{T}_b$ es la matriz (ortogonal) que transforma desplazamientos globales en locales, $\mathbf{U}_L=\mathbf{T}_b\mathbf{U}$, entonces la matriz de rigidez elemental referida al sistema de coordenadas global es
+\[
+\mathbf{K} = \mathbf{T}_b^{\mathsf T}\,\mathbf{K}_L\,\mathbf{T}_b ,
+\]
+la cual es también simétrica (por ser $\mathbf{K}_L$ simétrica) y es la que corresponde ensamblar en la matriz de rigidez de la estructura completa.
+\end{ecnimportante}
+
+Para el elemento de barra, $\mathbf{T}_b$ tiene una estructura muy particular: como sólo el eje $z_L$ tiene significado mecánico (es el único a lo largo del cual la barra desarrolla rigidez), en la matriz de rigidez global sólo interviene la fila de $\mathbf{T}_b$ asociada a $z_L$, es decir, los cosenos directores del eje de la barra respecto de cada eje global.
+
+\subsection{Matriz de rigidez explícita en 2D}
+
+En el plano, sean $s=\cos(z_L,x)$ y $c=\cos(z_L,z)$ los cosenos directores del eje de la barra respecto de los ejes globales $x$ y $z$, respectivamente (equivalentemente, si $\theta$ es el ángulo que forma la barra con el eje $z$ global, $s=\sen\theta$ y $c=\cos\theta$). Con los grados de libertad ordenados como $(U_1,W_1,U_2,W_2)$ --- desplazamiento global horizontal y vertical de cada nodo ---, al efectuar el producto $\mathbf{T}_b^{\mathsf T}\mathbf{K}_L\mathbf{T}_b$ se obtiene:
+
+\begin{ecnimportante}{Matriz de rigidez del elemento de barra en 2D}{cap04-rigidez-2d}
+\[
+\mathbf{K} = K^{(e)}
+\begin{bmatrix}
+s^2 & sc & -s^2 & -sc \\
+sc & c^2 & -sc & -c^2 \\
+-s^2 & -sc & s^2 & sc \\
+-sc & -c^2 & sc & c^2
+\end{bmatrix}, \qquad K^{(e)}=\frac{E^{(e)}A^{(e)}}{L^{(e)}},
+\]
+con $s=\sen\theta$, $c=\cos\theta$ y $\theta$ el ángulo entre el eje global $z$ y el eje de la barra (del nodo local $1$ al $2$). Es simétrica y, al igual que en el caso 1D, sus valores propios son $0$ (movimiento de sólido rígido de la barra) y $2K^{(e)}$ (estiramiento puro a lo largo de su eje).
+\end{ecnimportante}
+
+\subsection{Matriz de rigidez explícita en 3D}
+
+La generalización a tres dimensiones es directa: si $T_{31}=\cos(z_L,x)$, $T_{32}=\cos(z_L,y)$ y $T_{33}=\cos(z_L,z)$ son los cosenos directores del eje de la barra respecto de los tres ejes globales, y los grados de libertad se ordenan $(U_1,V_1,W_1,U_2,V_2,W_2)$, la matriz de rigidez elemental $6\times6$ en coordenadas globales es
+
+\begin{ecnimportante}{Matriz de rigidez del elemento de barra en 3D}{cap04-rigidez-3d}
+\[
+\mathbf{K} = K^{(e)}
+\begin{bmatrix}
+T_{31}^2 & T_{31}T_{32} & T_{31}T_{33} & -T_{31}^2 & -T_{31}T_{32} & -T_{31}T_{33} \\
+ & T_{32}^2 & T_{32}T_{33} & -T_{31}T_{32} & -T_{32}^2 & -T_{32}T_{33} \\
+ & & T_{33}^2 & -T_{31}T_{33} & -T_{32}T_{33} & -T_{33}^2 \\
+ & & & T_{31}^2 & T_{31}T_{32} & T_{31}T_{33} \\
+ & \text{sim.} & & & T_{32}^2 & T_{32}T_{33} \\
+ & & & & & T_{33}^2
+\end{bmatrix},
+\]
+con $K^{(e)}=E^{(e)}A^{(e)}/L^{(e)}$. Como en el caso 2D, sólo intervienen los cosenos directores de la tercera fila de la matriz de rotación completa $\mathbf{T}$ (la fila asociada al eje axial $z_L$), reflejando que la barra únicamente ofrece resistencia a los desplazamientos relativos a lo largo de su propio eje.
+\end{ecnimportante}
+
+Una forma equivalente y muy práctica de obtener estos resultados --- útil también para la implementación numérica --- es escribir directamente
+\[
+\mathbf{K} = K^{(e)}\,\overline{\mathbf{T}}^{\mathsf T}\begin{bmatrix}1&-1\\-1&1\end{bmatrix}\overline{\mathbf{T}}, \qquad
+\overline{\mathbf{T}} = \begin{bmatrix} T_{31} & T_{32} & T_{33} & 0 & 0 & 0 \\ 0 & 0 & 0 & T_{31} & T_{32} & T_{33} \end{bmatrix},
+\]
+donde $\overline{\mathbf{T}}$ (de tamaño $2\times6$, o $2\times4$ en 2D) proyecta directamente los desplazamientos nodales globales de ambos extremos sobre el eje axial de la barra, evitando construir explícitamente la matriz de rotación completa $\mathbf{T}_b$ de $6\times6$.
+
+\begin{ejemplo}{Armadura plana de tres barras}{cap04-cercha-3barras}
+Considérese la armadura plana de la \cref{fig:cap04-cercha-3barras}: tres barras concurren en un nodo libre común, el nodo $2$, donde se aplica una carga concentrada $P$; los otros extremos de las tres barras (nodos $1$, $3$ y $4$) están articulados a apoyos fijos. La barra $(1)$ conecta los nodos $1$ y $2$ y es horizontal ($\theta_1=0^\circ$); la barra $(3)$ conecta los nodos $4$ y $2$ y es vertical ($\theta_3=90^\circ$); la barra $(2)$ conecta los nodos $3$ y $2$ y forma $\theta_2=45^\circ$ con el eje $z$ global.
+
+\begin{center}
+\begin{tikzpicture}[>=Stealth, scale=1.15]
+  \draw[thick, ucblue] (-2,0) -- (0,0);
+  \draw[thick, ucblue] (0,-2) -- (0,0);
+  \draw[thick, ucblue] (-2,-2) -- (0,0);
+  \node[ucblue, font=\small] at (-1,0.28) {$(1)$};
+  \node[ucblue, font=\small] at (0.35,-1) {$(3)$};
+  \node[ucblue, font=\small] at (-1.5,-0.75) {$(2)$};
+  \filldraw[ucred] (0,0) circle (2.5pt) node[above right=1pt, font=\small]{$2$};
+  \filldraw[ucgray] (-2,0) circle (2.5pt) node[left=2pt, font=\small]{$1$};
+  \filldraw[ucgray] (-2,-2) circle (2.5pt) node[left=2pt, font=\small]{$3$};
+  \filldraw[ucgray] (0,-2) circle (2.5pt) node[below=2pt, font=\small]{$4$};
+  % apoyo en el nodo 1, (-2,0)
+  \draw[thick] (-2.3,-0.05) -- (-1.7,-0.05);
+  \draw (-2.3,-0.05) -- (-2.5,-0.3);
+  \draw (-2.1,-0.05) -- (-2.3,-0.3);
+  \draw (-1.9,-0.05) -- (-2.1,-0.3);
+  \draw (-1.7,-0.05) -- (-1.9,-0.3);
+  % apoyo en el nodo 3, (-2,-2)
+  \draw[thick] (-2.3,-2.05) -- (-1.7,-2.05);
+  \draw (-2.3,-2.05) -- (-2.5,-2.3);
+  \draw (-2.1,-2.05) -- (-2.3,-2.3);
+  \draw (-1.9,-2.05) -- (-2.1,-2.3);
+  \draw (-1.7,-2.05) -- (-1.9,-2.3);
+  % apoyo en el nodo 4, (0,-2)
+  \draw[thick] (-0.3,-2.05) -- (0.3,-2.05);
+  \draw (-0.3,-2.05) -- (-0.5,-2.3);
+  \draw (-0.1,-2.05) -- (-0.3,-2.3);
+  \draw (0.1,-2.05) -- (-0.1,-2.3);
+  \draw (0.3,-2.05) -- (0.1,-2.3);
+  \draw[->, ucteal, thick] (0,0) -- (0,-0.9) node[midway, right, font=\small]{$P$};
+  \draw[->, thick] (0.6,-2) -- (0.6,-3) node[right, font=\small]{$x$};
+  \draw[->, thick] (0.6,-2) -- (1.6,-2) node[right, font=\small]{$z$};
+\end{tikzpicture}
+\captionof{figure}{Armadura plana de tres barras concurrentes en el nodo libre $2$, con apoyos fijos en los nodos $1$, $3$ y $4$, sometida a una carga vertical $P$.}
+\label{fig:cap04-cercha-3barras}
+\end{center}
+
+\textbf{Datos.} $E^{(e)}$, $A^{(e)}$ iguales para las tres barras; longitud de las barras $(1)$ y $(3)$: $L$; longitud de la barra $(2)$: $L\sqrt2$ (diagonal a $45^\circ$); carga $P$ aplicada en el nodo $2$ en la dirección $-x$; apoyos $U_1=W_1=U_3=W_3=U_4=W_4=0$.
+
+\textbf{Incógnitas.} $U_2$, $W_2$ (únicos grados de libertad libres) y las seis reacciones en los nodos $1$, $3$ y $4$.
+
+Como los tres apoyos están totalmente restringidos, sólo el nodo $2$ aporta grados de libertad al sistema reducido, que resulta ser, en este caso particularmente simple, de sólo $2\times2$. Usando la \cref{eq:cap04-rigidez-2d} con $K^{(e)}=EA/L$ para las barras $1$ y $3$, y $K^{(e)}=EA/(L\sqrt2)=K^{(e)}_{1}/\sqrt2$ para la barra $2$, y extrayendo de cada matriz $4\times4$ el bloque $2\times2$ asociado al nodo $2$ (el bloque ``$22$''), se obtiene, para cada barra, la contribución
+\[
+\mathbf{K}_{22}^{(e)} = K^{(e)}\begin{bmatrix} s^2 & sc \\ sc & c^2 \end{bmatrix} .
+\]
+Con $\theta_1=0^\circ$ ($s=0,c=1$), $\theta_3=90^\circ$ ($s=1,c=0$) y $\theta_2=45^\circ$ ($s=c=\sqrt2/2$, $s^2=c^2=sc=1/2$):
+\[
+\mathbf{K}_{22}^{(1)} = K_1\begin{bmatrix}0&0\\0&1\end{bmatrix}, \qquad
+\mathbf{K}_{22}^{(3)} = K_3\begin{bmatrix}1&0\\0&0\end{bmatrix}, \qquad
+\mathbf{K}_{22}^{(2)} = \frac{K_2}{2}\begin{bmatrix}1&1\\1&1\end{bmatrix},
+\]
+donde se ha escrito $K_1,K_2,K_3$ por brevedad ($K_1=K_3=EA/L$, $K_2=K_1/\sqrt2$). Como los tres nodos opuestos ($1$, $3$ y $4$) están totalmente fijos, no aparecen más términos, y el sistema reducido es simplemente la suma de estas tres contribuciones:
+\[
+\left(\mathbf{K}_{22}^{(1)}+\mathbf{K}_{22}^{(2)}+\mathbf{K}_{22}^{(3)}\right)\begin{Bmatrix}U_2\\W_2\end{Bmatrix} = \begin{Bmatrix}-P\\0\end{Bmatrix}, \qquad\text{es decir,}
+\]
+\[
+\begin{bmatrix} K_3+\tfrac{K_2}{2} & \tfrac{K_2}{2} \\ \tfrac{K_2}{2} & K_1+\tfrac{K_2}{2} \end{bmatrix}\begin{Bmatrix}U_2\\W_2\end{Bmatrix} = \begin{Bmatrix}-P\\0\end{Bmatrix} .
+\]
+
+\textbf{Aplicación numérica.} Sea $E=200\ \mathrm{GPa}$, $A=300\ \mathrm{mm^2}$, $L=1\ \mathrm{m}$ y $P=100\ \mathrm{kN}$. Entonces $K_1=K_3=EA/L=60\,000\ \mathrm{kN/m}$ y $K_2=K_1/\sqrt2=42\,426\ \mathrm{kN/m}$, de modo que el sistema reducido queda (en $\mathrm{kN/m}$ y $\mathrm{kN}$)
+\[
+\begin{bmatrix} 81\,213 & 21\,213 \\ 21\,213 & 81\,213 \end{bmatrix}\begin{Bmatrix}U_2\\W_2\end{Bmatrix} = \begin{Bmatrix}-100\,000\\0\end{Bmatrix},
+\]
+cuya solución (invirtiendo la matriz $2\times2$ simétrica) es
+\[
+U_2 = -1.322\ \mathrm{mm}, \qquad W_2 = 0.345\ \mathrm{mm} .
+\]
+El nodo cargado se desplaza, como es de esperar, mayormente en la dirección de la carga ($U_2<0$), con un pequeño desplazamiento transversal $W_2>0$ inducido por el acoplamiento que introduce la barra diagonal $(2)$. Las fuerzas axiales en cada barra se obtienen proyectando $(U_2,W_2)$ sobre el eje local de cada una ($\Delta^{(e)} = s\,U_2+c\,W_2$, ya que el otro extremo está fijo) y multiplicando por $K^{(e)}$:
+\[
+F_\sigma^{(1)} = K_1 W_2 = 20.7\ \mathrm{kN}\ (\text{tracción}), \qquad
+F_\sigma^{(3)} = K_3 U_2 = -79.3\ \mathrm{kN}\ (\text{compresión}),
+\]
+\[
+F_\sigma^{(2)} = K_2\left(\tfrac{\sqrt2}{2}U_2+\tfrac{\sqrt2}{2}W_2\right) = -29.3\ \mathrm{kN}\ (\text{compresión}).
+\]
+Las reacciones en los apoyos se obtienen, para cada barra, como $-\mathbf{K}_{22}^{(e)}\{U_2,W_2\}^{\mathsf T}$ (fuerza que la barra ejerce sobre su nodo fijo); sumando las tres se comprueba que $\sum \mathbf{R} = (100\ \mathrm{kN},\,0\ \mathrm{kN})$, que equilibra exactamente la carga aplicada $P=100\ \mathrm{kN}$ en la dirección $-x$, confirmando la consistencia de la solución.
+\end{ejemplo}
+
+\section{Síntesis}
+
+El análisis matricial de barras desarrollado en este capítulo, aunque limitado a un tipo de elemento muy particular, ya exhibe la estructura completa que tendrá el MEF general: discretización en elementos, cálculo de una relación fuerza-desplazamiento elemental, ensamblaje por superposición en un sistema global, partición según condiciones de borde esenciales y post-proceso de reacciones y esfuerzos. Lo único que ha faltado, hasta aquí, es una justificación rigurosa --- válida para un medio continuo tridimensional general, no sólo para una barra --- de \emph{por qué} la ecuación de equilibrio nodal $\mathbf{K}^{(e)}\mathbf{U}^{(e)}=\mathbf{F}^{(e)}$ es la forma discreta correcta del equilibrio del sólido. Esa justificación --- que además mostrará cómo calcular $\mathbf{K}^{(e)}$ y $\mathbf{F}^{(e)}$ para elementos mucho más generales que la barra --- es el objeto del Principio de los Trabajos Virtuales, que se desarrolla en el \hyperref[cap:cap05-ptv]{Capítulo 5}.

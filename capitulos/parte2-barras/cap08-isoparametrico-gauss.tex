@@ -1,0 +1,321 @@
+\chapter{Formulación Isoparamétrica e Integración Numérica de Gauss}
+\label{chap:cap08-isoparametrico-gauss}
+
+\section{Motivación}
+
+En el Capítulo 6, las matrices elementales $\bm K^{(e)}$ y $\bm F^{(e)}$ del elemento de barra se calcularon integrando directamente en la coordenada física $z$, con funciones de forma $N_i^{(e)}(z/L^{(e)})$ que dependían explícitamente de la longitud $L^{(e)}$ de cada elemento. Esto tiene una consecuencia práctica incómoda: al ensamblar una malla con elementos de distinta longitud, cada uno requiere, en principio, sus propias expresiones de $\bm N^{(e)}$, $\bm B^{(e)}$ y los límites de integración correspondientes a su propio dominio $[0,L^{(e)}]$. Automatizar este cálculo --- programarlo una sola vez y reutilizarlo para cualquier elemento de la malla --- resulta más simple si se dispone de una descripción de las funciones de forma que sea \emph{independiente} de la geometría particular del elemento.
+
+Esta es la motivación central de la \textbf{formulación isoparamétrica}: realizar las integraciones que definen $\bm K^{(e)}$ y $\bm F^{(e)}$ en un dominio de referencia --- el \emph{dominio paramétrico} o \emph{normalizado} --- común a todos los elementos del mismo tipo, en vez de hacerlo directamente en el dominio físico real, que varía de un elemento a otro. Para lograrlo, se necesitan tres ingredientes: (i) la interpolación del campo de desplazamientos $u$ en términos de la coordenada paramétrica; (ii) la interpolación de la propia geometría del elemento (la posición física $z$) en términos de esa misma coordenada; y (iii) un procedimiento de integración numérica adecuado al nuevo dominio, que se desarrolla en la segunda mitad de este capítulo bajo el nombre de cuadratura de Gauss.
+
+Aunque en el caso de la barra recta esta reformulación pueda parecer un ejercicio formal --- ya se dispone, desde el Capítulo 6, de una solución cerrada y sencilla ---, su verdadero valor se manifiesta en elementos de geometría arbitraria en dos y tres dimensiones (elementos planos, de placa, sólidos), donde no existe, en general, una expresión analítica simple de $\bm N$ en coordenadas físicas y donde la formulación isoparamétrica es, en la práctica, indispensable. El elemento de barra es, en este capítulo, el vehículo más simple posible para introducir estas ideas sin la complicación adicional de la geometría multidimensional.
+
+\section{Mapeo al dominio paramétrico}
+
+Considérese nuevamente el elemento de barra de dos nodos del Capítulo 6, ahora descrito mediante una coordenada paramétrica (o normalizada) $r$, definida de modo que el nodo 1 se ubique en $r=-1$ y el nodo 2 en $r=+1$ (Figura~\ref{fig:cap08-mapeo-isoparametrico}). Se propone interpolar el desplazamiento en función de $r$:
+\[
+w = \bm N(r)\,\bm U^{(e)}, \qquad \bm N(r) = \begin{bmatrix} N_1(r) & N_2(r) \end{bmatrix}, \qquad \bm U^{(e)} = \begin{bmatrix} W_1^{(e)} \\ W_2^{(e)} \end{bmatrix} .
+\]
+Al igual que en el Capítulo 6, con solo dos nodos la interpolación más rica posible es lineal: $w=a_0+a_1 r$. Imponiendo los valores nodales,
+\begin{align*}
+w\big|_{r=-1}=W_1^{(e)}=a_0-a_1, &\qquad w\big|_{r=+1}=W_2^{(e)}=a_0+a_1 , \\
+\Longrightarrow \quad a_0=\frac{W_1^{(e)}+W_2^{(e)}}{2}, &\qquad a_1=\frac{W_2^{(e)}-W_1^{(e)}}{2} ,
+\end{align*}
+de donde
+\[
+w = \frac{1}{2}(1-r)\,W_1^{(e)} + \frac{1}{2}(1+r)\,W_2^{(e)} .
+\]
+Esta misma expresión se obtiene, de manera más general y sistemática, mediante los polinomios de Lagrange introducidos en el Capítulo 6, evaluados ahora en los nodos paramétricos $r_1=-1$, $r_2=+1$:
+\[
+N_i(r) = \prod_{\substack{j=1\\j\neq i}}^n \frac{r-r_j}{r_i-r_j} \quad\Longrightarrow\quad N_1(r)=\frac{r-1}{-1-1}=\frac{1}{2}(1-r), \qquad N_2(r)=\frac{r+1}{1+1}=\frac{1}{2}(1+r) .
+\]
+
+\begin{ecnimportante}{Funciones de forma en el dominio paramétrico}{cap08-mapeo-parametrico}
+Para el elemento de barra de dos nodos, en la coordenada paramétrica $r\in[-1,1]$:
+\[
+N_1(r) = \frac{1}{2}(1-r), \qquad N_2(r) = \frac{1}{2}(1+r) .
+\]
+El punto esencial es que $\bm N(r)$ \textbf{no depende de $L^{(e)}$}: es idéntica para todos los elementos de dos nodos de la malla, sin importar su longitud física. Esta es la ventaja decisiva de la formulación paramétrica, crucial para elementos 2D y 3D, donde permite programar una única expresión de $\bm N$ reutilizable para todos los elementos de un mismo tipo. Se verifica, además, que se preserva la condición de sólido rígido $N_1(r)+N_2(r)=1$ para todo $r$, ya discutida como requisito de convergencia en el Capítulo 7.
+\end{ecnimportante}
+
+Para poder calcular la deformación $\varepsilon_{zz}=\partial w/\partial z$, es necesario relacionar las derivadas respecto de $r$ (que es lo que se puede calcular directamente de $\bm N(r)$) con las derivadas respecto de la coordenada física $z$ (que es lo que efectivamente aparece en $\bm B$). Para ello se interpola también la \emph{geometría} del elemento --- es decir, la coordenada física $z$ de cualquier punto interior --- en función de las coordenadas nodales $z_1,z_2$ y de las mismas funciones de forma:
+\[
+z = \bm N(r)\,\bm X^{(e)}, \qquad \bm N(r)=\begin{bmatrix}N_1(r) & N_2(r)\end{bmatrix}, \qquad \bm X^{(e)} = \begin{bmatrix} z_1 \\ z_2 \end{bmatrix} .
+\]
+Cuando el número de nodos usados para interpolar la geometría ($n_z$) coincide con el número de nodos usados para interpolar el desplazamiento ($n_w$), como en este caso, la formulación se denomina \textbf{isoparamétrica}. Si $n_w<n_z$ se habla de formulación \emph{superparamétrica} (más nodos para la geometría que para el desplazamiento), y si $n_w>n_z$, de formulación \emph{subparamétrica}. De aquí en adelante, y salvo mención explícita, se considerará siempre el caso isoparamétrico, el más frecuente en la práctica.
+
+\section{El jacobiano de la transformación}
+
+La regla de la cadena permite escribir
+\[
+\pdv{N_i(r)}{r} = \pdv{N_i(r)}{z}\pdv{z}{r} \quad\Longrightarrow\quad \pdv{N_i(r)}{z} = \frac{1}{\partial z/\partial r}\pdv{N_i(r)}{r} = J^{-1}\pdv{N_i(r)}{r} ,
+\]
+donde se define el \textbf{jacobiano de la transformación isoparamétrica} $J=\partial z/\partial r$ (una matriz $1\times1$, es decir, un escalar, en el caso unidimensional). Usando la interpolación isoparamétrica de la geometría, $J$ se calcula directamente de las coordenadas nodales:
+\[
+J = \pdv{z}{r} = \begin{bmatrix}\dfrac{\partial N_1(r)}{\partial r} & \dfrac{\partial N_2(r)}{\partial r}\end{bmatrix}\begin{bmatrix}z_1\\z_2\end{bmatrix} = \begin{bmatrix}-\tfrac12 & \tfrac12\end{bmatrix}\begin{bmatrix}z_1\\z_2\end{bmatrix} = \frac{z_2-z_1}{2} = \frac{L^{(e)}}{2} .
+\]
+Para el elemento de dos nodos, $J$ resulta constante (no depende de $r$), de modo que $J^{-1}=2/L^{(e)}$, también constante. Finalmente, el diferencial de volumen (en este caso, de longitud, multiplicado por el área) se transforma como
+\[
+d\Omega = A^{(e)}\,dz = A^{(e)}\pdv{z}{r}\,dr = \underbrace{\abs{J}}_{\text{det. jacobiano}} A^{(e)}\, dr = \underbrace{A^{(e)}\,dr_p}_{d\Omega_p \text{ escalado por } |J|} ,
+\]
+una expresión que, escrita como $d\Omega = |J|\,d\Omega_p$ (con $\Omega_p$ el dominio paramétrico), es completamente general y se extiende sin cambios a elementos de mayor dimensión, donde $J$ es una matriz y $|J|$ su determinante.
+
+\begin{ecnimportante}{Jacobiano de la transformación isoparamétrica}{cap08-jacobiano}
+\[
+J = \pdv{z}{r}, \qquad d\Omega = \abs{J}\, d\Omega_p .
+\]
+Para el elemento de barra de dos nodos, con coordenadas físicas de los nodos $z_1,z_2$:
+\[
+J = \frac{z_2-z_1}{2} = \frac{L^{(e)}}{2} \quad (\text{constante}), \qquad d\Omega = A^{(e)}\,\abs{J}\,dr = A^{(e)}\frac{L^{(e)}}{2}\,dr .
+\]
+\end{ecnimportante}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\draw[thick] (0,0) -- (5,0);
+\filldraw (0,0) circle (2pt) node[below=3pt] {$1$};
+\filldraw (5,0) circle (2pt) node[below=3pt] {$2$};
+\node[above] at (0,0.15) {$z=0$};
+\node[above] at (5,0.15) {$z=L^{(e)}$};
+\node[below=15pt] at (2.5,0) {Dominio físico};
+
+\begin{scope}[yshift=-3.1cm]
+\draw[thick] (0,0) -- (5,0);
+\filldraw (0,0) circle (2pt) node[below=3pt] {$1$};
+\filldraw (5,0) circle (2pt) node[below=3pt] {$2$};
+\node[above] at (0,0.15) {$r=-1$};
+\node[above] at (5,0.15) {$r=+1$};
+\node[below=15pt] at (2.5,0) {Dominio paramétrico};
+\end{scope}
+
+\draw[->, ucred, thick] (0,-0.85) .. controls (0,-1.6) .. (0,-2.15);
+\draw[->, ucred, thick] (5,-0.85) .. controls (5,-1.6) .. (5,-2.15);
+\node[ucred] at (6.55,-1.55) {$z=z(r)$};
+\end{tikzpicture}
+\caption{Mapeo entre el dominio físico $z\in[0,L^{(e)}]$ y el dominio paramétrico normalizado $r\in[-1,1]$, para el elemento de barra de dos nodos.}
+\label{fig:cap08-mapeo-isoparametrico}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\draw[->] (-3.6,0) -- (3.6,0) node[right] {$r$};
+\draw[thick] (-3,0) -- (3,0);
+\filldraw (-3,0) circle (1.5pt) node[below] {$-1$};
+\filldraw (3,0) circle (1.5pt) node[below] {$+1$};
+\draw[ucred, thick] (0.3,0.06) -- (1.1,0.06);
+\draw[ucred, <->] (0.3,0.28) -- (1.1,0.28) node[midway, above] {$dr$};
+
+\begin{scope}[yshift=-2.4cm]
+\draw[->] (-0.5,0) -- (6.6,0) node[right] {$z$};
+\draw[thick] (0,0) -- (6,0);
+\filldraw (0,0) circle (1.5pt) node[below] {$0$};
+\filldraw (6,0) circle (1.5pt) node[below] {$L^{(e)}$};
+\draw[ucblue, thick] (3.3,0.06) -- (4.1,0.06);
+\draw[ucblue, <->] (3.3,0.28) -- (4.1,0.28) node[midway, above] {$dz=J\,dr$};
+\end{scope}
+
+\draw[->, gray] (0.7,-0.4) .. controls (2,-1.15) .. (3.7,-2.0);
+\end{tikzpicture}
+\caption{Escalamiento diferencial entre el dominio paramétrico y el dominio físico: un segmento diferencial $dr$ se transforma en $dz=J\,dr$, con $J=L^{(e)}/2$ para el elemento de dos nodos (independiente de $r$, por tratarse de una transformación lineal).}
+\label{fig:cap08-diferencial-dz-dr}
+\end{figure}
+
+\section{Ejemplo: re-derivación de \texorpdfstring{$\bm K^{(e)}$}{K} y \texorpdfstring{$\bm F^{(e)}$}{F} en coordenadas paramétricas}
+
+\begin{ejemplo}{Verificación de consistencia: barra de dos nodos en coordenadas paramétricas}{cap08-verificacion-2nodos}
+Se desea comprobar que la formulación isoparamétrica, aplicada al elemento de barra de dos nodos, reproduce exactamente el resultado ya obtenido en la \cref{eq:cap06-elemento-2nodos-K} del Capítulo 6 mediante integración directa en $z$.
+
+\textbf{Cálculo de $\bm B$.} A partir de $\partial N_i/\partial z = J^{-1}\,\partial N_i/\partial r$, con $J^{-1}=2/L^{(e)}$ y $\partial N_1/\partial r=-1/2$, $\partial N_2/\partial r=1/2$:
+\[
+\bm B = \begin{bmatrix} \dfrac{2}{L^{(e)}}\left(-\dfrac12\right) & \dfrac{2}{L^{(e)}}\left(\dfrac12\right) \end{bmatrix} = \begin{bmatrix} -\dfrac{1}{L^{(e)}} & \dfrac{1}{L^{(e)}} \end{bmatrix} ,
+\]
+idéntico al obtenido directamente en el Capítulo 6, como era de esperar ya que ambas coordenadas están relacionadas linealmente.
+
+\textbf{Cálculo de $\bm K^{(e)}$.} Sustituyendo en $\bm K^{(e)}=\int_\Omega \bm B^{\mathsf T}E^{(e)}\bm B\,d\Omega = \int_{-1}^{1}\bm B^{\mathsf T}(r)\,E^{(e)}\,\bm B(r)\,\abs{J}\,A^{(e)}\,dr$:
+\[
+\bm K^{(e)} = E^{(e)}A^{(e)} \int_{-1}^{1} \begin{bmatrix} -1/L^{(e)} \\ 1/L^{(e)} \end{bmatrix}\begin{bmatrix} -1/L^{(e)} & 1/L^{(e)} \end{bmatrix} \frac{L^{(e)}}{2}\,dr
+= \frac{E^{(e)}A^{(e)}}{2L^{(e)}}\int_{-1}^{1}\begin{bmatrix}1&-1\\-1&1\end{bmatrix} dr .
+\]
+El integrando es constante en $r$ (no depende de $r$, ya que $\bm B$ es constante para este elemento), de modo que $\int_{-1}^1 dr = 2$, y
+\[
+\bm K^{(e)} = \frac{E^{(e)}A^{(e)}}{2L^{(e)}}\cdot 2\begin{bmatrix}1&-1\\-1&1\end{bmatrix} = \frac{E^{(e)}A^{(e)}}{L^{(e)}}\begin{bmatrix}1&-1\\-1&1\end{bmatrix} ,
+\]
+que \textbf{coincide exactamente} con el resultado de la \cref{eq:cap06-elemento-2nodos-K} obtenido en el Capítulo 6 por integración directa en la coordenada física $z$.
+
+\textbf{Cálculo de $\bm F^{(e)}$.} Con $\bar t_z$, $b_z$, $\rho$ constantes, y transformando también el término de carga:
+\[
+\bm F^{(e)} = \bar t_z\int_{-1}^{1}\begin{bmatrix}\tfrac12(1-r)\\ \tfrac12(1+r)\end{bmatrix}\frac{L^{(e)}}{2}\,dr + \rho b_z A^{(e)}\int_{-1}^{1}\begin{bmatrix}\tfrac12(1-r)\\ \tfrac12(1+r)\end{bmatrix}\frac{L^{(e)}}{2}\,dr + \begin{bmatrix}P_1\\P_2\end{bmatrix} .
+\]
+Evaluando $\int_{-1}^1 \tfrac12(1-r)\,dr = \int_{-1}^1 \tfrac12(1+r)\,dr = 1$ (cada una vale exactamente 1, como corresponde a que ambas funciones de forma son "mitades" complementarias del intervalo de longitud 2):
+\[
+\bm F^{(e)} = \bar t_z L^{(e)}\begin{bmatrix}1/2\\1/2\end{bmatrix} + \rho b_z A^{(e)}L^{(e)}\begin{bmatrix}1/2\\1/2\end{bmatrix} + \begin{bmatrix}P_1\\P_2\end{bmatrix} ,
+\]
+que también coincide exactamente con el resultado de la \cref{eq:cap06-cargas-equivalentes} del Capítulo 6.
+
+Esta doble coincidencia --- de $\bm K^{(e)}$ y de $\bm F^{(e)}$ --- confirma que la formulación isoparamétrica no es una teoría distinta, sino un simple \emph{cambio de variable de integración} que preserva exactamente el resultado físico, con la ventaja de que las funciones de forma y los límites de integración ($r\in[-1,1]$) resultan idénticos para todos los elementos de la malla, independientemente de su longitud física $L^{(e)}$ --- toda la dependencia de la geometría particular del elemento queda concentrada en el jacobiano $J$.
+\end{ejemplo}
+
+\section{Integración numérica de Gauss}
+
+Como se acaba de ver, aunque los límites de integración de la formulación isoparamétrica ($r\in[-1,1]$) son los mismos para todos los elementos, la \emph{función a integrar} sí depende de cada elemento particular (a través de $\bm B(r)$, que depende de $L^{(e)}$, y --- en elementos de geometría más compleja que la barra recta --- también de $\abs{J}(r)$, que en general no es constante). Por esta razón, en la práctica del MEF se recurre a un procedimiento de \textbf{integración numérica}, conocido como \emph{cuadratura de Gauss}, que evalúa la integral como una suma ponderada de valores del integrando en un número reducido de puntos. Esta técnica es indispensable en elementos 2D y 3D, donde rara vez es posible (o conveniente) integrar analíticamente.
+
+\begin{teorema}{Cuadratura de Gauss}{cap08-gauss-derivacion}
+\textbf{Planteamiento.} Se busca aproximar $\int_{-1}^{1} f(r)\,dr$ mediante una suma de $m$ evaluaciones de $f$, ponderadas por factores $\alpha_i$:
+\[
+\int_{-1}^{1} f(r)\,dr = \alpha_1 f(r_1) + \alpha_2 f(r_2) + \dots + \alpha_m f(r_m) + R_m = \sum_{i=1}^m \alpha_i f_i + R_m ,
+\]
+donde $R_m$ es el residuo (error) de la aproximación, que no se evalúa explícitamente. Tanto los pesos $\alpha_i$ como las abscisas (puntos de integración) $r_i$ son incógnitas del problema: en total, $2m$ incógnitas.
+
+\textbf{Paso 1: interpolación de Lagrange.} Se define el polinomio de interpolación de Lagrange de $f$ en los $m$ puntos aún indeterminados $r_i$:
+\[
+\psi(r) = \sum_{i=1}^m f_i \, \ell_i(r), \qquad \ell_i(r) = \prod_{\substack{j=1\\j\neq i}}^m \frac{r-r_j}{r_i-r_j} \quad (\text{polinomio de grado } m-1),
+\]
+que satisface $\ell_i(r_j)=\delta_{ij}$ y, por lo tanto, $\psi(r_i)=f_i$ para cada punto de interpolación.
+
+\textbf{Paso 2: descomposición del residuo.} Defínase el polinomio $P(r)=(r-r_1)(r-r_2)\cdots(r-r_m)$, de grado $m$, que se anula en los $m$ puntos $r_i$. Cualquier función $f(r)$ puede escribirse, de manera exacta en los puntos $r_i$, como
+\[
+f(r) = \psi(r) + P(r)\left(\beta_0+\beta_1 r+\beta_2 r^2+\dots\right) ,
+\]
+ya que el segundo término se anula idénticamente en cada $r_i$ (por definición de $P$), de modo que $f(r_i)=\psi(r_i)=f_i$ se preserva. Integrando ambos miembros entre $-1$ y $1$:
+\[
+\int_{-1}^{1} f(r)\,dr = \underbrace{\sum_{i=1}^m f_i \int_{-1}^1 \ell_i(r)\,dr}_{[1]} + \underbrace{\sum_{j=0}^{\infty}\beta_j\int_{-1}^1 r^j P(r)\,dr}_{[2]} ,
+\]
+donde el término $[1]$ involucra únicamente polinomios de grado $m-1$ (los $\ell_i$), mientras que $[2]$ involucra polinomios de grado $m$ y superior (ya que $P$ tiene grado $m$).
+
+\textbf{Paso 3: determinación de los puntos $r_i$.} La idea central de Gauss es elegir los $m$ puntos $r_i$ de manera que el término $[2]$ --- que contamina la aproximación con potencias de grado $m$ y mayor --- se anule para el mayor número posible de esas potencias. Esto se logra imponiendo las $m$ condiciones de ortogonalidad
+\[
+\int_{-1}^{1} r^k\,P(r)\,dr = 0, \qquad k=0,1,\dots,m-1 ,
+\]
+un sistema de $m$ ecuaciones (una por cada valor de $k$) para las $m$ incógnitas $r_1,\dots,r_m$ (los coeficientes de $P(r)$). Con esta elección, se cancelan exactamente los términos $\beta_0,\dots,\beta_{m-1}$ de $[2]$, y la aproximación
+\[
+\int_{-1}^1 f(r)\,dr \approx \sum_{i=1}^m \alpha_i f_i
+\]
+resulta \textbf{exacta} cuando $f(r)$ es un polinomio de grado $2m-1$ o menor (los primeros $m-1$ momentos de $P$ se anulan por construcción, y $P$ mismo es de grado $m$, cubriendo en total grados $0$ hasta $2m-1$). Aun cuando los integrandos de $\bm K$ y $\bm F$ no sean, en general, polinomios exactos, este procedimiento entrega en la práctica resultados satisfactorios; en general, a mayor número de puntos $m$ se obtiene mayor precisión (a costa de mayor esfuerzo computacional).
+
+\textbf{Paso 4: determinación de los pesos $\alpha_i$.} Una vez conocidos los $r_i$, los pesos se obtienen igualando las dos expresiones de $\int_{-1}^1 f(r)\,dr$ término a término en $f_i$:
+\[
+\alpha_i = \int_{-1}^{1} \ell_i(r)\,dr, \qquad i=1,\dots,m ,
+\]
+y el residuo resulta $R_m = \sum_{j\geq m}\beta_j\int_{-1}^1 r^j P(r)\,dr$, que involucra únicamente potencias de grado $m$ y superiores --- consistente con la exactitud hasta grado $2m-1$ recién establecida.
+
+Este procedimiento se extiende de manera directa a integrales en 2D y 3D aplicando la integración unidimensional de manera sucesiva en cada dirección coordenada.
+\end{teorema}
+
+\begin{ecnimportante}{Fórmula general de la cuadratura de Gauss}{cap08-formula-gauss}
+\[
+\int_{-1}^{1} f(r)\,dr \approx \sum_{i=1}^{m} \alpha_i\, f(r_i) ,
+\]
+donde $m$ es el número de puntos de integración, $r_i$ sus posiciones (\emph{puntos de Gauss}) y $\alpha_i$ los pesos correspondientes. La regla de $m$ puntos integra de manera \textbf{exacta} cualquier polinomio de grado $2m-1$ o inferior.
+\end{ecnimportante}
+
+\subsection{Reglas explícitas de uno, dos y tres puntos}
+
+\textbf{Un punto ($m=1$).} La única condición de ortogonalidad es $\int_{-1}^1 (r-r_1)\,dr=0$ (caso $k=0$), que da $r_1=0$. Con un solo punto, el polinomio de Lagrange es simplemente $\ell_1(r)=1$, de modo que $\alpha_1=\int_{-1}^1 1\,dr = 2$. Esta regla integra de manera exacta polinomios de grado $2(1)-1=1$ (rectas).
+
+\textbf{Dos puntos ($m=2$).} Las condiciones de ortogonalidad para $k=0,1$ son
+\[
+\int_{-1}^1 (r-r_1)(r-r_2)\,dr=0, \qquad \int_{-1}^1 r(r-r_1)(r-r_2)\,dr=0 ,
+\]
+que, al desarrollarse, entregan el sistema $\tfrac23+2r_1r_2=0$, $\tfrac23(r_1+r_2)=0$, con solución simétrica $r_1=-\sqrt{3}/3$, $r_2=\sqrt3/3$. Los pesos resultan $\alpha_1=\alpha_2=1$. Esta regla integra de manera exacta polinomios de grado $2(2)-1=3$ (cúbicos).
+
+\textbf{Tres puntos ($m=3$).} Procediendo de manera análoga con las tres condiciones de ortogonalidad correspondientes a $k=0,1,2$, se obtiene la solución simétrica $r_1=-\sqrt{3/5}$, $r_2=0$, $r_3=\sqrt{3/5}$, con pesos $\alpha_1=\alpha_3=5/9$, $\alpha_2=8/9$. Esta regla integra de manera exacta polinomios de grado $2(3)-1=5$ (quínticos).
+
+\begin{ecnimportante}{Reglas explícitas de cuadratura de Gauss (1, 2 y 3 puntos)}{cap08-reglas-explicitas}
+\[
+m=1:\quad r_1=0,\ \alpha_1=2 \qquad\qquad
+m=2:\quad r_{1,2}=\mp\frac{\sqrt3}{3},\ \alpha_{1,2}=1
+\]
+\[
+m=3:\quad r_1=-\sqrt{\tfrac35},\ r_2=0,\ r_3=\sqrt{\tfrac35}, \qquad \alpha_1=\alpha_3=\frac59,\ \alpha_2=\frac89 .
+\]
+Grado de polinomio integrado exactamente: $2m-1$ (es decir, $1$, $3$ y $5$, respectivamente).
+\end{ecnimportante}
+
+\begin{table}[htbp]
+\centering
+\caption{Puntos y pesos de la cuadratura de Gauss para $m=1,2,3$.}
+\label{tab:cap08-puntos-gauss}
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+$m$ & \multicolumn{3}{c}{Puntos $r_i$ y pesos $\alpha_i$} & Grado exacto \\
+\midrule
+$1$ & \multicolumn{3}{c}{$r_1=0,\ \ \alpha_1=2$} & $1$ \\
+\addlinespace
+$2$ & \multicolumn{3}{c}{$r_{1,2}=\mp\sqrt{3}/3\approx\mp0.57735,\ \ \alpha_1=\alpha_2=1$} & $3$ \\
+\addlinespace
+$3$ & \multicolumn{3}{c}{$r_{1,3}=\mp\sqrt{3/5}\approx\mp0.77459,\ \ r_2=0,\ \ \alpha_{1,3}=5/9,\ \ \alpha_2=8/9$} & $5$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\draw[thick] (0,2) -- (6,2);
+\filldraw (0,2) circle (1.5pt) node[below] {$-1$};
+\filldraw (6,2) circle (1.5pt) node[below] {$+1$};
+\filldraw[ucred] (3,2) circle (2pt);
+\node[above] at (3,2.25) {$r_1=0$};
+\node[left] at (-0.4,2) {$m=1$};
+
+\draw[thick] (0,1) -- (6,1);
+\filldraw (0,1) circle (1.5pt) node[below] {$-1$};
+\filldraw (6,1) circle (1.5pt) node[below] {$+1$};
+\filldraw[ucred] (1.27,1) circle (2pt);
+\filldraw[ucred] (4.73,1) circle (2pt);
+\node[below] at (1.27,0.75) {$-\sqrt3/3$};
+\node[below] at (4.73,0.75) {$\sqrt3/3$};
+\node[left] at (-0.4,1) {$m=2$};
+
+\draw[thick] (0,0) -- (6,0);
+\filldraw (0,0) circle (1.5pt) node[below] {$-1$};
+\filldraw (6,0) circle (1.5pt) node[below] {$+1$};
+\filldraw[ucred] (0.68,0) circle (2pt);
+\filldraw[ucred] (3,0) circle (2pt);
+\filldraw[ucred] (5.32,0) circle (2pt);
+\node[above] at (0.68,0.25) {$-\sqrt{3/5}$};
+\node[above] at (3,0.25) {$0$};
+\node[above] at (5.32,0.25) {$\sqrt{3/5}$};
+\node[left] at (-0.4,0) {$m=3$};
+\end{tikzpicture}
+\caption{Ubicación de los puntos de integración de Gauss en el intervalo normalizado $r\in[-1,1]$, para $m=1,2,3$ puntos.}
+\label{fig:cap08-puntos-gauss}
+\end{figure}
+
+\section{Ejemplo: verificación de la exactitud de la cuadratura}
+
+\begin{ejemplo}{Integración exacta de polinomios mediante cuadratura de Gauss}{cap08-verificacion-cuadratura}
+\textbf{Caso 1: polinomio cúbico con la regla de dos puntos.} Se desea verificar que $\int_{-1}^1 (r^3+r^2+r+1)\,dr$ se integra exactamente con $m=2$. Analíticamente,
+\[
+\int_{-1}^1 (r^3+r^2+r+1)\,dr = \left[\frac{r^4}{4}+\frac{r^3}{3}+\frac{r^2}{2}+r\right]_{-1}^{1} = \frac23 + 2 = \frac83 .
+\]
+Numéricamente, con $r_1=-\sqrt3/3$, $r_2=\sqrt3/3$, $\alpha_1=\alpha_2=1$:
+\[
+\alpha_1 f(r_1) + \alpha_2 f(r_2) = \left[\left(-\tfrac{\sqrt3}{3}\right)^3+\left(-\tfrac{\sqrt3}{3}\right)^2-\tfrac{\sqrt3}{3}+1\right] + \left[\left(\tfrac{\sqrt3}{3}\right)^3+\left(\tfrac{\sqrt3}{3}\right)^2+\tfrac{\sqrt3}{3}+1\right] .
+\]
+Los términos impares ($r^3$ y $r$) se cancelan entre ambos puntos (por antisimetría de $r_1=-r_2$), y los términos pares se duplican:
+\[
+= 2\left(\tfrac{\sqrt3}{3}\right)^2 + 2 = 2\cdot\frac13 + 2 = \frac23+2=\frac83 ,
+\]
+que coincide \textbf{exactamente} con el valor analítico, confirmando que la regla de dos puntos integra sin error cualquier polinomio de grado 3 (aquí, $2m-1=3$).
+
+\textbf{Caso 2: polinomio cuártico, comparación entre dos y tres puntos.} Considérese ahora $\int_{-1}^1 r^4\,dr = \left[r^5/5\right]_{-1}^1 = 2/5$.
+
+Con la regla de \textbf{dos puntos} ($2m-1=3<4$, fuera del rango de exactitud):
+\[
+\alpha_1 f(r_1)+\alpha_2 f(r_2) = \left(-\tfrac{\sqrt3}{3}\right)^4 + \left(\tfrac{\sqrt3}{3}\right)^4 = 2\left(\tfrac13\right)^2 = \frac29 ,
+\]
+que \textbf{no coincide} con el valor exacto $2/5$ ($2/9\approx0.222$ frente a $2/5=0.4$): como se anticipó, dos puntos solo garantizan exactitud hasta grado 3, y el integrando aquí es de grado 4.
+
+Con la regla de \textbf{tres puntos} ($2m-1=5\geq4$, dentro del rango de exactitud):
+\begin{align*}
+\alpha_1 f(r_1)+\alpha_2 f(r_2)+\alpha_3 f(r_3) &= \frac59\left(-\sqrt{\tfrac35}\right)^4 + \frac89(0)^4 + \frac59\left(\sqrt{\tfrac35}\right)^4 \\
+&= 2\cdot\frac59\left(\frac35\right)^2 = \frac{10}{9}\cdot\frac{9}{25} = \frac{2}{5} ,
+\end{align*}
+que coincide \textbf{exactamente} con el valor analítico. Este ejemplo ilustra de manera concreta la regla general: para integrar exactamente un polinomio de grado $p$, se requiere una cuadratura de Gauss con $m\geq (p+1)/2$ puntos.
+\end{ejemplo}
+
+\section{Síntesis}
+
+Este capítulo, que cierra la formulación de elementos finitos de barra, introdujo dos herramientas que trascienden ampliamente el caso unidimensional tratado en este libro hasta ahora. La \textbf{formulación isoparamétrica} reescribe la interpolación del desplazamiento y de la geometría en un dominio paramétrico común a todos los elementos de un mismo tipo, con el jacobiano $J$ concentrando toda la información geométrica particular de cada elemento; se verificó explícitamente, para la barra de dos nodos, que esta reformulación reproduce con exactitud los resultados ya obtenidos en el Capítulo 6 por integración directa. La \textbf{cuadratura de Gauss} resuelve el problema práctico de evaluar las integrales resultantes, aproximando la integral exacta mediante una suma ponderada de un número reducido de evaluaciones del integrando, con la notable propiedad de ser exacta para polinomios de grado hasta $2m-1$ con solo $m$ puntos de evaluación. Juntas, estas dos técnicas constituyen la maquinaria computacional estándar sobre la cual se construyen, en cursos posteriores, los elementos finitos de dos y tres dimensiones para problemas de elasticidad, placas y sólidos generales.

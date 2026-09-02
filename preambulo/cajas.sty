@@ -1,0 +1,90 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{preambulo/cajas}[2026/08/12 Entornos tcolorbox del libro ICM3323]
+
+% Requiere: preambulo/preambulo (tikz, tcolorbox[most], colores, hyperref, cleveref)
+% ya cargado antes en main.tex.
+
+%================================================================
+% Estilo base compartido (DRY)
+%================================================================
+\tcbset{
+  academicbox/.style={
+    enhanced, breakable,
+    fonttitle=\bfseries,
+    coltitle=white,
+    boxrule=0.9pt, arc=2mm,
+    top=8pt, bottom=9pt, left=9pt, right=9pt,
+    before skip=12pt, after skip=12pt,
+    attach boxed title to top left={yshift*=-1mm, xshift=3mm},
+    boxed title style={
+      boxrule=0pt, arc=1.5mm, top=3pt, bottom=3pt, left=6pt, right=6pt
+    }
+  }
+}
+
+%================================================================
+% 1. Ecuacion importante -- la caja mas prominente del libro
+%================================================================
+\newtcbtheorem[number within=chapter, list inside=ecnimportante]{ecnimportante}{Ecuación importante}{%
+  academicbox,
+  colback=ucred!5, colframe=ucred, colbacktitle=ucred,
+  boxrule=1.2pt
+}{eq}
+\crefname{ecnimportante}{ecuación importante}{ecuaciones importantes}
+\Crefname{ecnimportante}{Ecuación importante}{Ecuaciones importantes}
+% newtcbtheorem crea el contador real como tcb@cnt@<nombre>; cleveref debe
+% apuntar su crefname a ese contador interno, no al nombre del entorno.
+\crefname{tcb@cnt@ecnimportante}{ecuación importante}{ecuaciones importantes}
+\Crefname{tcb@cnt@ecnimportante}{Ecuación importante}{Ecuaciones importantes}
+
+%================================================================
+% 2. Definicion
+%================================================================
+\newtcbtheorem[number within=chapter]{definicion}{Definición}{%
+  academicbox,
+  colback=ucblue!5, colframe=ucblue, colbacktitle=ucblue
+}{def}
+\crefname{definicion}{definición}{definiciones}
+\Crefname{definicion}{Definición}{Definiciones}
+\crefname{tcb@cnt@definicion}{definición}{definiciones}
+\Crefname{tcb@cnt@definicion}{Definición}{Definiciones}
+
+%================================================================
+% 3. Ejemplo resuelto
+%================================================================
+\newtcbtheorem[number within=chapter]{ejemplo}{Ejemplo resuelto}{%
+  academicbox,
+  colback=ucteal!5, colframe=ucteal, colbacktitle=ucteal
+}{ej}
+\crefname{ejemplo}{ejemplo}{ejemplos}
+\Crefname{ejemplo}{Ejemplo}{Ejemplos}
+\crefname{tcb@cnt@ejemplo}{ejemplo}{ejemplos}
+\Crefname{tcb@cnt@ejemplo}{Ejemplo}{Ejemplos}
+
+%================================================================
+% 4. Teorema / derivacion formal
+%================================================================
+\newtcbtheorem[number within=chapter]{teorema}{Teorema}{%
+  academicbox,
+  colback=ucgray!4, colframe=ucgray, colbacktitle=ucgray,
+  fonttitle=\bfseries\scshape
+}{teo}
+\crefname{teorema}{teorema}{teoremas}
+\Crefname{teorema}{Teorema}{Teoremas}
+\crefname{tcb@cnt@teorema}{teorema}{teoremas}
+\Crefname{tcb@cnt@teorema}{Teorema}{Teoremas}
+
+%================================================================
+% 5. Observacion / nota -- sin numerar, estilo callout
+%================================================================
+\newtcolorbox{observacion}[1][Observación]{
+  enhanced, breakable,
+  colback=ucamber!6, colframe=ucamber, colbacktitle=ucamber,
+  coltitle=white, fonttitle=\bfseries,
+  title={#1},
+  boxrule=0.8pt, arc=1.5mm,
+  top=6pt, bottom=7pt, left=8pt, right=8pt,
+  before skip=10pt, after skip=10pt
+}
+
+\endinput

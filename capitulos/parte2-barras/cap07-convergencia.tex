@@ -1,0 +1,220 @@
+\chapter{Requisitos de Convergencia del Método de los Elementos Finitos}
+\label{chap:cap07-convergencia}
+
+\section{Introducción}
+
+El Capítulo 6 mostró cómo construir, para un elemento finito arbitrario, sus matrices elementales $\bm K^{(e)}$ y $\bm F^{(e)}$ a partir de una elección de funciones de forma $\bm N^{(e)}$. Esa construcción es puramente mecánica: dada \emph{cualquier} elección razonable de $\bm N^{(e)}$, las fórmulas $\bm K = \int \bm B^{\mathsf T}\bm C\bm B\,d\Omega$ y $\bm F = \int\bm N^{\mathsf T}\bar{\bm t}\,d\Gamma + \int\bm N^{\mathsf T}\rho\bm b\,d\Omega + \bm P$ producen un sistema de ecuaciones bien definido. Sin embargo, no toda elección de $\bm N^{(e)}$ da lugar a una aproximación \emph{útil}: es indispensable que, a medida que la malla de elementos finitos se refina (más elementos, de menor tamaño), la solución numérica se aproxime cada vez más a la solución analítica exacta del problema continuo. A esta propiedad se la denomina \emph{convergencia}, y es el tema central de este capítulo.
+
+La convergencia del MEF no es automática: depende de que las funciones de forma satisfagan ciertos requisitos matemáticos, algunos de ellos exigidos directamente por la estructura del PTV, y otros --- más sutiles --- relacionados con la capacidad del elemento de representar los estados límite de deformación (constante y nula) que debe alcanzar cualquier elemento suficientemente pequeño dentro de una malla refinada. Este capítulo recorre ambos tipos de requisitos, culminando en el criterio práctico más influyente para verificarlos: el \emph{patch test} propuesto por B.M. Irons.
+
+\section{Continuidad, derivabilidad e integrabilidad}
+\label{sec:cap07-condiciones-basicas}
+
+El propio PTV, tal como fue formulado en el Capítulo 5 y utilizado en el Capítulo 6 para construir $\bm K$ y $\bm F$, impone de manera directa tres condiciones mínimas sobre las funciones de forma admisibles.
+
+\paragraph{Condición de continuidad.} El campo de desplazamientos interpolado debe ser continuo en el interior de cada elemento. Esta condición se satisface automáticamente al construir $\bm N$ mediante funciones polinómicas (como se hizo en el Capítulo 6), que son continuas por definición en todo su dominio.
+
+\paragraph{Condición de derivabilidad.} La aproximación escogida debe ser derivable, y no idénticamente nula, hasta el orden de derivación que aparece en la expresión del trabajo virtual interno $\delta W_{\text{int}}=\int_\Omega \delta\bm\varepsilon^{\mathsf T}\bm\sigma\,d\Omega$. El orden de derivación requerido queda determinado por la matriz $\bm B$: para la barra, $\bm B = \partial \bm N/\partial z$ involucra derivadas \emph{primeras} de $\bm N$, de modo que $\bm N$ debe ser, como mínimo, un polinomio de primer grado (una constante no serviría, pues su derivada es idénticamente nula y el elemento no podría representar deformación alguna).
+
+\paragraph{Condición de integrabilidad.} Las funciones de interpolación deben ser tales que la integral que define $\bm K$ exista (sea finita). Recordando que la derivada de orden $m$ de una función es integrable si sus primeras $m-1$ derivadas son continuas, y que $\bm B$ involucra derivadas de orden $m$ de $\bm N$, se concluye que $\bm N$ debe tener continuidad de clase $C^{m-1}$ entre elementos --- la misma conclusión, en realidad, que la condición de derivabilidad, expresada ahora en términos de continuidad entre elementos y no solo dentro de cada uno. Para el caso de la barra, con $\bm B$ conteniendo derivadas primeras de $\bm N$, la condición de integrabilidad exige $\bm N$ de clase $C^0$ (continuidad del campo de desplazamientos entre elementos, sin exigir continuidad de su derivada), que es exactamente la clase de elementos construidos en el Capítulo 6.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=0.55cm, every node/.style={font=\small}]
+\node[draw, rounded corners, fill=ucred!12, draw=ucred, align=center, text width=4.6cm] (raiz) at (5.2,4.3) {Requisitos de convergencia del MEF};
+
+\node[draw, rounded corners, fill=ucblue!8, draw=ucblue, align=center, text width=2.5cm] (n1) at (0,2.2) {Continuidad};
+\node[draw, rounded corners, fill=ucblue!8, draw=ucblue, align=center, text width=2.5cm] (n2) at (2.8,2.2) {Derivabilidad};
+\node[draw, rounded corners, fill=ucblue!8, draw=ucblue, align=center, text width=2.5cm] (n3) at (5.6,2.2) {Integrabilidad};
+\node[draw, rounded corners, fill=ucamber!12, draw=ucamber, align=center, text width=2.5cm] (n4) at (8.4,2.2) {Patch test (Irons)};
+
+\node[draw, rounded corners, fill=ucteal!10, draw=ucteal, align=center, text width=2.6cm] (n5) at (5.4,0) {Compatibilidad entre elementos};
+\node[draw, rounded corners, fill=ucteal!10, draw=ucteal, align=center, text width=2.6cm] (n6) at (8.3,0) {Estabilidad (rango de $\bm K$)};
+\node[draw, rounded corners, fill=ucteal!10, draw=ucteal, align=center, text width=2.6cm] (n7) at (11.2,0) {Invariancia geométrica};
+
+\draw (raiz) -- (n1);
+\draw (raiz) -- (n2);
+\draw (raiz) -- (n3);
+\draw (raiz) -- (n4);
+\draw (n4) -- (n5);
+\draw (n4) -- (n6);
+\draw (n4) -- (n7);
+\end{tikzpicture}
+\caption{Panorama de los requisitos de convergencia del MEF. Los tres primeros son exigidos directamente por la estructura del PTV (\cref{sec:cap07-condiciones-basicas}); el patch test de Irons resume, en un único criterio práctico, las condiciones de deformación constante y de sólido rígido, de las cuales se derivan a su vez la compatibilidad, la estabilidad y la invariancia geométrica como requisitos deseables adicionales.}
+\label{fig:cap07-arbol-requisitos}
+\end{figure}
+
+\section{El patch test de Irons}
+
+Verificar analíticamente, para un elemento arbitrario, que las condiciones anteriores garantizan la convergencia de la malla completa es, en general, una tarea compleja. B.M. Irons propuso, hacia mediados de la década de 1960, un procedimiento sencillo e intuitivo --- el \emph{patch test} o "criterio de la parcela" --- que permite verificar en la práctica si un elemento dado es apto para su uso en una malla de elementos finitos.
+
+\begin{teorema}{El patch test de Irons}{cap07-patch-test}
+\textbf{Procedimiento.} Selecciónese un conjunto (\emph{parcela}, o \emph{patch}) de elementos conectados entre sí. Aplíquense en los nodos del contorno de la parcela los desplazamientos correspondientes a un campo prescrito y conocido $\bar w(z)$ en toda la parcela. Se dice que el elemento satisface el patch test --- lo que garantiza su convergencia --- si la solución de elementos finitos así obtenida (desplazamientos y deformaciones en el interior de la parcela) coincide exactamente con la que se deduciría analíticamente del campo $\bar w(z)$ prescrito. Un elemento que no satisface este criterio no es apto para uso práctico en una malla de EF.
+
+\textbf{Condición 1 (deformación constante).} A medida que una malla de elementos finitos se refina, el tamaño de cada elemento tiende a cero y, por continuidad del campo de deformaciones exacto, la deformación dentro de cada elemento individual tiende a un valor \emph{constante}. En consecuencia, todo elemento debe ser capaz de reproducir exactamente un estado de deformación constante para garantizar la convergencia en el límite de refinamiento. El patch test evalúa esta condición aplicando en el contorno de la parcela el campo de desplazamientos $\bar w(z) = c_0 + c_1 z$ (que produce analíticamente $\varepsilon_{zz}=c_1=\text{cte.}$ en toda la parcela) y verificando que la solución de EF reproduzca dicho campo de deformación constante en el interior.
+
+\emph{Demostración de que el elemento lineal de dos nodos lo satisface.} Con $W_1^{(e)}=\bar w(z_1)=c_0+c_1z_1$ y $W_2^{(e)}=\bar w(z_2)=c_0+c_1z_2$ prescritos en los nodos, la interpolación $w=N_1^{(e)}W_1^{(e)}+N_2^{(e)}W_2^{(e)}$ con $N_1^{(e)}+N_2^{(e)}=1$ y $N_1^{(e)}z_1+N_2^{(e)}z_2=z$ (pues las funciones de forma son exactas para un polinomio de grado 1, al ser ellas mismas de grado 1) reproduce $w(z)=c_0+c_1z=\bar w(z)$ en todo punto interior, y por lo tanto $\varepsilon_{zz}=c_1$ exactamente. $\blacksquare$
+
+\textbf{Condición 2 (sólido rígido, deformación nula).} Es el caso particular de la condición anterior con $c_1=0$: al someter a un elemento (o a una parcela) a un campo de movimientos prescritos en su contorno correspondiente a un desplazamiento de sólido rígido $\bar w(z) = \bar W = \text{cte.}$, debe obtenerse un estado de deformación \emph{nula} en su interior. Si no fuera así, el elemento generaría deformación (y por lo tanto tensión) espuria ante un simple movimiento de cuerpo rígido, lo cual es físicamente inadmisible y, en particular, incompatibiliza al elemento con la representación de estados de deformación más complejos.
+
+\emph{Demostración.} Con $W_i^{(e)}=\bar W$ para todos los nodos $i=1,\dots,n$, la interpolación entrega
+\[
+w = \sum_{i=1}^n N_i^{(e)} W_i^{(e)} = \bar W \sum_{i=1}^n N_i^{(e)} .
+\]
+Para que $w=\bar W$ (es decir, para que se reproduzca exactamente el movimiento de sólido rígido prescrito) para \emph{cualquier} valor de $\bar W$, es necesario y suficiente que
+\[
+\sum_{i=1}^n N_i^{(e)}(z) = 1 \qquad \text{para todo } z \text{ en el elemento.}
+\]
+Esta condición ya fue verificada explícitamente para los elementos de dos y de tres nodos del Capítulo 6, y se cumple en general para cualquier elemento Lagrangiano, ya que los polinomios de Lagrange satisfacen $\sum_i N_i(z) \equiv 1$ como identidad polinómica (es la partición de la unidad asociada a la interpolación de Lagrange). $\blacksquare$
+\end{teorema}
+
+De estas dos condiciones se desprende, en particular, que \textbf{la condición de sólido rígido es un caso particular de la condición de deformación constante} (con la constante igual a cero), pero se enuncia por separado por su importancia física directa: ningún elemento debería "resistir" --- generando fuerzas internas --- un movimiento que no involucra deformación alguna.
+
+\section{Compatibilidad y conformidad entre elementos adyacentes}
+
+En principio, se desea que los elementos empleados en una malla sean \emph{compatibles} (también llamados \emph{conformes}): que el campo de desplazamientos sea continuo no solo dentro de cada elemento, sino también \emph{entre} elementos adyacentes, en toda la superficie (o punto, en 1D) de contacto entre ellos, y no únicamente en los nodos compartidos. La condición de compatibilidad se satisface automáticamente si se cumple el requisito de continuidad del campo de desplazamientos en los nodos --- lo cual, para los elementos Lagrangianos de clase $C^0$ desarrollados en el Capítulo 6, se garantiza por construcción, ya que dos elementos adyacentes comparten el valor nodal en el nodo común y las funciones de forma son lineales (o de orden superior) sobre segmentos que solo se tocan en ese punto.
+
+Es importante notar que la compatibilidad, aunque deseable, no es estrictamente indispensable para la convergencia: existen elementos \emph{no conformes} (que violan la continuidad entre elementos en puntos distintos de los nodos) que, sin embargo, verifican el patch test y convergen correctamente. Estos casos son más frecuentes en elementos de placas y láminas que en elementos de barra, y no se profundizan aquí, pero es importante tener presente que compatibilidad y convergencia no son, en general, sinónimos.
+
+\section{Condición de polinomio completo}
+
+Existe un argumento adicional, de naturaleza distinta al patch test, que explica \emph{por qué} la capacidad de representar deformación constante es la condición mínima necesaria (y no una condición arbitraria): la conexión entre la aproximación polinómica de elementos finitos y el desarrollo en serie de Taylor de la solución exacta.
+
+En el entorno de un punto $z_i$, la solución exacta $w(z)$ (suponiéndola suficientemente derivable) admite el desarrollo
+\[
+w(z) = w(z_i) + \pdv{w}{z}\bigg|_{z_i}(z-z_i) + \frac{1}{2!}\pdv[2]{w}{z}\bigg|_{z_i}(z-z_i)^2 + \dots + \frac{1}{m!}\pdv[m]{w}{z}\bigg|_{z_i}(z-z_i)^m + \dots
+\]
+Por otro lado, la aproximación de elementos finitos, siendo polinómica de grado $m$, tiene la forma
+\[
+w_{\text{MEF}}(z) = a_0 + a_1 z + a_2 z^2 + \dots + a_m z^m .
+\]
+
+\begin{ecnimportante}{Condición de polinomio completo}{cap07-polinomio-completo}
+La aproximación $w_{\text{MEF}}(z)$ reproduce exactamente los términos del desarrollo de Taylor de $w(z)$ hasta el orden $m$ \emph{si y solo si} la expresión de $w_{\text{MEF}}(z)$ contiene \emph{todos} los términos del polinomio de grado $m$ --- es decir, si $\bm N$ constituye un \emph{polinomio completo} de grado $m$, sin monomios faltantes entre el término constante y el de grado $m$. Un elemento cuyas funciones de forma omiten algún término intermedio (por ejemplo, un elemento con términos $1, z, z^3$ pero sin el término $z^2$) no podrá representar exactamente ciertos estados de deformación de orden inferior a $m$, y su convergencia será, en el mejor de los casos, más lenta que la de un elemento completo del mismo grado nominal.
+\end{ecnimportante}
+
+Para los elementos Lagrangianos del Capítulo 6, por construcción, un elemento de $n$ nodos genera un polinomio completo de grado $n-1$ (el elemento de dos nodos es completo de grado 1; el de tres nodos, completo de grado 2), de modo que ambos satisfacen automáticamente esta condición, consistente con el hecho de que ya se verificó que cumplen el patch test.
+
+\section{Estabilidad: rango correcto de la matriz de rigidez}
+
+Un elemento finito debe tener, además, un \emph{rango correcto} en su matriz de rigidez elemental $\bm K^{(e)}$ (entendiendo por rango de una matriz cuadrada singular el número de valores propios distintos de cero). Concretamente, el rango de $\bm K^{(e)}$ de un elemento aislado, sin vinculaciones externas, debe ser igual a
+\[
+\text{rango}(\bm K^{(e)}) = n_{\text{gdl}} - n_{\text{sr}} ,
+\]
+donde $n_{\text{gdl}}$ es el número total de grados de libertad del elemento y $n_{\text{sr}}$ es el número de movimientos de sólido rígido posibles del elemento (para la barra, $n_{\text{sr}}=1$: la traslación axial). Un elemento aislado siempre exhibe al menos $n_{\text{sr}}$ modos de energía de deformación nula (los movimientos de sólido rígido), lo cual es físicamente correcto y necesario: un elemento sin restricciones no debería oponer resistencia a un desplazamiento que no lo deforma. El problema surge cuando $\bm K^{(e)}$ tiene \emph{más} modos de energía nula que los estrictamente asociados a movimientos de sólido rígido: estos modos adicionales (llamados \emph{modos espurios}, de \emph{mecanismo} o de \emph{energía nula}) representan deformaciones no nulas del elemento que, sin embargo, no generan fuerza interna alguna --- un defecto grave que puede producir soluciones sin sentido físico (oscilaciones tipo tablero de ajedrez, mecanismos internos, etc.) al ensamblar la malla completa. Se dice que un elemento es \emph{estable} cuando, una vez prescritos sus movimientos de sólido rígido, no admite ningún otro modo de deformación de energía nula.
+
+\section{Invariancia geométrica}
+
+Finalmente, se exige que un elemento no tenga direcciones preferentes: su comportamiento no debería depender de la orientación con la que se numeran sus nodos o de la dirección en que se define el sistema de coordenadas local. Esta propiedad, llamada \emph{invariancia} (o isotropía geométrica), se satisface naturalmente en los elementos Lagrangianos de barra desarrollados en el Capítulo 6, dado que las funciones de forma se construyen de manera simétrica respecto de la posición relativa de los nodos y no privilegian ninguna dirección del espacio (en el caso 1D, solo existe una dirección posible, pero la propiedad se vuelve más relevante y menos trivial de verificar en elementos 2D y 3D, donde el polinomio de interpolación debe tratar simétricamente todas las direcciones coordenadas).
+
+\section{Ejemplo: valores propios de la matriz de rigidez del elemento de dos nodos}
+
+\begin{ejemplo}{Análisis espectral de $\bm K^{(e)}$ para el elemento de barra de dos nodos}{cap07-autovalores-barra}
+Considérese la matriz de rigidez del elemento lineal de dos nodos obtenida en el Capítulo 6,
+\[
+\bm K^{(e)} = \frac{E^{(e)}A^{(e)}}{L^{(e)}} \begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix} .
+\]
+Se observa de inmediato que $\det\bm K^{(e)} = (E^{(e)}A^{(e)}/L^{(e)})^2(1\cdot 1 - (-1)(-1)) = 0$: la matriz es singular, y por lo tanto solo puede invertirse una vez impuestas las condiciones de borde esenciales (es decir, sobre el sistema de ecuaciones reducido), como ya se discutió en el Capítulo 4. Esta singularidad es, precisamente, la manifestación algebraica de la existencia de un movimiento de sólido rígido: sin restricciones de desplazamiento, el sistema $\bm K^{(e)}\bm U^{(e)}=\bm F^{(e)}$ admite infinitas soluciones de $\bm U^{(e)}$ que satisfacen el equilibrio homogéneo.
+
+\textbf{Cálculo de los valores propios.} Para hallar $\lambda$ tal que $\bm K^{(e)}\bm U^{(e)}=\lambda\bm U^{(e)}$ para algún $\bm U^{(e)}\neq\bm 0$, se resuelve $\det(\bm K^{(e)}-\lambda\bm I)=0$. Escribiendo $k=E^{(e)}A^{(e)}/L^{(e)}$ y factorizando:
+\[
+\det\begin{bmatrix} k-\lambda & -k \\ -k & k-\lambda \end{bmatrix} = (k-\lambda)^2 - k^2 = 0 \quad\Longrightarrow\quad \lambda^2 - 2k\lambda = 0 \quad\Longrightarrow\quad \lambda(\lambda-2k)=0 .
+\]
+
+\begin{ecnimportante}{Autovalores de la matriz de rigidez del elemento de barra de dos nodos}{cap07-autovalores-K}
+\[
+\lambda_1 = 0, \qquad \lambda_2 = 2k = \frac{2E^{(e)}A^{(e)}}{L^{(e)}} .
+\]
+\end{ecnimportante}
+
+\textbf{Autovectores e interpretación física.} Para $\lambda_1=0$, el sistema $(\bm K^{(e)}-0\cdot\bm I)\bm U^{(e)}=\bm 0$ se reduce a $W_1^{(e)}-W_2^{(e)}=0$, es decir $W_1^{(e)}=W_2^{(e)}$, cuyo autovector normalizado es
+\[
+\bm\Lambda_1 = \begin{bmatrix}1\\1\end{bmatrix} .
+\]
+Este modo corresponde a una \textbf{traslación de sólido rígido}: ambos extremos de la barra se desplazan la misma cantidad, la barra se mueve completa sin cambiar de longitud, la deformación es nula, y en consecuencia no se requiere energía de deformación (autovalor nulo) para producir este movimiento.
+
+Para $\lambda_2=2k$, el sistema $(\bm K^{(e)}-2k\bm I)\bm U^{(e)}=\bm 0$ se reduce a $-W_1^{(e)}-W_2^{(e)}=0$, es decir $W_1^{(e)}=-W_2^{(e)}$, cuyo autovector normalizado es
+\[
+\bm\Lambda_2 = \begin{bmatrix}-1\\1\end{bmatrix} .
+\]
+Este modo corresponde a un \textbf{estiramiento} (o acortamiento) simétrico de la barra: ambos extremos se desplazan en sentidos opuestos y con igual magnitud respecto del centro, produciendo una deformación axial uniforme no nula, y por lo tanto una rigidez efectiva positiva ($\lambda_2>0$) asociada a este modo.
+
+El espectro completo $\{0,\,2k\}$ confirma exactamente lo anticipado por el criterio de estabilidad de la \cref{sec:cap07-condiciones-basicas} anterior: la barra tiene $n_{\text{gdl}}=2$ grados de libertad y $n_{\text{sr}}=1$ movimiento de sólido rígido posible (la traslación axial), de modo que el rango correcto de $\bm K^{(e)}$ debe ser $2-1=1$ --- exactamente el número de autovalores no nulos obtenidos. No aparece ningún modo de energía nula espurio adicional: el elemento es estable.
+\end{ejemplo}
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.47\textwidth}
+\centering
+\begin{tikzpicture}
+\draw[gray, thick] (0,0) -- (3,0);
+\filldraw[gray] (0,0) circle (2pt);
+\filldraw[gray] (3,0) circle (2pt);
+\draw[ucblue, thick] (0.8,0.7) -- (3.8,0.7);
+\filldraw[ucblue] (0.8,0.7) circle (2pt) node[above] {$1$};
+\filldraw[ucblue] (3.8,0.7) circle (2pt) node[above] {$2$};
+\draw[->, ucred, thick] (0,0.15) -- (0.72,0.62);
+\draw[->, ucred, thick] (3,0.15) -- (3.72,0.62);
+\node at (1.9,-0.45) {$W_1^{(e)}=W_2^{(e)}\neq0$};
+\end{tikzpicture}
+\caption{Modo de sólido rígido, $\lambda_1=0$: la barra se traslada completa, sin deformarse.}
+\label{fig:cap07-modo-cuerpo-rigido}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.47\textwidth}
+\centering
+\begin{tikzpicture}
+\draw[gray, thick] (0,0) -- (3,0);
+\filldraw[gray] (0,0) circle (2pt);
+\filldraw[gray] (3,0) circle (2pt);
+\draw[ucblue, thick] (0.55,0.7) -- (3.45,0.7);
+\filldraw[ucblue] (0.55,0.7) circle (2pt) node[above] {$1$};
+\filldraw[ucblue] (3.45,0.7) circle (2pt) node[above] {$2$};
+\draw[->, ucred, thick] (0,0.15) -- (0.5,0.62);
+\draw[<-, ucred, thick] (3,0.15) -- (3.4,0.62);
+\node at (1.9,-0.45) {$W_1^{(e)}=-W_2^{(e)}\neq0$};
+\end{tikzpicture}
+\caption{Modo de estiramiento, $\lambda_2=2E^{(e)}A^{(e)}/L^{(e)}$: los extremos se separan simétricamente.}
+\label{fig:cap07-modo-estiramiento}
+\end{subfigure}
+\caption{Interpretación física de los autovectores de $\bm K^{(e)}$ para el elemento de barra de dos nodos.}
+\label{fig:cap07-modos-barra}
+\end{figure}
+
+\section{Compatibilidad y equilibrio de la solución numérica}
+
+\begin{observacion}[Qué satisface exactamente el MEF, y qué no]
+Conviene resumir con precisión qué se satisface \emph{exactamente} en la solución de elementos finitos y qué se satisface solo de manera \emph{aproximada}, ya que es una fuente frecuente de confusión:
+\begin{itemize}
+  \item La \textbf{compatibilidad} del campo de desplazamientos $u$ se satisface siempre en los nodos, por construcción (los elementos comparten el valor nodal). Dentro de cada elemento, $u$ es compatible (continua) por ser polinómica; entre elementos, puede no serlo si el elemento no es conforme, aunque los elementos $C^0$ del Capítulo 6 sí lo son.
+  \item El \textbf{equilibrio nodal}, dado por el PTV discretizado ($\bm K\bm U=\bm F$), se satisface \emph{siempre} en los nodos --- es, de hecho, la ecuación que se resuelve.
+  \item El \textbf{equilibrio de tensiones}, en cambio, \emph{no} se satisface, en general, ni en el interior de cada elemento ni en el contorno entre elementos: las ecuaciones diferenciales de equilibrio puntual $\partial\sigma_{ij}/\partial x_j+\rho b_i=0$ en $\Omega$, y $\sigma_{ij}n_j=\bar t_i$ en $\Gamma_\sigma$, no quedan garantizadas por la solución de EF. Como los elementos son de clase $C^0$, las derivadas de $\bm N$ (y por lo tanto el campo de tensiones, que depende de ellas a través de $\bm B$) no son, en general, continuas entre elementos adyacentes, de modo que tampoco existe equilibrio de tensiones en el contorno interelemental.
+\end{itemize}
+En síntesis: \textbf{la solución del MEF es, en general, aproximada, y no satisface las ecuaciones diferenciales de equilibrio y compatibilidad de manera puntual.} Lo que sí satisface, siempre y exactamente, es el equilibrio en \emph{forma integral (débil)} expresado por el PTV, tanto en $\Omega$ como en $\Gamma_\sigma$. La solución del MEF coincidirá con la solución analítica exacta únicamente en el caso particular en que la función de interpolación $\bm N$ sea capaz de representar exactamente el campo de desplazamientos analítico del problema --- en cuyo caso también $\bm\varepsilon$ y $\bm\sigma$ calculados por el MEF coinciden con los valores analíticos, como ocurrió en la validación cruzada del elemento de dos nodos con el Capítulo 4.
+\end{observacion}
+
+\section{Taxonomía de los errores numéricos del MEF}
+
+La discusión anterior deja claro que la solución del MEF es, salvo casos excepcionales, una aproximación. Es útil, para el ingeniero que interpreta resultados de un análisis por EF, distinguir las distintas fuentes de error que contribuyen a esa aproximación, resumidas en la \cref{tab:cap07-taxonomia-errores}.
+
+\begin{table}[htbp]
+\centering
+\caption{Taxonomía de los errores numéricos presentes en una solución de elementos finitos.}
+\label{tab:cap07-taxonomia-errores}
+\begin{tabular}{@{}p{4.1cm}p{8.7cm}@{}}
+\toprule
+\textbf{Tipo de error} & \textbf{Origen} \\
+\midrule
+Discretización & Inherente al carácter polinómico, con un número finito de términos, de la aproximación de EF; existe teoría específica de estimación de este error, cuya magnitud disminuye al refinar la malla o aumentar el orden de los elementos. \\
+Aproximación de la geometría & Es habitual aproximar contornos curvos mediante sucesivos tramos rectos (o de bajo orden); la geometría real del dominio no se representa exactamente salvo que se usen elementos de orden suficientemente alto o formulaciones isoparamétricas adecuadas (Capítulo 8). \\
+Integración de las matrices elementales & Surge al emplear técnicas de integración numérica (como la cuadratura de Gauss del Capítulo 8), necesarias en la práctica dada la dificultad de integrar analíticamente $\bm K^{(e)}$ y $\bm F^{(e)}$ en casos generales. \\
+Solución del sistema de ecuaciones & Errores de mal condicionamiento de $\bm K_r$, de truncamiento y de redondeo asociados a la resolución numérica del sistema lineal $\bm K_r\bm U_r=\bm F_r$. \\
+Ecuación constitutiva & Proviene de la necesidad de contar con parámetros del material (por ejemplo, $E$) determinados a partir de una caracterización experimental, siempre imperfecta, del comportamiento mecánico real. \\
+Suavizado de tensiones nodales & Al usar elementos de clase $C^0$, el campo de tensiones no es continuo entre elementos; su valor en un nodo se calcula habitualmente promediando los valores elementales de $\bm\sigma$ de los elementos que concurren a ese nodo. Un procedimiento más consistente se conoce como \emph{suavizado}: la minimización, en forma integral, de la diferencia entre los valores elementales y los valores nodales de $\bm\varepsilon$ y $\bm\sigma$. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Síntesis}
+
+Este capítulo estableció el marco teórico que permite decidir si un elemento finito, como los desarrollados en el Capítulo 6, es apto para su uso práctico: debe satisfacer las condiciones de continuidad, derivabilidad e integrabilidad exigidas directamente por el PTV, y debe superar el patch test de Irons --- equivalente a poder representar exactamente tanto un estado de deformación constante como un movimiento de sólido rígido. Se verificó, mediante el análisis espectral de $\bm K^{(e)}$, que el elemento de barra de dos nodos posee exactamente el rango correcto (un único modo de sólido rígido de energía nula, y un modo de deformación con rigidez positiva), y se precisó con cuidado qué tipo de equilibrio garantiza realmente la solución de elementos finitos --- el equilibrio nodal en sentido débil, y no el equilibrio puntual de tensiones. El capítulo siguiente introduce la formulación isoparamétrica, que reformula el cálculo de $\bm K^{(e)}$ y $\bm F^{(e)}$ en un dominio paramétrico normalizado, y la integración numérica de Gauss, herramienta indispensable para evaluar esas integrales en la práctica.

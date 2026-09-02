@@ -1,0 +1,125 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{preambulo/preambulo}[2026/08/12 Preambulo del libro ICM3323]
+
+%================================================================
+% Idioma y codificacion
+%================================================================
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[T1]{fontenc}
+\RequirePackage[spanish,shorthands=off]{babel} % shorthands=off evita que "<" y ">"
+                                                % queden activos y choquen con las
+                                                % flechas de TikZ (->, <->, etc.)
+\RequirePackage{mathpazo}
+\RequirePackage{microtype}
+
+%================================================================
+% Geometria de pagina (libro a dos caras)
+%================================================================
+\RequirePackage[
+  paper=letterpaper,
+  twoside,
+  inner=3cm, outer=2.5cm,
+  top=2.8cm, bottom=3cm,
+  headheight=28pt
+]{geometry}
+
+%================================================================
+% Matematica y notacion
+%================================================================
+\RequirePackage{amsmath,amssymb,mathtools}
+\RequirePackage{physics}
+\RequirePackage{bm}
+\RequirePackage{tensor}
+% Nota: siunitx se probo y se descarto -- esta version de siunitx (3.5.5)
+% deja \SI/\si rotos ("Undefined control sequence l_siunitx_quantity_prefix_
+% mode_str") en combinacion con el paquete physics (que sobreescribe \qty
+% sin comprobar si ya esta definido). Ningun capitulo usa \SI/\si (todas las
+% unidades se escriben como $\mathrm{...}$), asi que se omite por completo.
+
+%================================================================
+% Tablas y figuras
+%================================================================
+\RequirePackage{booktabs}
+\RequirePackage{array}
+\RequirePackage{caption}
+\RequirePackage{subcaption}
+\RequirePackage{enumitem}
+
+%================================================================
+% Color, TikZ, tcolorbox
+%================================================================
+\RequirePackage{preambulo/colores}
+\RequirePackage{tikz}
+\usetikzlibrary{calc, positioning, arrows.meta, decorations.pathmorphing,
+  decorations.markings, patterns, shapes.geometric,
+  backgrounds, fadings, fit, quotes, angles, 3d}
+
+\RequirePackage[most]{tcolorbox}
+\tcbuselibrary{skins, breakable, theorems, many, hooks}
+
+%================================================================
+% Encabezados y pies de pagina
+%================================================================
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\small\itshape\nouppercase{\leftmark}}
+\fancyhead[RO]{\small\itshape\nouppercase{\rightmark}}
+\fancyfoot[LE,RO]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0pt}
+\AtBeginDocument{\renewcommand{\headrule}{\hbox to\headwidth{\color{ucred}\leaders\hrule height \headrulewidth\hfill}}}
+
+\fancypagestyle{plain}{%
+  \fancyhf{}
+  \fancyfoot[LE,RO]{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+%================================================================
+% Estilo de partes, capitulos y secciones
+%================================================================
+\RequirePackage{titlesec}
+
+\titleformat{\part}[display]
+  {\normalfont\centering}
+  {\Large\scshape\color{ucred} Parte \thepart}
+  {0.5em}
+  {\Huge\bfseries\color{ucred}}
+
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries}
+  {\Large\color{ucred!70}\chaptertitlename\ \thechapter}
+  {0.4em}
+  {\Huge\color{ucred}}
+\titlespacing*{\chapter}{0pt}{-10pt}{25pt}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{ucred}}{\thesection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.4em}{0.8em}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{ucblue}}{\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{1.1em}{0.6em}
+
+%================================================================
+% Hipervinculos y referencias cruzadas (cargar al final)
+%================================================================
+\RequirePackage[unicode]{hyperref}
+\RequirePackage{bookmark}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=ucblue,
+  citecolor=ucteal,
+  urlcolor=ucred,
+  pdftitle={Elementos Finitos en Diseño Mecánico},
+  pdfauthor={Pedro Taboada},
+  pdfsubject={ICM3323 - Apuntes de cátedra},
+  bookmarksnumbered=true
+}
+\RequirePackage[capitalize,spanish]{cleveref}
+% Los nombres de referencia (\crefname) para las cajas numeradas
+% (ecnimportante, definicion, ejemplo, teorema) se definen en cajas.sty,
+% justo despues de crearlas con \newtcbtheorem.
+
+\endinput

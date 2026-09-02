@@ -1,0 +1,470 @@
+\chapter{Teoría Constitutiva Elástica Lineal}
+\label{sec:cap03-teoria-constitutiva}
+
+El Capítulo 2 dejó planteado el problema de valor de frontera del sólido elástico con una pieza pendiente: las ecuaciones de equilibrio y las relaciones cinemáticas son de naturaleza puramente física-geométrica —válidas para cualquier sólido, sin importar de qué material esté hecho—, pero no bastan por sí solas para determinar la respuesta del sólido ante una carga dada. Falta la \textbf{relación constitutiva}: la ley que vincula el tensor de tensiones $\bm\sigma$ con el tensor de deformaciones $\bm\varepsilon$ a través de las propiedades mecánicas específicas del material. Este capítulo desarrolla esa relación para el caso más simple e importante en la práctica —el material linealmente elástico—, y responde a una pregunta que resulta central para cualquier ingeniero que deba caracterizar experimentalmente un material: ¿cuántas constantes elásticas independientes son realmente necesarias, y cómo depende ese número de la simetría interna del material?
+
+\section{Ley de Hooke generalizada}
+\label{sec:cap03-hooke-general}
+
+La generalización tridimensional de la ley de Hooke postula que, para un material linealmente elástico, cada componente del tensor de tensiones es una función \emph{lineal} de las seis componentes independientes del tensor de deformaciones. Escrita explícitamente, componente a componente, esta hipótesis toma la forma
+\[
+\sigma_{xx} = c_{xxxx}\varepsilon_{xx} + c_{xxyy}\varepsilon_{yy} + c_{xxzz}\varepsilon_{zz} + c_{xxxy}\varepsilon_{xy} + c_{xxxz}\varepsilon_{xz} + c_{xxyz}\varepsilon_{yz},
+\]
+y de manera análoga para las cinco componentes restantes de $\bm\sigma$, cada una con su propio conjunto de seis coeficientes. La manera compacta y sistemática de escribir estas 36 relaciones simultáneamente es introducir un tensor de cuarto orden $\bm C$ —el \textbf{tensor constitutivo elástico}— tal que
+
+\begin{ecnimportante}{Ley de Hooke generalizada}{cap03-hooke-general}
+Para un material linealmente elástico, el tensor de tensiones se relaciona con el tensor de deformaciones mediante
+\[
+\sigma_{ij} = C_{ijkl}\,\varepsilon_{kl} \qquad \text{en } \Omega, \qquad\qquad \bm\sigma = \bm C : \bm\varepsilon \qquad \text{en } \Omega,
+\]
+donde $\bm C$ es el tensor constitutivo elástico, de cuarto orden, y el símbolo ``$:$'' denota la doble contracción tensorial (suma sobre los dos índices compartidos $k,l$).
+\end{ecnimportante}
+
+En principio, un tensor de cuarto orden en el espacio tridimensional tiene $3^4=81$ componentes independientes ($C_{ijkl}$, con $i,j,k,l\in\{1,2,3\}$ cada uno recorriendo tres valores). Sin embargo, ese número se reduce drásticamente al imponer dos restricciones que ya se establecieron en el Capítulo 2: la simetría del tensor de tensiones, $\sigma_{ij}=\sigma_{ji}$, y la simetría del tensor de deformaciones, $\varepsilon_{ij}=\varepsilon_{ji}$. Como la relación $\sigma_{ij}=C_{ijkl}\varepsilon_{kl}$ debe ser consistente con $\sigma_{ij}=\sigma_{ji}$ para \emph{cualquier} estado de deformación, el tensor $\bm C$ debe satisfacer $C_{ijkl}=C_{jikl}$ (de lo contrario, $\sigma_{ij}$ y $\sigma_{ji}$ diferirían en general). De manera análoga, como $\varepsilon_{kl}=\varepsilon_{lk}$, cualquier parte antisimétrica de $\bm C$ en los índices $k,l$ contrae a cero contra $\varepsilon_{kl}$ y por tanto puede eliminarse sin pérdida de generalidad, lo que equivale a exigir $C_{ijkl}=C_{ijlk}$. Estas dos propiedades se conocen como las \textbf{simetrías menores} de $\bm C$:
+\[
+\begin{gathered}
+C_{ijkl} = C_{jikl} \qquad \text{(simetría en el primer par de índices)}, \\[4pt]
+C_{ijkl} = C_{ijlk} \qquad \text{(simetría en el segundo par)}.
+\end{gathered}
+\]
+El efecto práctico de estas dos simetrías es que el par de índices $(i,j)$ —al igual que el par $(k,l)$— deja de tener $3\times 3=9$ combinaciones independientes y pasa a tener solo $6$ (las seis combinaciones distintas de un par no ordenado con repetición: $xx,yy,zz,xy,xz,yz$). En consecuencia, el número de componentes independientes de $\bm C$ se reduce de $9\times 9=81$ a $6\times 6=36$.
+
+\subsection{Notación matricial preliminar}
+
+Gracias a esta reducción, resulta natural reorganizar las seis componentes independientes de $\bm\sigma$ y de $\bm\varepsilon$ en vectores columna de longitud 6, y las 36 componentes independientes de $\bm C$ en una matriz de $6\times 6$ —todavía no necesariamente simétrica en esta etapa—, de modo que la relación $\sigma_{ij}=C_{ijkl}\varepsilon_{kl}$ se escriba como un simple producto matriz-vector:
+\[
+\begin{bmatrix} \sigma_{xx} \\ \sigma_{yy} \\ \sigma_{zz} \\ \sigma_{yz} \\ \sigma_{xz} \\ \sigma_{xy} \end{bmatrix}
+=
+\begin{bmatrix}
+c_{11} & c_{12} & c_{13} & c_{14} & c_{15} & c_{16} \\
+c_{21} & c_{22} & c_{23} & c_{24} & c_{25} & c_{26} \\
+c_{31} & c_{32} & c_{33} & c_{34} & c_{35} & c_{36} \\
+c_{41} & c_{42} & c_{43} & c_{44} & c_{45} & c_{46} \\
+c_{51} & c_{52} & c_{53} & c_{54} & c_{55} & c_{56} \\
+c_{61} & c_{62} & c_{63} & c_{64} & c_{65} & c_{66}
+\end{bmatrix}
+\begin{bmatrix} \varepsilon_{xx} \\ \varepsilon_{yy} \\ \varepsilon_{zz} \\ \gamma_{yz} \\ \gamma_{xz} \\ \gamma_{xy} \end{bmatrix},
+\]
+donde ya se ha anticipado el uso de las deformaciones angulares de ingeniería $\gamma_{xy}=2\varepsilon_{xy}$, $\gamma_{xz}=2\varepsilon_{xz}$, $\gamma_{yz}=2\varepsilon_{yz}$ introducidas en el Capítulo 2. Esta sustitución no es cosmética: al expandir $\sigma_{xy}=C_{xyxx}\varepsilon_{xx}+\dots+C_{xyxy}\varepsilon_{xy}+C_{xyyx}\varepsilon_{yx}$ y usar $C_{xyxy}=C_{xyyx}$ (simetría menor) junto con $\varepsilon_{xy}=\varepsilon_{yx}$, el término de corte aparece \emph{dos veces}: $C_{xyxy}\varepsilon_{xy}+C_{xyxy}\varepsilon_{xy}=C_{xyxy}\,(2\varepsilon_{xy})=C_{xyxy}\,\gamma_{xy}$. Usar $\gamma_{xy}$ en lugar de $\varepsilon_{xy}$ en el vector de deformaciones es, precisamente, lo que absorbe ese factor 2 y permite que la matriz $6\times 6$ de arriba reproduzca exactamente los coeficientes $C_{ijkl}$ del tensor original, sin factores adicionales. Esta correspondencia entre índices tensoriales $(ij)$ y el índice matricial simple $1,\dots,6$ —usada ya en la matriz anterior— es la llamada \textbf{notación de Voigt}, que se formaliza en la \cref{sec:cap03-voigt}.
+
+En esta etapa, la matriz $\bm c$ de $6\times 6$ contiene 36 coeficientes, en principio todos distintos: no se ha impuesto todavía ninguna condición de simetría \emph{sobre la propia matriz} (es decir, no se sabe aún si $c_{12}=c_{21}$, por ejemplo). Esa simetría adicional —que reducirá el conteo de 36 a 21 constantes— es consecuencia de un argumento termodinámico distinto, que se desarrolla a continuación.
+
+\section{El potencial de energía de deformación y la simetría mayor de \texorpdfstring{$\bm C$}{C}}
+\label{sec:cap03-potencial-energia}
+
+Una manera alternativa y muy poderosa de caracterizar un sólido elástico —debida a Green (1839)— consiste en postular la existencia de una función escalar $W(\bm\varepsilon)$, llamada \textbf{potencial de energía de deformación} (o energía de deformación específica, por unidad de volumen), tal que las tensiones se obtienen como su derivada respecto de las deformaciones:
+\[
+\sigma_{ij} = \frac{\partial W}{\partial \varepsilon_{ij}}.
+\]
+Esta definición alternativa de sólido elástico se apoya en el segundo principio de la termodinámica: en un proceso reversible e isotérmico (consistente con la hipótesis de problema isotérmico del Capítulo 1), el trabajo de deformación realizado sobre el sólido debe ser recuperable en su totalidad, lo cual exige que dicho trabajo dependa únicamente del estado de deformación final y no de la trayectoria seguida para alcanzarlo —es decir, que exista una función potencial $W$ cuyo diferencial sea precisamente el trabajo de deformación incremental—.
+
+\begin{teorema}{De la existencia de $W$ a la simetría mayor de $\bm C$}{cap03-simetria-mayor}
+Supóngase, además, que $W$ es una forma cuadrática en las componentes de $\bm\varepsilon$ (lo cual es razonable para pequeñas deformaciones, ya que es la aproximación de orden más bajo que produce una relación tensión-deformación lineal). Usando notación de Voigt para las seis componentes independientes de deformación, $W$ se escribe de la forma más general posible como un polinomio cuadrático,
+\[
+W = c_0 + c_1\varepsilon_{xx}+c_2\varepsilon_{yy}+c_3\gamma_{xy}+c_4\varepsilon_{zz}+c_5\gamma_{xz}+c_6\gamma_{yz} + \tfrac{1}{2}c_{11}\varepsilon_{xx}^2 + c_{12}\varepsilon_{xx}\varepsilon_{yy} + \dots,
+\]
+es decir, una constante $c_0$, seis términos lineales y 21 términos cuadráticos ($6$ cuadrados puros más $\binom{6}{2}=15$ productos cruzados).
+
+\textbf{Paso 1 (eliminar el término constante y los lineales).} En el estado no deformado ($\bm\varepsilon=\bm 0$), es físicamente razonable exigir que tanto la energía almacenada como las tensiones sean nulas —no hay energía de deformación acumulada, ni tensiones, si el sólido no se ha deformado—. La primera condición, $W(\bm 0)=0$, fuerza $c_0=0$. La segunda condición, $\sigma_{ij}(\bm 0)=0$, se obtiene evaluando $\sigma_{ij}=\partial W/\partial\varepsilon_{ij}$ en $\bm\varepsilon=\bm 0$: derivando el polinomio anterior, cada una de las seis derivadas parciales evaluada en el origen deja únicamente el coeficiente lineal correspondiente, por ejemplo $\sigma_{xx}(\bm 0)=c_1$. Exigir que las seis tensiones se anulen en el estado no deformado da entonces $c_1=c_2=\dots=c_6=0$. Solo sobreviven los 21 coeficientes cuadráticos $c_{11},c_{12},\dots,c_{66}$.
+
+\textbf{Paso 2 (la simetría mayor emerge de las derivadas cruzadas).} Derivando el polinomio puramente cuadrático que resulta del Paso 1 respecto de cada componente de deformación se obtiene, por ejemplo,
+\[
+\sigma_{xx} = \frac{\partial W}{\partial\varepsilon_{xx}} = c_{11}\varepsilon_{xx}+c_{12}\varepsilon_{yy}+c_{13}\gamma_{xy}+c_{14}\varepsilon_{zz}+c_{15}\gamma_{xz}+c_{16}\gamma_{yz},
+\]
+\[
+\sigma_{yy} = \frac{\partial W}{\partial\varepsilon_{yy}} = c_{12}\varepsilon_{xx}+c_{22}\varepsilon_{yy}+c_{23}\gamma_{xy}+c_{24}\varepsilon_{zz}+c_{25}\gamma_{xz}+c_{26}\gamma_{yz},
+\]
+y así sucesivamente para las seis tensiones. Nótese que el coeficiente que acompaña a $\varepsilon_{yy}$ en la expresión de $\sigma_{xx}$ y el que acompaña a $\varepsilon_{xx}$ en la expresión de $\sigma_{yy}$ son, ambos, el coeficiente $c_{12}$ del polinomio original de $W$ —esto no es una coincidencia notacional, sino una consecuencia directa de que las derivadas parciales cruzadas de una función suave conmutan: $\partial^2 W/\partial\varepsilon_{xx}\partial\varepsilon_{yy} = \partial^2 W/\partial\varepsilon_{yy}\partial\varepsilon_{xx}$. Comparando estas expresiones con la relación matricial $\sigma_{ij}=c_{ij}\varepsilon_{kl}$ de la sección anterior, se concluye que la matriz $6\times 6$ formada por los coeficientes $c_{ij}$ es necesariamente \textbf{simétrica}: $c_{ij}=c_{ji}$.
+\end{teorema}
+
+Esta propiedad —la \textbf{simetría mayor} de $\bm C$, $C_{ijkl}=C_{klij}$, equivalente a $c_{ij}=c_{ji}$ en notación de Voigt— es independiente de las dos simetrías menores obtenidas en la \cref{sec:cap03-hooke-general}, y reduce el número de constantes elásticas independientes de $36$ a $36-15=21$ (las $15$ entradas por debajo de la diagonal de la matriz $6\times 6$ dejan de ser independientes, pues quedan determinadas por las de encima de la diagonal).
+
+\begin{ecnimportante}{Potencial de energía de deformación y simetría mayor}{cap03-potencial-energia}
+Si el sólido elástico admite un potencial de energía de deformación $W(\bm\varepsilon)$ cuadrático, con $\sigma_{ij}=\partial W/\partial\varepsilon_{ij}$, entonces el tensor constitutivo satisface la simetría mayor $C_{ijkl}=C_{klij}$ (equivalentemente, $c_{ij}=c_{ji}$ en notación de Voigt), y el potencial se escribe en forma cuadrática compacta como
+\[
+W = \frac{1}{2}\,\varepsilon_{ij}\,C_{ijkl}\,\varepsilon_{kl} = \frac{1}{2}\,\bm\varepsilon^{T}\bm C\,\bm\varepsilon = \frac{1}{2}\,\sigma_{ij}\varepsilon_{ij} = \frac{1}{2}\,\bm\sigma:\bm\varepsilon.
+\]
+Junto con las dos simetrías menores ya establecidas, el tensor constitutivo elástico más general posible —el de un material \textbf{anisótropo}— queda descrito por $\boxed{21}$ constantes elásticas independientes, obtenibles en principio de ensayos experimentales.
+\end{ecnimportante}
+
+Esta relación constitutiva de 21 constantes es \emph{invertible}: como $\bm C$ es una matriz de $6\times 6$ simétrica y —según se argumentará en la \cref{sec:cap03-estabilidad}— definida positiva, existe su inversa, la matriz de \textbf{compliance} $\bm C^{-1}$, tal que $\bm\varepsilon=\bm C^{-1}\bm\sigma$. Ambas descripciones (rigidez $\bm C$ o compliance $\bm C^{-1}$) son físicamente equivalentes y se usan indistintamente según convenga.
+
+\section{Notación de Voigt}
+\label{sec:cap03-voigt}
+
+Antes de continuar reduciendo el número de constantes independientes mediante argumentos de simetría material, conviene formalizar la correspondencia entre los índices tensoriales $(i,j)$ —que recorren pares no ordenados de $\{1,2,3\}$— y el índice matricial simple $I\in\{1,\dots,6\}$ que se ha venido usando informalmente. Esta correspondencia, estándar en toda la literatura de mecánica de sólidos, se conoce como \textbf{notación de Voigt}.
+
+\begin{ecnimportante}{Notación de Voigt: mapeo de índices}{cap03-voigt}
+Los pares de índices tensoriales simétricos $(i,j)$ se mapean a un único índice de Voigt $I$ según
+\begin{center}
+\begin{tabular}{@{}ccccccc@{}}
+\toprule
+$(i,j)$ & $11$ & $22$ & $33$ & $23$ (ó $32$) & $13$ (ó $31$) & $12$ (ó $21$) \\
+\midrule
+$I$ & $1$ & $2$ & $3$ & $4$ & $5$ & $6$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+de modo que $\sigma_I \equiv \sigma_{ij}$ para las seis tensiones, $\varepsilon_I \equiv \varepsilon_{ij}$ (con $I=1,2,3$) y $\gamma_I \equiv 2\varepsilon_{ij}$ (con $I=4,5,6$) para las seis deformaciones, y $C_{IJ}\equiv C_{ijkl}$ para las 36 (21 independientes) componentes del tensor constitutivo, quedando la ley de Hooke generalizada escrita como el producto matricial $\sigma_I = C_{IJ}\varepsilon_J$ con $\bm C=[C_{IJ}]$ simétrica.
+\end{ecnimportante}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.0, every node/.style={font=\small}]
+  % grilla 3x3 de indices tensoriales ij
+  \foreach \i [count=\r from 0] in {1,2,3}{
+    \foreach \j [count=\c from 0] in {1,2,3}{
+      \ifnum\j<\i
+        \node[draw, minimum size=0.82cm, fill=ucgray!12] (t-\i-\j) at (0.9*\c,-0.9*\r) {$\i\j$};
+      \else
+        \node[draw, minimum size=0.82cm, fill=ucblue!18] (t-\i-\j) at (0.9*\c,-0.9*\r) {$\i\j$};
+      \fi
+    }
+  }
+  \node at (0.9,0.85) {\footnotesize Índices tensoriales $(i,j)$};
+
+  % columna de indices de Voigt
+  \foreach \I/\lab/\y in {1/11/0, 2/22/-0.9, 3/33/-1.8, 4/23/-2.7, 5/13/-3.6, 6/12/-4.5}{
+    \node[draw, fill=ucteal!18, minimum size=0.82cm] (v-\I) at (5.4,\y) {$\I$};
+  }
+  \node at (5.4,0.85) {\footnotesize Índice de Voigt $I$};
+
+  % flechas desde las 6 celdas superiores independientes hacia el indice de Voigt
+  \draw[-{Latex[length=2mm]}, ucred] (t-1-1) to[out=0,in=180] (v-1);
+  \draw[-{Latex[length=2mm]}, ucred] (t-2-2) to[out=0,in=180] (v-2);
+  \draw[-{Latex[length=2mm]}, ucred] (t-3-3) to[out=0,in=180] (v-3);
+  \draw[-{Latex[length=2mm]}, ucred] (t-2-3) to[out=0,in=180] (v-4);
+  \draw[-{Latex[length=2mm]}, ucred] (t-1-3) to[out=0,in=180] (v-5);
+  \draw[-{Latex[length=2mm]}, ucred] (t-1-2) to[out=0,in=180] (v-6);
+\end{tikzpicture}
+\caption{Esquema de correspondencia (mapeo) entre los pares de índices tensoriales simétricos $(i,j)$ y el índice de Voigt $I=1,\dots,6$. Las celdas grises bajo la diagonal ($j<i$) no requieren mapeo propio, pues $\sigma_{ij}=\sigma_{ji}$.}
+\label{fig:cap03-mapeo-voigt}
+\end{figure}
+
+\begin{observacion}[Convención de ordenamiento usada en este libro]
+El orden $(11,22,33,23,13,12)\mapsto(1,2,3,4,5,6)$ adoptado aquí —el más común en la literatura de mecánica de sólidos y en el formulario de este curso— agrupa primero las tres componentes normales y luego las tres de corte. Algunas referencias (incluido el material de cátedra original de este curso) ordenan en cambio $(11,22,12,33,13,23)$, agrupando la componente de corte en el plano $xy$ inmediatamente después de las dos normales en ese plano. Ambas convenciones son matemáticamente equivalentes —difieren solo en una permutación de filas y columnas de $\bm C$— y todas las matrices de este capítulo se presentan consistentemente en la primera convención, $(xx,yy,zz,yz,xz,xy)$.
+\end{observacion}
+
+\section{Material ortótropo}
+\label{sec:cap03-ortotropo}
+
+Un material anisótropo general, con 21 constantes independientes, es difícil de caracterizar experimentalmente y poco frecuente en la práctica de ingeniería. La mayoría de los materiales estructurales de interés —metales laminados, madera, materiales compuestos reforzados con fibras en direcciones ortogonales— exhiben, en cambio, un tipo particular de simetría material que reduce considerablemente ese número.
+
+\begin{definicion}{Material ortótropo}{cap03-ortotropo}
+Un material es \textbf{ortótropo} si posee tres planos ortogonales de simetría elástica que se intersectan en tres ejes mutuamente perpendiculares (los \emph{ejes materiales} o \emph{ejes de ortotropía}, que aquí se hacen coincidir con $x,y,z$). Como consecuencia de esta simetría, las tensiones normales ($\sigma_{xx},\sigma_{yy},\sigma_{zz}$) resultan acopladas entre sí pero \emph{desacopladas} de las deformaciones de corte, y cada una de las tres tensiones de corte ($\sigma_{xy},\sigma_{xz},\sigma_{yz}$) depende únicamente de su propia deformación de corte asociada, desacoplada de las otras dos.
+\end{definicion}
+
+Esta estructura de acoplamiento particular reduce la matriz de compliance a la forma
+\[
+\bm C^{-1} =
+\begin{bmatrix}
+1/E_x & -\nu_{xy}/E_y & -\nu_{xz}/E_z & 0 & 0 & 0 \\
+-\nu_{yx}/E_x & 1/E_y & -\nu_{yz}/E_z & 0 & 0 & 0 \\
+-\nu_{zx}/E_x & -\nu_{zy}/E_y & 1/E_z & 0 & 0 & 0 \\
+0 & 0 & 0 & 1/G_{yz} & 0 & 0 \\
+0 & 0 & 0 & 0 & 1/G_{xz} & 0 \\
+0 & 0 & 0 & 0 & 0 & 1/G_{xy}
+\end{bmatrix},
+\]
+donde $E_x,E_y,E_z$ son los módulos de Young según los tres ejes materiales, $G_{xy},G_{xz},G_{yz}$ los módulos de corte asociados a los tres planos materiales, y $\nu_{ij}$ el coeficiente de Poisson que mide, para una tracción unitaria aplicada en la dirección $j$, la contracción resultante en la dirección $i$ (es decir, si solo $\sigma_{jj}\neq 0$, entonces $\varepsilon_{ii}=-\nu_{ij}\,\varepsilon_{jj}$). En esta forma hay, aparentemente, 12 constantes (3 módulos de Young, 6 coeficientes de Poisson y 3 módulos de corte); sin embargo, como $\bm C^{-1}$ debe ser simétrica —al serlo su inversa $\bm C$, por la simetría mayor de la \cref{sec:cap03-potencial-energia}—, los coeficientes de Poisson cruzados deben satisfacer las llamadas \textbf{relaciones de reciprocidad}:
+\[
+\frac{\nu_{xy}}{E_y} = \frac{\nu_{yx}}{E_x}, \qquad \frac{\nu_{xz}}{E_z} = \frac{\nu_{zx}}{E_x}, \qquad \frac{\nu_{yz}}{E_z} = \frac{\nu_{zy}}{E_y},
+\]
+lo que deja únicamente $E_x,E_y,E_z,\nu_{xy},\nu_{xz},\nu_{yz},G_{xy},G_{xz},G_{yz}$ como constantes verdaderamente independientes: en total, $\boxed{9}$ constantes elásticas independientes para un material ortótropo.
+
+\begin{ejemplo}{Determinación experimental de las constantes ortótropas}{cap03-ensayos-ortotropo}
+Las nueve constantes elásticas de un material ortótropo se determinan, en la práctica, mediante tres ensayos de tracción uniaxial simple, uno a lo largo de cada eje material, complementados con tres ensayos de corte puro.
+
+\textbf{Ensayo 1 (tracción según $x$, $\sigma_{xx}\neq 0$, resto nulo).} De la primera fila de $\bm\varepsilon=\bm C^{-1}\bm\sigma$ se obtiene $\varepsilon_{xx}=\sigma_{xx}/E_x$, de donde, midiendo simultáneamente la tensión aplicada y la deformación longitudinal resultante,
+\[
+E_x = \frac{\sigma_{xx}}{\varepsilon_{xx}}.
+\]
+
+\textbf{Ensayo 2 (tracción según $y$, $\sigma_{yy}\neq0$, resto nulo).} De manera análoga, de la segunda fila se obtiene $E_y=\sigma_{yy}/\varepsilon_{yy}$. Midiendo además, en este mismo ensayo, la deformación transversal $\varepsilon_{xx}$ y usando $\varepsilon_{xx}=-\nu_{xy}\,\sigma_{yy}/E_y$ (primera fila de $\bm C^{-1}$, columna de $\sigma_{yy}$), se obtiene el coeficiente de Poisson
+\[
+\nu_{xy} = -\frac{\varepsilon_{xx}}{\varepsilon_{yy}}.
+\]
+
+\textbf{Ensayo 3 (tracción según $z$, $\sigma_{zz}\neq0$, resto nulo).} Igualmente, $E_z=\sigma_{zz}/\varepsilon_{zz}$, y de las contracciones transversales medidas en este ensayo, $\nu_{xz}=-\varepsilon_{xx}/\varepsilon_{zz}$ y $\nu_{yz}=-\varepsilon_{yy}/\varepsilon_{zz}$.
+
+Nótese que, si bien $\nu_{yx}$ (contracción en $y$ al traccionar según $x$) y $\nu_{zx}$ podrían obtenerse en principio del primer ensayo, y $\nu_{zy}$ del segundo, en la práctica basta con medir $E_x,E_y,E_z,\nu_{xy},\nu_{xz},\nu_{yz}$ en estos tres ensayos, y obtener los coeficientes de Poisson ``recíprocos'' restantes —si se necesitan— a partir de las relaciones de reciprocidad, que deben satisfacerse exactamente por la simetría de $\bm C^{-1}$. Los tres módulos de corte $G_{xy},G_{xz},G_{yz}$ se determinan, por su parte, mediante tres ensayos de corte puro independientes en los tres planos materiales.
+\end{ejemplo}
+
+\section{Requisito de estabilidad del material}
+\label{sec:cap03-estabilidad}
+
+No cualquier conjunto de 21 (o 9, o 2) constantes elásticas define un material físicamente admisible. Existe una restricción adicional, de origen termodinámico, que toda matriz constitutiva debe satisfacer.
+
+En el estado no deformado, el equilibrio termodinámico del sólido establece que dicho estado corresponde a un \emph{mínimo} de energía: el sólido no se deforma espontáneamente (sin la aplicación de trabajo externo), y cualquier deformación que se le imponga debe requerir un trabajo positivo, que queda almacenado como energía de deformación recuperable. Dado que ya se estableció, en la \cref{sec:cap03-potencial-energia}, que $W(\bm 0)=0$, la condición de que el estado no deformado sea un mínimo de energía se traduce en la exigencia de que $W$ sea estrictamente positiva para cualquier estado de deformación distinto del trivial:
+
+\begin{ecnimportante}{Condición general de estabilidad material}{cap03-estabilidad-general}
+El potencial de energía de deformación debe ser una forma cuadrática \textbf{definida positiva}:
+\[
+W = \frac{1}{2}\bm\varepsilon^{T}\bm C\,\bm\varepsilon > 0 \qquad \forall\,\bm\varepsilon\neq\bm 0, \qquad\qquad W(\bm 0) = 0.
+\]
+Equivalentemente, la matriz constitutiva $\bm C$ (simétrica, de $6\times 6$) debe ser definida positiva, lo cual puede verificarse de forma equivalente exigiendo que: (a) todos sus valores propios sean positivos; (b) todos sus menores principales sean positivos; o (c) su determinante, junto con los de todas sus submatrices principales, sea positivo.
+\end{ecnimportante}
+
+Para el caso particular de un material ortótropo, esta condición general se traduce en desigualdades explícitas sobre las nueve constantes de ingeniería. Aplicando la positividad de los menores principales de $\bm C^{-1}$ se obtiene, en primer lugar, que los seis módulos deben ser individualmente positivos,
+\[
+E_x>0,\quad E_y>0,\quad E_z>0,\quad G_{xy}>0,\quad G_{xz}>0,\quad G_{yz}>0,
+\]
+y, en segundo lugar, que los coeficientes de Poisson no pueden tomar cualquier valor: deben mantenerse acotados en relación con los módulos de Young según cada par de direcciones, de la forma típica
+\[
+\nu_{xy}^2 < \frac{E_x}{E_y}, \qquad \nu_{xz}^2 < \frac{E_x}{E_z}, \qquad \nu_{yz}^2 < \frac{E_y}{E_z}
+\]
+(más una condición conjunta sobre el determinante de $\bm C^{-1}$ que acopla los tres coeficientes de Poisson simultáneamente; una estimación más precisa de estas condiciones es compleja y no se desarrolla en detalle aquí). El caso isótropo, que se estudia a continuación, admite en cambio una condición de estabilidad mucho más simple y directamente interpretable, que se deducirá en la \cref{sec:cap03-descomposicion}.
+
+\section{Material isótropo}
+\label{sec:cap03-isotropo}
+
+El caso más simple —y, con mucho, el más usado en la práctica de ingeniería— es aquel en que las propiedades elásticas del material no dependen en absoluto de la orientación de los ejes de referencia: un material \textbf{isótropo} se comporta exactamente igual, en un punto dado, sin importar en qué dirección se le solicite. Matemáticamente, esta condición se expresa exigiendo que el tensor constitutivo permanezca \emph{invariante} frente a cualquier rotación de los ejes coordenados: usando la ley de transformación de cuarto orden deducida en el Capítulo 2 (\cref{eq:cap02-transformacion-tensores}), la condición de isotropía es
+\[
+\bm C^{*} = \bm C \qquad \text{para todo tensor de rotación } \bm T.
+\]
+
+\subsection{De 9 a 2 constantes: invariancia frente a rotaciones}
+
+Para deducir cuántas constantes sobreviven a esta exigencia, conviene partir ya de la forma reducida de un material ortótropo (\cref{sec:cap03-ortotropo}), que en términos de las componentes del tensor $\bm C$ (no de compliance) se escribe
+\[
+\sigma_{xx} = C_{xxxx}\varepsilon_{xx} + C_{xxyy}\varepsilon_{yy} + C_{xxzz}\varepsilon_{zz}, \qquad
+\sigma_{xy} = 2C_{xyxy}\,\varepsilon_{xy},
+\]
+y análogamente para las restantes componentes, con nueve constantes independientes
+\[
+C_{xxxx},\ C_{yyyy},\ C_{zzzz},\ C_{xxyy},\ C_{xxzz},\ C_{yyzz},\ C_{xyxy},\ C_{xzxz},\ C_{yzyz}.
+\]
+Un material ortótropo ya posee simetría respecto de los tres planos coordenados, de modo que exigir además invariancia frente a rotaciones \emph{en torno a} esos ejes es lo que aporta información nueva.
+
+Considérese primero una rotación de $90^	rc$ en torno al eje $z$ (es decir, $x^{*}=y,\ y^{*}=-x,\ z^{*}=z$, un caso particular de la transformación de la \cref{sec:cap02-transformacion} del Capítulo 2). Bajo esta rotación, $\varepsilon^{*}_{xx}=\varepsilon_{yy}$ y $\varepsilon^{*}_{yy}=\varepsilon_{xx}$ (los papeles de $x$ e $y$ se intercambian), mientras que $\varepsilon^{*}_{zz}=\varepsilon_{zz}$ no cambia. Escribiendo $\sigma^{*}_{xx}=C_{xxxx}\varepsilon^{*}_{xx}+C_{xxyy}\varepsilon^{*}_{yy}+C_{xxzz}\varepsilon^{*}_{zz}$ (la misma relación constitutiva, ahora evaluada en el sistema rotado, válida porque se exige invariancia) y comparando con la transformación de $\sigma_{xx}$ que se obtiene de la relación original con $x$ e $y$ intercambiados, se concluye que
+\[
+C_{xxxx} = C_{yyyy}, \qquad\qquad C_{xxzz} = C_{yyzz}.
+\]
+Repitiendo el mismo argumento con una rotación de $90^	rc$ en torno al eje $x$ (que intercambia los papeles de $y$ y $z$) se obtiene, análogamente,
+\[
+C_{yyyy} = C_{zzzz}, \qquad\qquad C_{xxyy} = C_{xxzz}.
+\]
+Combinando ambos resultados, las tres constantes normales colapsan en una sola, y las tres constantes de acoplamiento colapsan en otra:
+\[
+C_{xxxx}=C_{yyyy}=C_{zzzz} \ (\equiv \lambda+2\mu), \qquad\qquad C_{xxyy}=C_{xxzz}=C_{yyzz} \ (\equiv \lambda),
+\]
+donde $\lambda$ y $2\mu$ son, por ahora, solo nombres para dos combinaciones de constantes que se irán precisando. Un argumento equivalente para las tres constantes de corte da $C_{xyxy}=C_{xzxz}=C_{yzyz}\equiv\mu$. Hasta aquí, la invariancia frente a rotaciones de $90^	rc$ en torno a los ejes coordenados ha reducido las nueve constantes ortótropas a solo \emph{tres}: $\lambda+2\mu$ (normal), $\lambda$ (acoplamiento) y $\mu$ (corte). Esta simetría intermedia —tres constantes, invariante frente a rotaciones de $90^	rc$ en torno a los ejes, pero no frente a una rotación arbitraria— es precisamente la que caracteriza a los materiales de \textbf{simetría cúbica}, que se retoman en la \cref{sec:cap03-jerarquia-simetrias}.
+
+Para llegar a la isotropía completa falta imponer invariancia frente a una rotación adicional que \emph{no} sea múltiplo de $90^	rc$: por ejemplo, una rotación de $45^	rc$ en torno al eje $z$. Repitiendo el mismo procedimiento de transformar $\sigma_{xx}$ y $\sigma_{xy}$ a este nuevo sistema y exigir que la relación constitutiva conserve la misma forma con las mismas tres constantes $(\lambda+2\mu,\lambda,\mu)$, se obtiene, tras algo de álgebra, una relación adicional que liga la constante de corte con las dos constantes normales:
+\[
+\mu = \frac{(\lambda+2\mu)-\lambda}{2},
+\]
+la cual es una identidad trivialmente cierta \emph{si} $\mu$ se define como se hizo arriba —pero el punto no trivial de la rotación de $45^	rc$ es que esta relación deja de ser una definición y pasa a ser una \emph{restricción}: en un material de simetría cúbica, la constante de corte $C_{xyxy}$ es, en principio, independiente de $C_{xxxx}$ y $C_{xxyy}$; la invariancia frente a la rotación de $45^	rc$ es precisamente lo que \emph{fuerza} a que $C_{xyxy}=\left(C_{xxxx}-C_{xxyy}\right)/2$, eliminando una constante más. Solo quedan, entonces, \emph{dos} constantes verdaderamente independientes.
+
+\begin{ecnimportante}{Material isótropo: constantes de Lamé}{cap03-isotropo-lame}
+Un material isótropo queda completamente caracterizado por solo $\boxed{2}$ constantes elásticas independientes, las \textbf{constantes de Lamé} $\lambda$ y $\mu$, en función de las cuales el tensor constitutivo (en notación de Voigt, orden $xx,yy,zz,yz,xz,xy$) se escribe
+\[
+\bm C =
+\begin{bmatrix}
+\lambda+2\mu & \lambda & \lambda & 0 & 0 & 0 \\
+\lambda & \lambda+2\mu & \lambda & 0 & 0 & 0 \\
+\lambda & \lambda & \lambda+2\mu & 0 & 0 & 0 \\
+0 & 0 & 0 & \mu & 0 & 0 \\
+0 & 0 & 0 & 0 & \mu & 0 \\
+0 & 0 & 0 & 0 & 0 & \mu
+\end{bmatrix},
+\]
+o, en notación indicial compacta, válida en cualquier sistema de coordenadas cartesiano (por ser $\bm C$ isótropo),
+\[
+C_{ijkl} = \lambda\,\delta_{ij}\delta_{kl} + \mu\left(\delta_{ik}\delta_{jl}+\delta_{il}\delta_{jk}\right), \qquad\qquad \sigma_{ij} = \lambda\,\varepsilon_{kk}\,\delta_{ij} + 2\mu\,\varepsilon_{ij}.
+\]
+La constante $\mu$ coincide, físicamente, con el módulo de corte: $\mu\equiv G$.
+\end{ecnimportante}
+
+\subsection{La forma clásica en términos de \texorpdfstring{$E$, $\nu$ y $G$}{E, nu y G}}
+
+Aunque las constantes de Lamé son las más convenientes algebraicamente, en la práctica de ingeniería es mucho más habitual caracterizar un material isótropo mediante el módulo de Young $E$ y el coeficiente de Poisson $\nu$, obtenidos ambos de un simple ensayo de tracción uniaxial: si solo $\sigma_{xx}\neq 0$, entonces $\varepsilon_{xx}=\sigma_{xx}/E$ define $E$, y $\varepsilon_{yy}=-\nu\,\varepsilon_{xx}$ (la contracción transversal, idéntica en cualquier dirección perpendicular a $x$ por isotropía) define $\nu$. Invirtiendo la matriz $\bm C(\lambda,\mu)$ de la caja anterior se obtiene, para las dos primeras filas de $\bm C^{-1}$,
+\[
+\frac{1}{E} = \frac{\lambda+\mu}{\mu(3\lambda+2\mu)} \quad \text{(A)}, \qquad\qquad -\frac{\nu}{E} = -\frac{\lambda}{2\mu(3\lambda+2\mu)} \quad \text{(B)}.
+\]
+Dividiendo miembro a miembro (B) entre (A) se eliminan el factor común $1/[\mu(3\lambda+2\mu)]$ y el denominador $E$, quedando $2\nu = \lambda/(\lambda+\mu)$, de donde se despeja
+\[
+\mu = \frac{\lambda(1-2\nu)}{2\nu} \quad \text{(C)}.
+\]
+Sustituyendo (C) en (A) y despejando $\lambda$ se obtiene $\lambda = \dfrac{E\nu}{(1-2\nu)(1+\nu)}$ (D), y sustituyendo esta última expresión de vuelta en (C) se llega, finalmente, al resultado buscado:
+
+\begin{ecnimportante}{Módulo de corte en función de $E$ y $\nu$}{cap03-modulo-corte}
+Para un material isótropo, el módulo de corte no es una constante independiente de $E$ y $\nu$, sino que queda determinado por ellos mediante
+\[
+G = \mu = \frac{E}{2(1+\nu)}.
+\]
+Esta relación confirma, de manera cuantitativa, lo que ya se sabía cualitativamente: un material isótropo tiene solo \emph{dos} constantes elásticas independientes; $E$, $\nu$ y $G$ son tres parámetros de ingeniería convenientes, pero solo dos de ellos pueden elegirse libremente.
+\end{ecnimportante}
+
+En términos de $E$ y $\nu$, la matriz constitutiva y su inversa se escriben, respectivamente (notación de Voigt, orden $xx,yy,zz,yz,xz,xy$),
+\[
+\bm C^{-1} = \frac{1}{E}
+\begin{bmatrix}
+1 & -\nu & -\nu & 0 & 0 & 0 \\
+-\nu & 1 & -\nu & 0 & 0 & 0 \\
+-\nu & -\nu & 1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 2(1+\nu) & 0 & 0 \\
+0 & 0 & 0 & 0 & 2(1+\nu) & 0 \\
+0 & 0 & 0 & 0 & 0 & 2(1+\nu)
+\end{bmatrix},
+\]
+\[
+\bm C = \frac{E(1-\nu)}{(1+\nu)(1-2\nu)}
+\begin{bmatrix}
+1 & \frac{\nu}{1-\nu} & \frac{\nu}{1-\nu} & 0 & 0 & 0 \\
+\frac{\nu}{1-\nu} & 1 & \frac{\nu}{1-\nu} & 0 & 0 & 0 \\
+\frac{\nu}{1-\nu} & \frac{\nu}{1-\nu} & 1 & 0 & 0 & 0 \\
+0 & 0 & 0 & \frac{1-2\nu}{2(1-\nu)} & 0 & 0 \\
+0 & 0 & 0 & 0 & \frac{1-2\nu}{2(1-\nu)} & 0 \\
+0 & 0 & 0 & 0 & 0 & \frac{1-2\nu}{2(1-\nu)}
+\end{bmatrix}.
+\]
+
+\section{Descomposición volumétrica y desviatórica}
+\label{sec:cap03-descomposicion}
+
+Una manera físicamente muy reveladora de reinterpretar la ley de Hooke isótropa consiste en separar tanto la tensión como la deformación en una parte que produce únicamente cambio de \emph{volumen} y una parte que produce únicamente cambio de \emph{forma}, sin cambio de volumen. Esta separación permite, además, obtener de manera casi inmediata la condición de estabilidad más simple e interpretable para un material isótropo.
+
+Partiendo de $\sigma_{ij}=\lambda\varepsilon_{kk}\delta_{ij}+2\mu\varepsilon_{ij}$ y contrayendo ambos lados haciendo $i=j$ (es decir, sumando las tres componentes normales), se obtiene $\sigma_{kk}=(3\lambda+2\mu)\varepsilon_{kk}$, una relación puramente escalar entre la traza de la tensión y la traza de la deformación. Se definen entonces la \textbf{presión} (o tensión media) $p$ y la \textbf{deformación volumétrica} $\varepsilon_v$ como
+\[
+p \equiv \frac{1}{3}\sigma_{kk}, \qquad\qquad \varepsilon_v \equiv \varepsilon_{kk},
+\]
+y, restando a cada tensor su parte esférica (isótropa), los correspondientes \textbf{tensores desviadores}
+\[
+\sigma'_{ij} \equiv \sigma_{ij} - p\,\delta_{ij}, \qquad\qquad \varepsilon'_{ij} \equiv \varepsilon_{ij} - \frac{1}{3}\varepsilon_v\,\delta_{ij},
+\]
+que por construcción tienen traza nula ($\sigma'_{kk}=0$, $\varepsilon'_{kk}=0$) y representan, respectivamente, el estado de corte puro y el cambio de forma sin cambio de volumen. Sustituyendo $\sigma_{ij}=\sigma'_{ij}+p\delta_{ij}$ y $\varepsilon_{ij}=\varepsilon'_{ij}+\tfrac{1}{3}\varepsilon_v\delta_{ij}$ en la ley de Hooke isótropa, y usando la relación escalar $\sigma_{kk}=(3\lambda+2\mu)\varepsilon_{kk}$ para simplificar la parte esférica, la ecuación constitutiva se separa exactamente en dos ecuaciones independientes —una para la parte desviadora y otra para la parte volumétrica—:
+
+\begin{ecnimportante}{Descomposición volumétrica-desviatórica}{cap03-descomposicion-vol-desv}
+La ley de Hooke isótropa se descompone, de manera exacta, en una relación desviadora (de corte) y una relación volumétrica, que no interactúan entre sí:
+\[
+\sigma'_{ij} = 2G\,\varepsilon'_{ij}, \qquad\qquad p = K\,\varepsilon_v,
+\]
+o, recombinando ambas partes en una sola expresión tensorial,
+\[
+\bm\sigma = K\,\mathrm{tr}(\bm\varepsilon)\,\bm 1 + 2G\,\mathrm{dev}(\bm\varepsilon),
+\]
+donde $G=\mu$ es el módulo de corte ya conocido, y $K$ es el \textbf{módulo de compresibilidad volumétrica} (\emph{bulk modulus}),
+\[
+K \equiv \lambda + \frac{2}{3}\mu = \frac{E}{3(1-2\nu)}.
+\]
+\end{ecnimportante}
+
+La interpretación física de este resultado es tan simple como contundente: en un material isótropo, la respuesta a un cambio de volumen (gobernada por $K$) y la respuesta a un cambio de forma a volumen constante (gobernada por $G$) son fenómenos completamente desacoplados, cada uno gobernado por una única constante elástica. La energía de deformación misma hereda esta separación: sustituyendo la descomposición en $W=\tfrac{1}{2}\sigma_{ij}\varepsilon_{ij}$ y usando que el producto de un tensor desviador por el tensor identidad es nulo ($\varepsilon'_{ij}\delta_{ij}=\varepsilon'_{kk}=0$), se obtiene
+\[
+W = G\,\varepsilon'_{ij}\varepsilon'_{ij} + \frac{1}{2}K\,\varepsilon_{kk}^2 = W_{\text{desviadora}} + W_{\text{volumétrica}},
+\]
+es decir, la energía de deformación total es, exactamente, la suma de una energía de distorsión (asociada al cambio de forma) y una energía de dilatación (asociada al cambio de volumen).
+
+\begin{ecnimportante}{Condiciones de estabilidad en $K$ y $G$}{cap03-estabilidad-kg}
+Como $W$ es la suma de un término proporcional a $G$ (siempre no negativo, por ser $\varepsilon'_{ij}\varepsilon'_{ij}\geq 0$) y un término proporcional a $K$ (siempre no negativo, por ser $\varepsilon_{kk}^2\geq 0$), y ambos términos son independientes entre sí (pueden anularse por separado), la condición de que $W>0$ para todo $\bm\varepsilon\neq\bm 0$ es equivalente, en el caso isótropo, a exigir que \emph{ambos} módulos sean estrictamente positivos:
+\[
+G > 0 \qquad \text{y} \qquad K > 0.
+\]
+Traduciendo estas dos condiciones a los parámetros de ingeniería $E$ y $\nu$ mediante $G=E/[2(1+\nu)]$ y $K=E/[3(1-2\nu)]$, se obtiene la condición de estabilidad más conocida de la elasticidad isótropa:
+\[
+E > 0 \qquad \text{y} \qquad -1 < \nu < \frac{1}{2}.
+\]
+\end{ecnimportante}
+
+\begin{observacion}[Sobre los límites del coeficiente de Poisson]
+El límite superior $\nu\to 1/2$ corresponde a un material \emph{incompresible} ($K\to\infty$: ningún cambio de volumen, sin importar la presión aplicada), mientras que el límite inferior $\nu\to -1$ corresponde a $G\to\infty$ manteniendo $K$ finito. En la práctica, prácticamente todos los materiales estructurales conocidos presentan $0<\nu<0.5$; no obstante, se han sintetizado en las últimas décadas materiales de arquitectura celular especial (los llamados materiales \emph{auxéticos}) con $\nu<0$, que se expanden lateralmente al ser traccionados en lugar de contraerse. Estos materiales, aunque inusuales, no violan ninguna ley física: simplemente ocupan una región distinta, pero igualmente admisible, del rango $-1<\nu<1/2$.
+\end{observacion}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.7]
+  % ---------- Cubo original ----------
+  \begin{scope}[x={(0.87cm,-0.5cm)}, y={(0.87cm,0.5cm)}, z={(0cm,1cm)}]
+    \draw[dashed, ucgray!70] (0,0,0) -- (1,0,0);
+    \draw[dashed, ucgray!70] (0,0,0) -- (0,1,0);
+    \draw[dashed, ucgray!70] (0,0,0) -- (0,0,1);
+    \draw[fill=ucblue!45] (0,0,1) -- (1,0,1) -- (1,1,1) -- (0,1,1) -- cycle;
+    \draw[fill=ucblue!65] (1,0,0) -- (1,1,0) -- (1,1,1) -- (1,0,1) -- cycle;
+    \draw[fill=ucblue!55] (0,1,0) -- (1,1,0) -- (1,1,1) -- (0,1,1) -- cycle;
+    \node at (0.5,0.5,1.35) {$\bm\varepsilon$};
+  \end{scope}
+  \node at (0.4,-1.15) {\footnotesize Estado general};
+
+  \draw[-{Latex[length=3mm]}, ucgray, thick] (1.5,0.1) -- (2.3,0.1) node[midway,above,font=\footnotesize] {$=$};
+
+  % ---------- Cubo volumetrico (expansion uniforme) ----------
+  \begin{scope}[xshift=2.9cm]
+    \begin{scope}[x={(0.87cm,-0.5cm)}, y={(0.87cm,0.5cm)}, z={(0cm,1cm)}]
+      \draw[dashed, ucgray!70] (-0.08,-0.08,-0.08) -- (1.08,-0.08,-0.08);
+      \draw[dashed, ucgray!70] (-0.08,-0.08,-0.08) -- (-0.08,1.08,-0.08);
+      \draw[dashed, ucgray!70] (-0.08,-0.08,-0.08) -- (-0.08,-0.08,1.08);
+      \draw[fill=ucteal!45] (-0.08,-0.08,1.08) -- (1.08,-0.08,1.08) -- (1.08,1.08,1.08) -- (-0.08,1.08,1.08) -- cycle;
+      \draw[fill=ucteal!65] (1.08,-0.08,-0.08) -- (1.08,1.08,-0.08) -- (1.08,1.08,1.08) -- (1.08,-0.08,1.08) -- cycle;
+      \draw[fill=ucteal!55] (-0.08,1.08,-0.08) -- (1.08,1.08,-0.08) -- (1.08,1.08,1.08) -- (-0.08,1.08,1.08) -- cycle;
+      \node at (0.5,0.5,1.5) {$\varepsilon_v\bm 1/3$};
+    \end{scope}
+    \node at (0.4,-1.15) {\footnotesize Volumétrica ($K$)};
+  \end{scope}
+
+  \node at (4.55,0.1) {\footnotesize $+$};
+
+  % ---------- Cubo desviador (distorsion sin cambio de volumen) ----------
+  \begin{scope}[xshift=5.1cm]
+    \begin{scope}[x={(0.87cm,-0.5cm)}, y={(0.87cm,0.5cm)}, z={(0cm,1cm)}]
+      \draw[dashed, ucgray!70] (0.08,-0.05,-0.05) -- (1.08,0.05,0.05);
+      \draw[dashed, ucgray!70] (0.08,-0.05,-0.05) -- (-0.02,1.05,-0.1);
+      \draw[dashed, ucgray!70] (0.08,-0.05,-0.05) -- (0.05,0.0,0.95);
+      \draw[fill=ucamber!45] (0.05,0.0,0.95) -- (1.05,0.1,1.0) -- (0.95,1.05,0.95) -- (-0.02,1.05,0.9) -- cycle;
+      \draw[fill=ucamber!65] (1.05,0.1,1.0) -- (0.95,1.15,0.85) -- (0.95,1.05,0.95) -- cycle;
+      \draw[fill=ucamber!55] (-0.02,1.05,-0.1) -- (0.95,1.15,-0.05) -- (0.95,1.05,0.95) -- (-0.02,1.05,0.9) -- cycle;
+      \draw[fill=ucamber!65] (1.08,0.05,0.05) -- (0.95,1.15,-0.05) -- (0.95,1.15,0.85) -- (1.05,0.1,1.0) -- cycle;
+      \node at (0.5,0.6,1.4) {$\bm\varepsilon'$};
+    \end{scope}
+    \node at (0.4,-1.15) {\footnotesize Desviatórica ($G$)};
+  \end{scope}
+\end{tikzpicture}
+\caption{Descomposición del estado de deformación (y, análogamente, de tensión) de un elemento cúbico en una componente volumétrica pura —expansión o contracción uniforme, sin cambio de forma, gobernada por $K$— y una componente desviatórica pura —cambio de forma a volumen constante, gobernada por $G$—.}
+\label{fig:cap03-vol-desv}
+\end{figure}
+
+\section{Simetrías intermedias: cúbica y transversalmente isótropa}
+\label{sec:cap03-jerarquia-simetrias}
+
+Entre el caso general anisótropo (21 constantes) y el caso isótropo (2 constantes) existen varios niveles intermedios de simetría material, dos de los cuales ya aparecieron de forma natural en la deducción de la \cref{sec:cap03-isotropo} y conviene ahora nombrar explícitamente.
+
+\subsection{Simetría cúbica}
+
+Como se observó al deducir las constantes de Lamé, exigir solamente invariancia frente a rotaciones de $90^	rc$ en torno a los tres ejes coordenados —sin exigir invariancia frente a rotaciones de ángulo arbitrario— conduce a un material con \emph{tres} constantes elásticas independientes: $C_{xxxx}(=C_{yyyy}=C_{zzzz})$, $C_{xxyy}(=C_{xxzz}=C_{yyzz})$ y $C_{xyxy}(=C_{xzxz}=C_{yzyz})$, sin que la relación adicional $C_{xyxy}=(C_{xxxx}-C_{xxyy})/2$ se cumpla necesariamente. Este es precisamente el tipo de simetría elástica que exhiben los cristales del sistema cúbico (por ejemplo, muchos metales con estructura cristalina cúbica centrada en el cuerpo o en las caras, a escala monocristalina). Es importante notar que un material de simetría cúbica se comporta \emph{igual} según los tres ejes ortogonales del cristal, pero \emph{no} se comporta igual en cualquier otra dirección arbitraria: no es isótropo, aunque a veces se le confunda con tal por la igualdad de sus tres constantes normales y de corte.
+
+\subsection{Isotropía transversal}
+
+Un material presenta \textbf{isotropía transversal} (o anisotropía normal) cuando existe un plano —tómese aquí el plano $x$-$y$— tal que el material se comporta de manera isótropa dentro de ese plano, pero de manera distinta en la dirección normal a él ($z$). Es el tipo de simetría típico de materiales laminados o reforzados con fibras alineadas en una única dirección $z$, y también el que exhiben ciertos materiales geológicos estratificados. Su matriz de compliance toma la forma
+\[
+\bm C^{-1} =
+\begin{bmatrix}
+1/E_x & -\nu_{xy}/E_x & -\nu_{xz}/E_z & 0 & 0 & 0 \\
+-\nu_{xy}/E_x & 1/E_x & -\nu_{xz}/E_z & 0 & 0 & 0 \\
+-\nu_{xz}/E_z & -\nu_{xz}/E_z & 1/E_z & 0 & 0 & 0 \\
+0 & 0 & 0 & 1/G_{xz} & 0 & 0 \\
+0 & 0 & 0 & 0 & 1/G_{xz} & 0 \\
+0 & 0 & 0 & 0 & 0 & 2(1+\nu_{xy})/E_x
+\end{bmatrix},
+\]
+con solo $\boxed{5}$ constantes independientes: $E_x(=E_y)$, $E_z$, $\nu_{xy}$, $\nu_{xz}(=\nu_{yz})$ y $G_{xz}(=G_{yz})$. Nótese que el módulo de corte en el plano de isotropía, $G_{xy}$, \emph{no} es independiente: al igual que ocurría en el caso isótropo pleno, la isotropía dentro del plano $x$-$y$ fuerza la relación $G_{xy}=E_x/[2(1+\nu_{xy})]$, exactamente análoga a la de la \cref{eq:cap03-modulo-corte}.
+
+La \cref{tab:cap03-jerarquia} resume la jerarquía completa de simetrías materiales estudiadas en este capítulo, ordenadas de mayor a menor número de constantes independientes.
+
+\begin{table}[htbp]
+\centering
+\caption{Jerarquía de simetrías del tensor constitutivo elástico y número de constantes independientes asociado.}
+\label{tab:cap03-jerarquia}
+\begin{tabular}{@{}p{3.6cm}p{1.6cm}p{7.7cm}@{}}
+\toprule
+\textbf{Simetría material} & \textbf{N.\ constantes} & \textbf{Característica distintiva} \\
+\midrule
+Anisótropo general & 21 & Solo simetría mayor y menores de $\bm C$; sin planos de simetría elástica. \\
+Ortótropo & 9 & Tres planos ortogonales de simetría; normales y cortes desacoplados. \\
+Transversalmente isótropo & 5 & Isotropía dentro de un plano; comportamiento distinto en la normal a él. \\
+Cúbico & 3 & Igual respuesta según tres ejes ortogonales; no isótropo en general. \\
+Isótropo & 2 & Invariante frente a cualquier rotación; $G=E/[2(1+\nu)]$. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Con esta jerarquía de simetrías materiales queda completa la formulación de la Parte I de este libro: el Capítulo 2 estableció el problema de valor de frontera del sólido elástico —equilibrio, cinemática y condiciones de borde—, y este capítulo ha cerrado el sistema de ecuaciones con la relación constitutiva, precisando cuántas constantes elásticas independientes exige cada nivel de simetría material. Con las tres familias de ecuaciones ya completas —equilibrio, cinemática y constitutiva—, y confirmado que el número de ecuaciones iguala al de incógnitas, el problema del sólido elástico lineal está matemáticamente bien planteado, y la Parte II de este libro puede abocarse a la tarea de discretizarlo mediante el Método de los Elementos Finitos, comenzando por el caso más simple: los elementos de barra.

@@ -1,0 +1,97 @@
+% ================================================================
+% Portada del libro -- 100% TikZ, pagina completa
+% ================================================================
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+
+  % ------------------------------------------------------------
+  % Fondo: malla triangular tipo discretizacion FEM con degradado
+  % (simula un mapa de contornos de tension), tercio inferior.
+  % ------------------------------------------------------------
+  \begin{scope}[shift={(current page.south west)}]
+    \pgfmathsetmacro{\cellw}{2.45}
+    \pgfmathsetmacro{\cellh}{3.15}
+    \foreach \i in {0,...,8} {
+      \foreach \j in {0,...,2} {
+        \pgfmathsetmacro{\ax}{\i*\cellw + 0.14*sin(137*\i+91*\j)}
+        \pgfmathsetmacro{\ay}{\j*\cellh + 0.14*cos(83*\i+59*\j)}
+        \pgfmathsetmacro{\bx}{(\i+1)*\cellw + 0.14*sin(137*(\i+1)+91*\j)}
+        \pgfmathsetmacro{\by}{\j*\cellh + 0.14*cos(83*(\i+1)+59*\j)}
+        \pgfmathsetmacro{\cx}{\i*\cellw + 0.14*sin(137*\i+91*(\j+1))}
+        \pgfmathsetmacro{\cy}{(\j+1)*\cellh + 0.14*cos(83*\i+59*(\j+1))}
+        \pgfmathsetmacro{\dx}{(\i+1)*\cellw + 0.14*sin(137*(\i+1)+91*(\j+1))}
+        \pgfmathsetmacro{\dy}{(\j+1)*\cellh + 0.14*cos(83*(\i+1)+59*(\j+1))}
+        \pgfmathsetmacro{\mixpct}{100*\j/2}
+        \fill[ucred!\mixpct!ucblue, opacity=0.55] (\ax,\ay) -- (\bx,\by) -- (\dx,\dy) -- cycle;
+        \fill[ucred!\mixpct!ucblue, opacity=0.55] (\ax,\ay) -- (\dx,\dy) -- (\cx,\cy) -- cycle;
+        \draw[white, opacity=0.55, line width=0.25pt] (\ax,\ay) -- (\bx,\by) -- (\dx,\dy) -- (\cx,\cy) -- cycle;
+        \draw[white, opacity=0.55, line width=0.25pt] (\ax,\ay) -- (\dx,\dy);
+      }
+    }
+    % Velo blanco tenue para que el texto inferior sea legible sobre la malla
+    \fill[white, opacity=0.12] (0,0) rectangle (22.5,9.7);
+  \end{scope}
+
+  % ------------------------------------------------------------
+  % Cubo de tensiones 3D (motivo "hero"): medio continuo -> FEM
+  % Proyeccion isometrica via remapeo de ejes x/y/z (sin libreria 3d)
+  % ------------------------------------------------------------
+  \begin{scope}[shift={($(current page.north west)+(6.4,-8.9)$)}]
+    \begin{scope}[x={(-0.866cm,-0.5cm)}, y={(0.866cm,-0.5cm)}, z={(0cm,1cm)}]
+      \pgfmathsetmacro{\Lc}{2.3}
+      \draw[fill=ucblue!55, draw=ucblue!80!black, line width=0.6pt]
+        (0,0,\Lc) -- (\Lc,0,\Lc) -- (\Lc,\Lc,\Lc) -- (0,\Lc,\Lc) -- cycle; % cara superior
+      \draw[fill=ucblue!75, draw=ucblue!80!black, line width=0.6pt]
+        (\Lc,0,0) -- (\Lc,\Lc,0) -- (\Lc,\Lc,\Lc) -- (\Lc,0,\Lc) -- cycle; % cara derecha
+      \draw[fill=ucblue!65, draw=ucblue!80!black, line width=0.6pt]
+        (0,\Lc,0) -- (\Lc,\Lc,0) -- (\Lc,\Lc,\Lc) -- (0,\Lc,\Lc) -- cycle; % cara frontal
+      % Vectores de traccion normales a cada cara visible
+      \draw[-{Stealth[length=2.6mm]}, ucred, line width=0.9pt]
+        (\Lc/2,\Lc/2,\Lc) -- ++(0,0,0.85) node[above, ucred, font=\scriptsize] {$\bm{t}$};
+      \draw[-{Stealth[length=2.6mm]}, ucred, line width=0.9pt]
+        (\Lc,\Lc/2,\Lc/2) -- ++(0.85,0,0) node[right, ucred, font=\scriptsize] {$\bm{t}$};
+      \draw[-{Stealth[length=2.6mm]}, ucred, line width=0.9pt]
+        (\Lc/2,\Lc,\Lc/2) -- ++(0,0.85,0) node[above right, ucred, font=\scriptsize] {$\bm{t}$};
+    \end{scope}
+  \end{scope}
+
+  % ------------------------------------------------------------
+  % Encabezado institucional
+  % ------------------------------------------------------------
+  \node[anchor=north, align=center, text width=0.8\paperwidth] at ($(current page.north)+(0,-1.9)$) {%
+    \scshape\large Pontificia Universidad Católica de Chile\\[2pt]
+    \scshape\normalsize Escuela de Ingeniería\\[2pt]
+    \upshape\small Departamento de Ingeniería Mecánica y Metalúrgica\\[2pt]
+    \upshape\small ICM 3323 --- Elementos Finitos en Diseño Mecánico
+  };
+  \draw[ucred, line width=0.6pt]
+    ($(current page.north)+(-0.21\paperwidth,-3.05)$) -- ($(current page.north)+(0.21\paperwidth,-3.05)$);
+
+  % Insignia generica (no es el escudo oficial de la universidad)
+  \node[circle, draw=ucred, line width=0.8pt, minimum size=1.35cm, fill=white]
+    at ($(current page.north)+(0,-1.05)$) {\scshape\footnotesize\color{ucred} PUC};
+
+  % ------------------------------------------------------------
+  % Titulo y subtitulo
+  % ------------------------------------------------------------
+  \node[anchor=north, align=center, text width=0.82\paperwidth] at ($(current page.north)+(0,-13.6)$) {%
+    {\fontsize{30}{34}\selectfont\bfseries\color{ucred} Elementos Finitos\\[2pt] en Diseño Mecánico}
+  };
+  \node[anchor=north, align=center, text width=0.72\paperwidth] at ($(current page.north)+(0,-16.1)$) {%
+    {\Large\color{ucblue} Mecánica del Medio Continuo y Formulación\\ del Método de los Elementos Finitos}\\[4pt]
+    {\normalsize\itshape\color{black!65} Apuntes de cátedra}
+  };
+
+  % ------------------------------------------------------------
+  % Bloque inferior: autoria, curso, fecha
+  % ------------------------------------------------------------
+  \node[anchor=south, align=center, text width=0.78\paperwidth] at ($(current page.south)+(0,2.55)$) {%
+    {\small Basado en los apuntes del curso dictado por el\\ Prof.\ Diego Celentano}\\[8pt]
+    {\normalsize\bfseries Recopilado y editado por: Pedro Taboada}\\[3pt]
+    {\small Primer Semestre 2026 --- Pontificia Universidad Católica de Chile}
+  };
+  \draw[ucred, line width=1.4pt] ($(current page.south)+(-0.30\paperwidth,1.65)$) -- ($(current page.south)+(0.30\paperwidth,1.65)$);
+
+\end{tikzpicture}
+\end{titlepage}

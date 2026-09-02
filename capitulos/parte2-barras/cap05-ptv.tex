@@ -1,0 +1,220 @@
+\chapter{El Principio de los Trabajos Virtuales}
+\label{cap:cap05-ptv}
+
+\section{De la forma fuerte a la forma débil: motivación}
+\label{sec:cap05-forma-fuerte-debil}
+
+El \hyperref[cap:cap04-analisis-matricial-barras]{Capítulo 4} mostró, para el caso particular de una estructura de barras, cómo el equilibrio de una colección de elementos discretos podía escribirse como un sistema de ecuaciones algebraicas $\mathbf{K}\mathbf{U}=\mathbf{F}$, obtenido simplemente igualando, nodo a nodo, fuerzas internas con fuerzas externas. Ese procedimiento fue posible porque una barra articulada es, de por sí, un sistema con un número finito de grados de libertad. El problema que ahora interesa es distinto y más general: un sólido elástico tridimensional es un sistema \emph{continuo}, con infinitos grados de libertad, cuyo equilibrio está gobernado por ecuaciones diferenciales en derivadas parciales. El objetivo de este capítulo es presentar la herramienta que permite tender el puente entre ambos mundos --- el continuo y el discreto --- de manera rigurosa: el Principio de los Trabajos Virtuales (PTV).
+
+Recuérdese (Parte I) que el problema de valores de frontera de la elastostática lineal consiste en encontrar el campo de desplazamientos $u_i(\bm x)$, el campo de deformaciones $\varepsilon_{ij}(\bm x)$ y el campo de tensiones $\sigma_{ij}(\bm x)$ en un sólido que ocupa un dominio $\Omega$ con frontera $\Gamma=\Gamma_u\cup\Gamma_t$ ($\Gamma_u\cap\Gamma_t=\varnothing$), tales que se satisfagan simultáneamente:
+\begin{align}
+\frac{\partial \sigma_{ij}}{\partial x_j} + \rho b_i &= 0 && \text{en } \Omega \qquad \text{(equilibrio)}, \label{eq:cap05-equilibrio-fuerte}\\
+\varepsilon_{ij} &= \frac12\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right) && \text{en } \Omega \qquad \text{(cinemática)}, \label{eq:cap05-cinematica}\\
+\sigma_{ij} &= C_{ijkl}\,\varepsilon_{kl} && \text{en } \Omega \qquad \text{(constitutiva)}, \label{eq:cap05-constitutiva}\\
+\sigma_{ij} n_j &= \bar t_i && \text{en } \Gamma_t \qquad \text{(borde natural, Neumann)}, \label{eq:cap05-bc-neumann}\\
+u_i &= \bar u_i && \text{en } \Gamma_u \qquad \text{(borde esencial, Dirichlet)}. \label{eq:cap05-bc-dirichlet}
+\end{align}
+Este conjunto de ecuaciones --- la \textbf{forma fuerte} (o \emph{clásica}, o \emph{diferencial}) del problema --- exige que el equilibrio se satisfaga \emph{puntualmente}, en todos y cada uno de los puntos de $\Omega$ y de $\Gamma_t$. Como consecuencia, exige también que el campo de desplazamientos $u_i$ sea lo suficientemente regular: la \cref{eq:cap05-cinematica} requiere que $u_i$ sea derivable una vez, y como la \cref{eq:cap05-equilibrio-fuerte} deriva nuevamente a $\sigma_{ij}$ (que, vía la constitutiva, depende linealmente de las primeras derivadas de $u_i$), en definitiva exige que $u_i$ sea derivable \emph{dos veces} y que dichas derivadas sean continuas.
+
+Salvo en geometrías y condiciones de carga muy simples, este sistema de ecuaciones diferenciales no admite solución analítica cerrada, por lo que es necesario recurrir a métodos numéricos de discretización. Existen, en términos generales, dos caminos:
+\begin{itemize}[leftmargin=1.6em]
+  \item Los \textbf{métodos diferenciales} (por ejemplo, diferencias finitas) atacan directamente la forma fuerte, reemplazando las derivadas por cocientes incrementales sobre una grilla de puntos. Su desventaja principal es que exigen construir aproximaciones capaces de representar razonablemente bien derivadas de orden relativamente alto, y se adaptan con dificultad a geometrías complejas y a condiciones de borde naturales.
+  \item Los \textbf{métodos integrales} (residuos ponderados, principios variacionales) reformulan el problema como una igualdad \emph{integral}, equivalente a la forma fuerte pero que se satisface en un sentido ``promediado'' o ``ponderado'' sobre el dominio, en lugar de puntualmente. Esta reformulación --- la \textbf{forma débil} del problema --- es el punto de partida del método de los elementos finitos.
+\end{itemize}
+La ventaja decisiva de la forma débil, que se hará evidente en este capítulo, es que \emph{reduce el orden de derivación exigido} a las funciones incógnitas: como se demostrará, la forma débil sólo involucra primeras derivadas de $u_i$, no segundas. Esto es exactamente lo que se necesita para poder aproximar $u_i$, dentro de cada elemento finito, mediante funciones simples --- polinomios de bajo grado, continuos pero no necesariamente derivables dos veces de forma continua --- como se hará en el Capítulo 6.
+
+De entre las distintas formulaciones débiles posibles, este libro adopta como punto de partida el \textbf{Principio de los Trabajos Virtuales}: una forma integral de las ecuaciones de equilibrio, con una interpretación física directa (trabajo de fuerzas sobre desplazamientos), que se demuestra --- en este mismo capítulo --- estrictamente equivalente a la forma fuerte completa, ecuaciones \eqref{eq:cap05-equilibrio-fuerte} y \eqref{eq:cap05-bc-neumann}.
+
+\begin{observacion}[El PTV no es un principio energético]
+Aunque su nombre lo sugiera, el PTV no es, en rigor, un principio de conservación de energía: el ``trabajo'' que en él aparece es \emph{ficticio}, en el sentido de que corresponde al trabajo realizado por un campo de tensiones estáticamente admisible al desplazarse a lo largo de un campo de desplazamientos virtuales cinemáticamente admisibles --- ninguno de los dos necesariamente coincide con la tensión ni el desplazamiento que realmente ocurren en el sólido bajo la carga real. En régimen estático, el PTV es simplemente una forma alternativa --- integral, en vez de diferencial --- de expresar las ecuaciones de equilibrio.
+\end{observacion}
+
+\section{Campos admisibles y trabajo virtual}
+\label{sec:cap05-admisibilidad}
+
+\begin{definicion}{Campos admisibles y desplazamiento virtual}{cap05-admisibilidad}
+Un campo de tensiones $\sigma_{ij}$ se dice \textbf{estáticamente admisible} si satisface las ecuaciones de equilibrio, tanto en el interior del dominio como en la frontera con condición natural:
+\[
+\frac{\partial \sigma_{ij}}{\partial x_j} + \rho b_i = 0 \ \text{ en } \Omega, \qquad \sigma_{ij}n_j = \bar t_i \ \text{ en } \Gamma_t .
+\]
+Un campo de desplazamientos $u_i$ se dice \textbf{cinemáticamente admisible} si satisface las condiciones de borde esenciales (de Dirichlet): $u_i = \bar u_i$ en $\Gamma_u$.
+
+Un \textbf{desplazamiento virtual} $\delta u_i$ es un desplazamiento infinitesimal, adicional al que existe en una configuración de equilibrio dada (es decir, medido a partir de dicha configuración), arbitrario en todo lo demás salvo por la restricción de ser cinemáticamente admisible con condiciones de borde \emph{homogéneas}:
+\[
+\delta u_i = 0 \quad \text{en } \Gamma_u ,
+\]
+de modo de no violar los apoyos ya impuestos sobre la configuración real. Nótese que, al ser $\delta u_i$ una variación de un campo, la manera de operar con el operador $\delta(\cdot)$ (linealidad, conmutación con la derivada espacial) es formalmente idéntica a la de un diferencial: $\dfrac{\partial(\delta u_i)}{\partial x_j} = \delta\!\left(\dfrac{\partial u_i}{\partial x_j}\right)$.
+\end{definicion}
+
+\begin{definicion}{Trabajo virtual externo}{cap05-trabajo-virtual-externo}
+Dado un campo de desplazamientos virtuales $\delta u_i$ cinemáticamente admisible, y dado un estado de carga externa constituido por una tracción prescrita $\bar t_i$ en $\Gamma_t$ y una fuerza de cuerpo por unidad de volumen $\rho b_i$ en $\Omega$, se define el \textbf{trabajo virtual externo} como
+\[
+\delta W_{ext} = \int_{\Gamma_t} \bar t_i\, \delta u_i \; d\Gamma + \int_\Omega \rho b_i\, \delta u_i \; d\Omega .
+\]
+Como $\delta u_i = 0$ en $\Gamma_u$, esta integral de superficie puede extenderse, sin cambiar su valor, a toda la frontera $\Gamma=\Gamma_u\cup\Gamma_t$, escribiendo $t_i$ para denotar la tracción real (prescrita en $\Gamma_t$, reacción incógnita en $\Gamma_u$) en toda la frontera:
+\[
+\int_{\Gamma_t} \bar t_i\, \delta u_i \; d\Gamma = \int_{\Gamma} t_i\, \delta u_i \; d\Gamma = \int_\Gamma \sigma_{ij}n_j\, \delta u_i \; d\Gamma ,
+\]
+donde en el último paso se usó que, sobre toda la frontera, la tracción real satisface $t_i=\sigma_{ij}n_j$ (definición de vector tracción de Cauchy). Esta reescritura --- reemplazar la tracción prescrita $\bar t_i$ por su expresión en términos del tensor de tensiones, extendida a toda la frontera --- es el punto de partida técnico de la demostración que sigue.
+\end{definicion}
+
+\section{Equivalencia entre equilibrio y el PTV}
+\label{sec:cap05-teorema-ptv}
+
+\begin{teorema}{El Principio de los Trabajos Virtuales}{cap05-teorema-ptv}
+Sea $\Omega$ un sólido de frontera $\Gamma=\Gamma_u\cup\Gamma_t$, sometido a una fuerza de cuerpo $\rho b_i$ y a una tracción prescrita $\bar t_i$ en $\Gamma_t$. Un campo de tensiones $\sigma_{ij}$ (suficientemente regular) satisface las ecuaciones de equilibrio
+\[
+\frac{\partial \sigma_{ij}}{\partial x_j} + \rho b_i = 0 \ \text{ en } \Omega, \qquad \sigma_{ij}n_j = \bar t_i \ \text{ en } \Gamma_t
+\]
+\emph{si, y sólo si,} para todo campo de desplazamientos virtuales $\delta u_i$ cinemáticamente admisible ($\delta u_i=0$ en $\Gamma_u$) se cumple la igualdad de trabajos virtuales
+\[
+\delta W_{ext} = \delta W_{int}, \qquad
+\int_{\Gamma_t} \bar t_i\, \delta u_i \; d\Gamma + \int_\Omega \rho b_i\, \delta u_i \; d\Omega = \int_\Omega \sigma_{ij}\, \delta\varepsilon_{ij} \; d\Omega ,
+\]
+donde $\delta\varepsilon_{ij}=\tfrac12\left(\partial(\delta u_i)/\partial x_j + \partial(\delta u_j)/\partial x_i\right)$ es la parte simétrica del gradiente del desplazamiento virtual (la \emph{deformación virtual}), y $\delta W_{int}$ se define, precisamente, como esta última integral (el \textbf{trabajo virtual interno}).
+
+\medskip
+\textbf{Demostración --- Parte 1 (equilibrio $\Rightarrow$ PTV).}
+Se parte de la definición del trabajo virtual externo, reescrita como en la \cref{def:cap05-trabajo-virtual-externo} usando $t_i=\sigma_{ij}n_j$ en toda la frontera $\Gamma$:
+\[
+\delta W_{ext} = \int_{\Gamma_t}\bar t_i\,\delta u_i\;d\Gamma + \int_\Omega \rho b_i\,\delta u_i\;d\Omega = \int_\Gamma \sigma_{ij}n_j\,\delta u_i\;d\Gamma + \int_\Omega \rho b_i\,\delta u_i\;d\Omega .
+\]
+Al primer término se le aplica el teorema de la divergencia (Green),
+\[
+\int_\Gamma \sigma_{ij}\,\delta u_i\, n_j\;d\Gamma = \int_\Omega \frac{\partial(\sigma_{ij}\,\delta u_i)}{\partial x_j}\;d\Omega = \int_\Omega \left[\sigma_{ij}\,\frac{\partial(\delta u_i)}{\partial x_j} + \delta u_i\,\frac{\partial \sigma_{ij}}{\partial x_j}\right] d\Omega ,
+\]
+donde en el último paso se aplicó la regla del producto a la derivada del integrando. Sustituyendo de vuelta,
+\[
+\delta W_{ext} = \int_\Omega \left[\sigma_{ij}\,\frac{\partial(\delta u_i)}{\partial x_j} + \delta u_i\left(\frac{\partial \sigma_{ij}}{\partial x_j} + \rho b_i\right)\right] d\Omega .
+\]
+Como por hipótesis $\sigma_{ij}$ es estáticamente admisible, el paréntesis que multiplica a $\delta u_i$ es idénticamente nulo por la \cref{eq:cap05-equilibrio-fuerte}, con lo que
+\[
+\delta W_{ext} = \int_\Omega \sigma_{ij}\,\frac{\partial(\delta u_i)}{\partial x_j}\;d\Omega .
+\]
+Descompóngase ahora el gradiente del desplazamiento virtual en su parte simétrica (deformación virtual $\delta\varepsilon_{ij}$) y su parte antisimétrica (rotación virtual $\delta\omega_{ij}$):
+\[
+\frac{\partial(\delta u_i)}{\partial x_j} = \underbrace{\frac12\left[\frac{\partial(\delta u_i)}{\partial x_j}+\frac{\partial(\delta u_j)}{\partial x_i}\right]}_{\displaystyle \delta\varepsilon_{ij}} + \underbrace{\frac12\left[\frac{\partial(\delta u_i)}{\partial x_j}-\frac{\partial(\delta u_j)}{\partial x_i}\right]}_{\displaystyle \delta\omega_{ij}} ,
+\]
+de modo que
+\[
+\sigma_{ij}\,\frac{\partial(\delta u_i)}{\partial x_j} = \sigma_{ij}\,\delta\varepsilon_{ij} + \sigma_{ij}\,\delta\omega_{ij} .
+\]
+Pero el segundo término es idénticamente nulo: $\sigma_{ij}$ es simétrico y $\delta\omega_{ij}$ es antisimétrico, y el producto (doblemente contraído) de un tensor simétrico por uno antisimétrico siempre se anula,
+\[
+\sigma_{ij}\,\delta\omega_{ij} = \frac12\left[\sigma_{ij}\frac{\partial(\delta u_i)}{\partial x_j} - \sigma_{ji}\frac{\partial(\delta u_j)}{\partial x_i}\right] = 0,
+\]
+ya que ambos términos entre corchetes son, tras renombrar los índices mudos, idénticos y se cancelan. En consecuencia,
+\[
+\delta W_{ext} = \int_{\Gamma_t}\bar t_i\,\delta u_i\;d\Gamma + \int_\Omega \rho b_i\,\delta u_i\;d\Omega = \int_\Omega \sigma_{ij}\,\delta\varepsilon_{ij}\;d\Omega = \delta W_{int} ,
+\]
+para todo $\delta u_i$ cinemáticamente admisible, que es la tesis. \hfill$\blacksquare$ (Parte 1)
+
+\medskip
+\textbf{Demostración --- Parte 2 (PTV $\Rightarrow$ equilibrio, recíproco).}
+Supóngase ahora, recíprocamente, que $\delta W_{ext}=\delta W_{int}$ se cumple para un cierto campo de tensiones $\sigma_{ij}$ y \emph{para todo} campo de desplazamientos virtuales $\delta u_i$ cinemáticamente admisible:
+\[
+\int_{\Gamma_t}\bar t_i\,\delta u_i\;d\Gamma + \int_\Omega \rho b_i\,\delta u_i\;d\Omega = \int_\Omega \sigma_{ij}\,\delta\varepsilon_{ij}\;d\Omega .
+\]
+En el primer miembro, se suma y se resta $\displaystyle\int_\Gamma \sigma_{ij}n_j\,\delta u_i\;d\Gamma$ (posible, ya que $\delta u_i=0$ en $\Gamma_u$, de modo que $\int_{\Gamma_t}\bar t_i \delta u_i\, d\Gamma = \int_\Gamma \bar t_i \delta u_i\, d\Gamma$); en el segundo miembro se usa $\sigma_{ij}\delta\varepsilon_{ij} = \sigma_{ij}\,\partial(\delta u_i)/\partial x_j$ (válido porque $\sigma_{ij}\delta\omega_{ij}=0$ idénticamente, como ya se probó, sin necesidad de admisibilidad estática). Se obtiene:
+\[
+\int_\Gamma \left(\bar t_i - \sigma_{ij}n_j\right)\delta u_i\;d\Gamma + \int_\Gamma \sigma_{ij}n_j\,\delta u_i\;d\Gamma + \int_\Omega \rho b_i\,\delta u_i\;d\Omega = \int_\Omega \sigma_{ij}\,\frac{\partial(\delta u_i)}{\partial x_j}\;d\Omega .
+\]
+Aplicando el teorema de Green al segundo término del primer miembro, exactamente como en la Parte 1,
+\[
+\int_\Gamma \sigma_{ij}n_j\,\delta u_i\;d\Gamma = \int_\Omega \left[\frac{\partial(\sigma_{ij}\,\delta u_i)}{\partial x_j}\right] d\Omega = \int_\Omega \sigma_{ij}\,\frac{\partial(\delta u_i)}{\partial x_j}\;d\Omega + \int_\Omega \delta u_i\,\frac{\partial \sigma_{ij}}{\partial x_j}\;d\Omega ,
+\]
+con lo cual, sustituyendo y cancelando el término $\int_\Omega \sigma_{ij}\,\partial(\delta u_i)/\partial x_j\,d\Omega$ que aparece en ambos miembros,
+\[
+\int_\Gamma \left(\bar t_i - \sigma_{ij}n_j\right)\delta u_i\;d\Gamma + \int_\Omega \left(\frac{\partial \sigma_{ij}}{\partial x_j} + \rho b_i\right)\delta u_i\;d\Omega = 0 .
+\]
+Esta igualdad debe cumplirse para \emph{todo} campo $\delta u_i$ arbitrario (cinemáticamente admisible), tanto en el interior de $\Omega$ como sobre $\Gamma_t$. Por el lema fundamental del cálculo de variaciones --- si una integral de la forma $\int f(\bm x)\,\delta u(\bm x)\,dV$ se anula para toda función de prueba $\delta u$ arbitraria, entonces $f\equiv0$ en todo el dominio de integración --- ambos paréntesis deben anularse independientemente:
+\[
+\frac{\partial \sigma_{ij}}{\partial x_j} + \rho b_i = 0 \ \text{ en } \Omega, \qquad \sigma_{ij}n_j = \bar t_i \ \text{ en } \Gamma_t ,
+\]
+es decir, el campo de tensiones $\sigma_{ij}$ es estáticamente admisible, que es la tesis. \hfill$\blacksquare$ (Parte 2)
+\end{teorema}
+
+\begin{ecnimportante}{Principio de los Trabajos Virtuales}{cap05-enunciado-ptv}
+Un campo de tensiones $\bm\sigma$ es estáticamente admisible si, y sólo si, para todo desplazamiento virtual $\delta\bm u$ cinemáticamente admisible se cumple
+\[
+\delta W_{ext} = \delta W_{int} ,
+\]
+con
+\[
+\delta W_{int} = \int_\Omega \bm\sigma:\delta\bm\varepsilon\;d\Omega = \int_\Omega \sigma_{ij}\,\delta\varepsilon_{ij}\;d\Omega, \qquad
+\delta W_{ext} = \int_{\Gamma_t} \bar{\bm t}\cdot\delta\bm u\;d\Gamma + \int_\Omega \rho\,\bm b\cdot\delta\bm u\;d\Omega .
+\]
+En notación matricial, con $\bm\sigma$, $\delta\bm\varepsilon$, $\bm b$, $\bar{\bm t}$, $\delta\bm u$ organizados como vectores columna,
+\[
+\delta W_{ext} = \int_{\Gamma_t} \delta\bm{u}^{\mathsf T}\bar{\bm t}\;d\Gamma + \int_\Omega \delta\bm{u}^{\mathsf T}\rho\bm b\;d\Omega = \int_\Omega \delta\bm{\varepsilon}^{\mathsf T}\bm\sigma\;d\Omega = \delta W_{int} .
+\]
+En estática, el PTV es equivalente en su totalidad a las ecuaciones de equilibrio \eqref{eq:cap05-equilibrio-fuerte} y a la condición de borde natural \eqref{eq:cap05-bc-neumann}; es, por lo tanto, la \textbf{forma débil} del problema de valores de frontera de la elastostática, y el punto de partida para la discretización por elementos finitos que se desarrolla a partir del próximo capítulo.
+\end{ecnimportante}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+  \draw[thick, ucblue, fill=ucblue!6]
+    plot[smooth cycle, tension=0.85] coordinates {(0,0) (1.7,0.55) (2.7,-0.25) (2.35,-1.65) (0.85,-2.05) (-0.55,-1.25) (-0.35,-0.15)};
+  \node[ucblue] at (1.0,-0.5) {$\Omega$};
+  \draw[very thick, ucred] (-0.55,-1.25) -- (-0.35,-0.15);
+  \draw[ucred] (-0.50,-1.05) -- (-0.80,-0.93);
+  \draw[ucred] (-0.46,-0.75) -- (-0.76,-0.63);
+  \draw[ucred] (-0.42,-0.45) -- (-0.72,-0.33);
+  \node[ucred] at (-1.05,-0.7) {$\Gamma_u$};
+  \draw[very thick, ucamber] (1.7,0.55) -- (2.7,-0.25) -- (2.35,-1.65);
+  \node[ucamber] at (3.15,-0.55) {$\Gamma_t$};
+  \draw[->, ucamber] (2.15,0.1) -- (2.65,0.38) node[right, font=\scriptsize]{$\bar{\bm t}$};
+  \draw[->, ucamber] (2.58,-0.95) -- (3.08,-0.80) node[right, font=\scriptsize]{$\bar{\bm t}$};
+  \filldraw[ucgray] (0.9,-0.95) circle (1.4pt);
+  \node[font=\scriptsize] at (0.65,-1.10) {$P$};
+  \draw[->, thick] (0.9,-0.95) -- (1.4,-0.62) node[right=1pt, font=\small]{$\bm u$};
+  \draw[->, thick, dashed, ucteal] (1.4,-0.62) -- (1.82,-0.34) node[right=1pt, font=\small]{$\delta\bm u$};
+  \draw[->, ucgray] (0.35,-1.75) -- (0.35,-2.3) node[below, font=\scriptsize]{$\bm b$};
+\end{tikzpicture}
+\caption{Cuerpo $\Omega$ con frontera $\Gamma=\Gamma_u\cup\Gamma_t$: condición esencial (Dirichlet) sobre $\Gamma_u$ (rayado) y tracción prescrita $\bar{\bm t}$ sobre $\Gamma_t$. En un punto material $P$ se indica el desplazamiento real $\bm u$ (de la configuración de equilibrio) y un desplazamiento virtual admisible $\delta\bm u$, arbitrario salvo por $\delta\bm u=\bm 0$ en $\Gamma_u$.}
+\label{fig:cap05-cuerpo-virtual}
+\end{figure}
+
+\section{Observaciones}
+
+\begin{observacion}[Orden de derivación: por qué el PTV es clave para el MEF]
+Compárese el orden de derivación de $u_i$ exigido por cada formulación. En la forma fuerte, la ecuación de equilibrio \eqref{eq:cap05-equilibrio-fuerte} requiere derivar $\sigma_{ij}$ --- que ya depende de la primera derivada de $u_i$ a través de $\varepsilon_{ij}$ --- una vez más, es decir, exige que $u_i$ sea dos veces derivable (con continuidad). En el PTV, en cambio, sólo aparecen \emph{primeras} derivadas de $u_i$: tanto en $\delta\varepsilon_{ij}$ (que depende de $\partial(\delta u_i)/\partial x_j$) como en $\sigma_{ij}=C_{ijkl}\varepsilon_{kl}$ (que depende de $\partial u_i/\partial x_j$). Esta reducción de un orden en las derivadas exigidas es \emph{la} razón estructural por la cual el MEF puede construirse sobre funciones de interpolación de bajo orden: basta con que las funciones de forma sean continuas y posean primeras derivadas no nulas e integrables dentro de cada elemento (continuidad de clase $C^0$), en lugar de exigirles ser dos veces continuamente diferenciables como demandaría atacar directamente la forma fuerte. Ésta es la propiedad que hace posible, por ejemplo, usar una interpolación simplemente lineal del desplazamiento axial dentro del elemento de barra, como se hará en el Capítulo 6.
+\end{observacion}
+
+\begin{observacion}[Extensión a problemas dinámicos]
+El PTV, tal como se ha enunciado, corresponde a un problema estático. Su extensión a la dinámica es inmediata mediante el principio de d'Alembert: basta con tratar la fuerza de inercia $-\rho\ddot u_i$ como una fuerza de cuerpo adicional (ficticia), de modo que la ecuación de equilibrio dinámico $\partial\sigma_{ij}/\partial x_j + \rho b_i - \rho\ddot u_i = 0$ tiene exactamente la misma estructura que la \cref{eq:cap05-equilibrio-fuerte}, y por lo tanto todo lo demostrado en este capítulo se traslada sin modificación, agregando al trabajo virtual externo el trabajo virtual (con signo negativo) de las fuerzas de inercia:
+\[
+\int_{\Gamma_t}\bar t_i\,\delta u_i\;d\Gamma + \int_\Omega \rho b_i\,\delta u_i\;d\Omega - \int_\Omega \rho\,\ddot u_i\,\delta u_i\;d\Omega = \int_\Omega \sigma_{ij}\,\delta\varepsilon_{ij}\;d\Omega .
+\]
+Al discretizar esta expresión mediante el MEF, el término $\int_\Omega \rho\,\ddot u_i\,\delta u_i\,d\Omega$ da origen a la matriz de masa elemental, dando lugar a la ecuación matricial de movimiento $\mathbf{M}\ddot{\mathbf U}+\mathbf{K}\mathbf{U}=\mathbf{F}(t)$ que se estudiará en capítulos posteriores dedicados a dinámica estructural.
+\end{observacion}
+
+\begin{observacion}[Cargas puntuales concentradas]
+En un medio continuo, una fuerza estrictamente concentrada en un punto no ``existe'' como campo de tracción o de fuerza de cuerpo genuino: si se intentara modelar como tal, produciría tensiones (y por lo tanto trabajos virtuales) infinitos, ya que estaría actuando sobre un área o un volumen nulos. Sin embargo, el PTV admite incorporar cargas puntuales $P_i$ de manera natural y rigurosa, como un caso límite de una tracción o fuerza de cuerpo que se concentra progresivamente sobre una región que tiende a un punto, agregando simplemente su trabajo virtual como un término aparte:
+\[
+\delta W_{ext} = \int_{\Gamma_t}\bar t_i\,\delta u_i\;d\Gamma + \int_\Omega \rho b_i\,\delta u_i\;d\Omega + P_i\,\delta u_i = \delta W_{int} .
+\]
+Este es, precisamente, el mecanismo por el cual el MEF admite de forma natural cargas puntuales aplicadas directamente sobre los nodos de la malla, sin necesidad de tratamiento especial alguno más allá de sumar su contribución al vector de fuerzas nodales.
+\end{observacion}
+
+\section{Del PTV a la discretización: panorama general}
+
+Los dos capítulos anteriores dejan planteados, por caminos distintos, los mismos ingredientes: por un lado (\hyperref[cap:cap04-analisis-matricial-barras]{Cap.\ 4}), una regla de ensamblaje puramente algebraica, válida para cualquier tipo de elemento; por otro (este capítulo), una forma débil --- el PTV --- estrictamente equivalente a las ecuaciones de equilibrio de un sólido continuo general, que involucra únicamente primeras derivadas del desplazamiento. El paso que falta, y que ocupará el resto de esta parte del libro, consiste en aplicar el PTV --- en vez de a un sólido continuo genérico --- a cada elemento finito de una malla, tras interpolar el campo de desplazamientos dentro del elemento en función de un número finito de desplazamientos nodales. Al hacerlo, las integrales del PTV se transforman automáticamente en las expresiones matriciales $\mathbf{K}^{(e)}=\int_{\Omega^{(e)}}\mathbf{B}^{\mathsf T}\mathbf{C}\mathbf{B}\;d\Omega$ y $\mathbf{F}^{(e)}=\int_{\Gamma_t^{(e)}}\mathbf{N}^{\mathsf T}\bar{\bm t}\;d\Gamma+\int_{\Omega^{(e)}}\mathbf{N}^{\mathsf T}\rho\bm b\;d\Omega+\mathbf{P}^{(e)}$ para la matriz de rigidez y el vector de fuerzas nodales de \emph{cualquier} elemento --- viga, placa, sólido 2D o 3D --- generalizando así, de manera rigurosa y sistemática, la matriz de rigidez del elemento de barra obtenida ``a mano'' en el Capítulo 4. Este procedimiento, particularizado al elemento de barra, es precisamente el contenido del próximo capítulo.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, node distance=2.3cm,
+  box/.style={draw, thick, rounded corners, align=center, minimum width=3.5cm, minimum height=1.6cm, font=\small}]
+  \node[box, draw=ucred, fill=ucred!5] (fuerte)
+    {\textbf{Forma fuerte}\\[2pt] EDP de equilibrio\\ + condiciones de borde\\ (\S\ref{sec:cap05-forma-fuerte-debil})};
+  \node[box, draw=ucblue, fill=ucblue!5, right=of fuerte] (debil)
+    {\textbf{Forma débil (PTV)}\\[2pt] $\delta W_{ext}=\delta W_{int}$\\ $\forall\,\delta\bm u$ admisible\\ (\S\ref{sec:cap05-teorema-ptv})};
+  \node[box, draw=ucteal, fill=ucteal!5, right=of debil] (fem)
+    {\textbf{FEM discretizado}\\[2pt] $\bm u\approx \mathbf N\mathbf U$\\ $\mathbf K^{(e)}\mathbf U^{(e)}=\mathbf F^{(e)}$\\ (Cap.\ 6)};
+  \draw[<->, thick] (fuerte) -- (debil) node[midway, above, font=\footnotesize]{Green / lema fundamental};
+  \draw[<->, thick] (debil) -- (fem) node[midway, above, font=\footnotesize]{interpolación nodal};
+\end{tikzpicture}
+\caption{De la forma fuerte a la forma débil (PTV) y de ésta a su discretización por elementos finitos: cada flecha es reversible --- la equivalencia entre forma fuerte y PTV se demostró en el \cref{teo:cap05-teorema-ptv}; el paso de la forma débil a su versión discretizada se obtiene interpolando $\bm u$ en función de un número finito de desplazamientos nodales, como se hará en el Capítulo 6.}
+\label{fig:cap05-flujo-formulaciones}
+\end{figure}

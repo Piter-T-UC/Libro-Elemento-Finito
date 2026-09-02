@@ -1,0 +1,379 @@
+\chapter{Cinemática y Equilibrio del Sólido Elástico Lineal}
+\label{sec:cap02-cinematica-equilibrio}
+
+En el Capítulo 1 se estableció, de manera conceptual, que el sólido elástico es un sistema continuo: su estado queda descrito por un campo de desplazamientos $\bm{u}(x,y,z)$ definido en cada punto de un dominio $\Omega$, y no por un número finito de incógnitas. Este capítulo formaliza matemáticamente esa afirmación. Se plantea el problema de valor de frontera (BVP, por sus siglas en inglés) del sólido elástico tridimensional bajo las hipótesis adoptadas en el Capítulo 1 —régimen estático, pequeños desplazamientos y deformaciones—, y se deducen, una por una, las tres familias de ecuaciones que lo componen: las ecuaciones de \emph{equilibrio} (que expresan el balance de fuerzas en cada punto), las relaciones \emph{cinemáticas} (que vinculan las deformaciones con los desplazamientos) y las \emph{condiciones de borde} (que acoplan la solución interior con lo que ocurre en la frontera del sólido). La única pieza que falta para cerrar el sistema —la relación \emph{constitutiva}, que conecta tensiones con deformaciones a través de las propiedades del material— se deja deliberadamente para el Capítulo 3, ya que merece un tratamiento propio.
+
+\section{El problema de valor de frontera del sólido elástico 3D}
+\label{sec:cap02-bvp}
+
+Considérese un cuerpo sólido que ocupa, en su configuración de referencia, un dominio $\Omega \subset \mathbb{R}^3$ referido a un sistema de coordenadas cartesiano $(x,y,z)$, con frontera $\Gamma$. Bajo la hipótesis de pequeños desplazamientos adoptada en el Capítulo 1, la configuración deformada del sólido coincide, a efectos de plantear el equilibrio, con la configuración de referencia $\Omega$: no es necesario distinguir entre ambas, lo cual es una simplificación considerable respecto de la mecánica de sólidos en grandes deformaciones.
+
+Sobre este sólido actúan dos tipos de acciones externas. Primero, \emph{fuerzas de cuerpo} $\bm{b}$, definidas por unidad de volumen (o, equivalentemente, por unidad de masa si se prefiere $\rho\bm{b}$), que representan acciones a distancia como el peso propio. Segundo, \emph{fuerzas de superficie} o \emph{tracciones} $\bm{t}$, definidas por unidad de área, que representan el contacto del sólido con el medio exterior sobre su frontera. Consistentemente con esta segunda acción, la frontera $\Gamma$ se divide en dos partes complementarias:
+\[
+\Gamma = \Gamma_u \cup \Gamma_t, \qquad \Gamma_u \cap \Gamma_t = \emptyset,
+\]
+donde $\Gamma_u$ es la porción de la frontera en la que se prescribe el desplazamiento (por ejemplo, un apoyo o empotramiento, donde se impone $\bm{u}=\bar{\bm{u}}$), y $\Gamma_t$ es la porción complementaria en la que se prescribe la tracción de superficie (por ejemplo, una carga aplicada, $\bm{t}=\bar{\bm{t}}$). Esta partición no es arbitraria: en cada punto de la frontera debe conocerse \emph{o bien} el desplazamiento \emph{o bien} la tracción —nunca ambos simultáneamente ni ninguno de los dos—, pues de lo contrario el problema estaría sobre- o sub-determinado. La \cref{fig:cap02-dominio} ilustra esta configuración geométrica general.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.0, every node/.style={font=\small}]
+  % dominio Omega: blob cerrado
+  \draw[ucblue, thick, fill=ucblue!10]
+    plot[smooth cycle, tension=0.85] coordinates {
+      (0,0) (1.6,1.0) (3.4,0.55) (4.3,1.7) (3.6,3.1) (1.9,3.3) (0.4,2.4) (-0.5,1.1)
+    };
+  \node[ucblue] at (1.9,1.7) {$\Omega$};
+
+  % Gamma_u: tramo inferior izquierdo, rayado (empotramiento)
+  \draw[ucred, ultra thick] plot[smooth, tension=0.85] coordinates {(-0.5,1.1) (0,0) (1.6,1.0)};
+  \foreach \t in {0.05,0.20,...,0.95}{
+    \draw[ucred] ($(-0.5,1.1)!\t!(0,0)$) -- ++(-0.22,-0.16);
+  }
+  \node[ucred] at (0.05,0.55) {\footnotesize $\Gamma_u$};
+  \node[ucred] at (-1.0,1.35) {\footnotesize $\bar{\bm{u}}$};
+
+  % Gamma_t: resto del contorno, con flechas de traccion
+  \draw[ucteal, ultra thick] plot[smooth, tension=0.85] coordinates {(1.6,1.0) (3.4,0.55) (4.3,1.7) (3.6,3.1) (1.9,3.3) (0.4,2.4) (-0.5,1.1)};
+  \foreach \p/\ang in {(3.9,1.2)/-40, (4.1,2.4)/25, (2.7,3.25)/95, (0.9,2.85)/140}{
+    \draw[-{Latex[length=2mm]}, ucteal, thick] \p -- ++(\ang:0.65);
+  }
+  \node[ucteal] at (5.0,1.0) {\footnotesize $\Gamma_t$};
+  \node[ucteal] at (5.1,2.6) {\footnotesize $\bar{\bm t}$};
+
+  % vector normal en un punto de Gamma_t
+  \draw[-{Latex[length=2mm]}, ucgray, thick] (3.9,1.2) -- ++(-40:0.9) node[right] {$\bm n$};
+
+  % fuerza de cuerpo dentro del dominio
+  \draw[-{Latex[length=2mm]}, ucamber, thick] (2.0,1.9) -- ++(0,-0.6) node[below] {$\bm b$};
+
+  % ejes coordenados
+  \draw[-{Latex[length=1.8mm]}] (-2.0,-0.6) -- ++(0.55,0) node[right] {$x$};
+  \draw[-{Latex[length=1.8mm]}] (-2.0,-0.6) -- ++(0,0.55) node[above] {$y$};
+  \draw[-{Latex[length=1.8mm]}] (-2.0,-0.6) -- ++(-0.35,-0.3) node[below left] {$z$};
+\end{tikzpicture}
+\caption{Dominio $\Omega$ de un sólido elástico con frontera $\Gamma=\Gamma_u\cup\Gamma_t$: en $\Gamma_u$ se prescribe el desplazamiento $\bar{\bm u}$ (representado con la trama rayada de un apoyo fijo) y en $\Gamma_t$ se prescribe la tracción de superficie $\bar{\bm t}$. La fuerza de cuerpo $\bm b$ actúa en el interior de $\Omega$, y $\bm n$ es la normal exterior a $\Gamma$.}
+\label{fig:cap02-dominio}
+\end{figure}
+
+Al conjunto de fuerzas y desplazamientos prescritos conviene agruparlo en vectores columna, que serán la notación estándar a lo largo de todo el libro:
+\[
+\bar{\bm u} = \begin{bmatrix} \bar u \\ \bar v \\ \bar w \end{bmatrix}, \qquad
+\bm t = \begin{bmatrix} t_x \\ t_y \\ t_z \end{bmatrix}, \qquad
+\bm b = \begin{bmatrix} b_x \\ b_y \\ b_z \end{bmatrix},
+\]
+donde $(u,v,w)$ denotan las tres componentes cartesianas del vector desplazamiento $\bm u$ en las direcciones $(x,y,z)$, respectivamente. El objetivo del análisis que sigue es determinar, en todo punto de $\Omega$, tres campos: el campo de desplazamientos $\bm u$, el campo de deformaciones y el campo de tensiones, ligados entre sí por las ecuaciones que se deducen a continuación.
+
+\section{Tensores de tensión y deformación}
+\label{sec:cap02-tensores}
+
+El estado tensional en un punto material de un sólido no queda descrito por un único número ni por un vector, sino por un objeto de segundo orden: el \textbf{tensor de tensiones} $\bm\sigma$. Físicamente, $\sigma_{ij}$ representa la componente en la dirección $x_j$ de la fuerza por unidad de área que actúa sobre una faceta cuya normal apunta en la dirección $x_i$ (la convención exacta de signos —tensión positiva en tracción— se retoma en la \cref{sec:cap02-condiciones-borde} al vincular $\bm\sigma$ con la tracción $\bm t$). En notación matricial, y bajo la hipótesis de sólido no polar que se justificará en la \cref{sec:cap02-equilibrio} (la cual garantiza $\sigma_{ij}=\sigma_{ji}$), el tensor de tensiones se escribe
+\[
+\bm\sigma =
+\begin{bmatrix}
+\sigma_{xx} & \sigma_{xy} & \sigma_{xz} \\
+& \sigma_{yy} & \sigma_{yz} \\
+\text{sim.} & & \sigma_{zz}
+\end{bmatrix},
+\]
+donde se ha indicado explícitamente la simetría (``sim.'') para no repetir las tres componentes de corte. De manera análoga, el estado de deformación en un punto se describe mediante el \textbf{tensor de deformaciones infinitesimales} $\bm\varepsilon$, también simétrico por construcción (como se verá en la \cref{sec:cap02-cinematica}),
+\[
+\bm\varepsilon =
+\begin{bmatrix}
+\varepsilon_{xx} & \varepsilon_{xy} & \varepsilon_{xz} \\
+& \varepsilon_{yy} & \varepsilon_{yz} \\
+\text{sim.} & & \varepsilon_{zz}
+\end{bmatrix}.
+\]
+Ambos tensores son de segundo orden y simétricos, de modo que cada uno posee, en principio, seis componentes independientes en un punto dado. La \cref{fig:cap02-cubo-tensiones} muestra la representación gráfica estándar del estado de tensión en un punto: un cubo infinitesimal orientado según los ejes coordenados, sobre cuyas caras actúan las nueve componentes de $\bm\sigma$ (tres normales y seis de corte, agrupadas en tres pares iguales por la simetría del tensor).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.9]
+  \begin{scope}[x={(0.87cm,-0.5cm)}, y={(0.87cm,0.5cm)}, z={(0cm,1cm)}]
+    % aristas ocultas (concurren en el vertice mas alejado del observador)
+    \draw[dashed, ucgray!70] (0,0,0) -- (1,0,0);
+    \draw[dashed, ucgray!70] (0,0,0) -- (0,1,0);
+    \draw[dashed, ucgray!70] (0,0,0) -- (0,0,1);
+
+    % tres caras visibles
+    \draw[fill=ucblue!55] (0,0,1) -- (1,0,1) -- (1,1,1) -- (0,1,1) -- cycle; % superior, normal +z
+    \draw[fill=ucblue!75] (1,0,0) -- (1,1,0) -- (1,1,1) -- (1,0,1) -- cycle; % derecha, normal +x
+    \draw[fill=ucblue!65] (0,1,0) -- (1,1,0) -- (1,1,1) -- (0,1,1) -- cycle; % frontal, normal +y
+
+    % componentes sobre la cara +x (normal x)
+    \draw[-{Latex[length=2.2mm]}, ucred, thick] (1,0.5,0.5) -- ++(0.55,0,0) node[right] {$\sigma_{xx}$};
+    \draw[-{Latex[length=2mm]}, ucgray, thick] (1,0.5,0.5) -- ++(0,0.42,0) node[above right] {$\tau_{xy}$};
+    \draw[-{Latex[length=2mm]}, ucgray, thick] (1,0.5,0.5) -- ++(0,0,0.42) node[above] {$\tau_{xz}$};
+
+    % componentes sobre la cara +y (normal y)
+    \draw[-{Latex[length=2.2mm]}, ucred, thick] (0.5,1,0.5) -- ++(0,0.55,0) node[right] {$\sigma_{yy}$};
+    \draw[-{Latex[length=2mm]}, ucgray, thick] (0.5,1,0.5) -- ++(0.42,0,0) node[below right] {$\tau_{yx}$};
+    \draw[-{Latex[length=2mm]}, ucgray, thick] (0.5,1,0.5) -- ++(0,0,0.42) node[left] {$\tau_{yz}$};
+
+    % componentes sobre la cara +z (normal z)
+    \draw[-{Latex[length=2.2mm]}, ucred, thick] (0.5,0.5,1) -- ++(0,0,0.55) node[above] {$\sigma_{zz}$};
+    \draw[-{Latex[length=2mm]}, ucgray, thick] (0.5,0.5,1) -- ++(0.42,0,0) node[right] {$\tau_{zx}$};
+    \draw[-{Latex[length=2mm]}, ucgray, thick] (0.5,0.5,1) -- ++(0,0.42,0) node[above left] {$\tau_{zy}$};
+
+    % triedro de ejes de referencia
+    \draw[-{Latex[length=1.8mm]}] (-0.55,-0.35,-0.05) -- ++(0.4,0,0) node[right] {$x$};
+    \draw[-{Latex[length=1.8mm]}] (-0.55,-0.35,-0.05) -- ++(0,0.4,0) node[above right] {$y$};
+    \draw[-{Latex[length=1.8mm]}] (-0.55,-0.35,-0.05) -- ++(0,0,0.4) node[above] {$z$};
+  \end{scope}
+\end{tikzpicture}
+\caption{Elemento cúbico infinitesimal en torno a un punto material, con las nueve componentes del tensor de tensiones $\bm\sigma$ actuando sobre sus tres caras visibles (normales $+x$, $+y$, $+z$). Por equilibrio de momentos (\cref{sec:cap02-equilibrio}), $\tau_{xy}=\tau_{yx}$, $\tau_{xz}=\tau_{zx}$ y $\tau_{yz}=\tau_{zy}$, de modo que $\bm\sigma$ es simétrico. Las caras ocultas (normales $-x,-y,-z$, no dibujadas) llevan tracciones iguales y opuestas a las mostradas, en virtud del equilibrio del elemento.}
+\label{fig:cap02-cubo-tensiones}
+\end{figure}
+
+Es habitual, y muy conveniente para los desarrollos algebraicos, alternar entre dos notaciones equivalentes para referirse a estos campos: la \textbf{notación indicial}, en la que cada componente se escribe explícitamente con subíndices que recorren $\{1,2,3\}$ (o, equivalentemente, $\{x,y,z\}$) y se aplica la convención de suma de Einstein sobre índices repetidos, y la \textbf{notación tensorial compacta}, en la que los mismos objetos se escriben como símbolos en negrita sin subíndices explícitos, junto con operadores diferenciales como el gradiente $\nabla$ o la divergencia $\nabla\cdot(\cdot)$. Ambas notaciones se usarán de forma intercambiable en lo que sigue; la \cref{tab:cap02-notaciones} anticipa, a modo de resumen, cómo se ven las cuatro relaciones fundamentales del sólido elástico en cada una de ellas (el resto de este capítulo se dedica a deducir cada una de estas filas).
+
+\begin{table}[htbp]
+\centering
+\caption{Las cuatro relaciones fundamentales del sólido elástico, en notación indicial y en notación tensorial compacta.}
+\label{tab:cap02-notaciones}
+\begin{tabular}{@{}p{4.6cm}p{3.6cm}p{4.6cm}@{}}
+\toprule
+\textbf{Relación} & \textbf{Notación indicial} & \textbf{Notación compacta} \\
+\midrule
+Equilibrio (en $\Omega$) & $\sigma_{ij,j} + b_i = 0$ & $\nabla\cdot\bm\sigma + \bm b = \bm 0$ \\
+Cinemática (en $\Omega$) & $\varepsilon_{ij} = \tfrac{1}{2}(u_{i,j}+u_{j,i})$ & $\bm\varepsilon = \nabla^{s}\bm u$ \\
+Cond.\ esencial (en $\Gamma_u$) & $u_i = \bar u_i$ & $\bm u = \bar{\bm u}$ \\
+Cond.\ natural (en $\Gamma_t$) & $\sigma_{ij}n_j = \bar t_i$ & $\bm\sigma\cdot\bm n = \bar{\bm t}$ \\
+Constitutiva (en $\Omega$, Cap.\ 3) & $\sigma_{ij}=C_{ijkl}\varepsilon_{kl}$ & $\bm\sigma = \bm C:\bm\varepsilon$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+En la notación indicial, la coma seguida de un subíndice denota derivada parcial respecto de la coordenada correspondiente, $(\cdot)_{,j} \equiv \partial(\cdot)/\partial x_j$, y un índice repetido en un mismo término implica suma sobre ese índice de 1 a 3 (convención de Einstein). Así, por ejemplo, $\sigma_{ij,j} = \partial\sigma_{i1}/\partial x_1 + \partial\sigma_{i2}/\partial x_2 + \partial\sigma_{i3}/\partial x_3$. En la notación compacta, $\nabla^{s}\bm u$ denota la parte simétrica del gradiente del vector desplazamiento, tal como se precisará en la \cref{sec:cap02-cinematica}.
+
+\section{Ecuaciones de equilibrio}
+\label{sec:cap02-equilibrio}
+
+La primera de las tres familias de ecuaciones que gobiernan el sólido elástico expresa, punto a punto, el equilibrio de fuerzas. Para deducirla, considérese un elemento diferencial de volumen $dx\,dy\,dz$ extraído del interior de $\Omega$, con caras paralelas a los planos coordenados. Sobre cada par de caras opuestas del elemento actúan las componentes del tensor de tensiones evaluadas en esas caras; como el elemento es infinitesimal, el valor de $\bm\sigma$ en la cara ``de salida'' (por ejemplo, la cara $x+dx$) difiere del valor en la cara ``de entrada'' (la cara $x$) en un término de primer orden dado por el desarrollo de Taylor,
+\[
+\sigma_{xx}(x+dx,y,z) \approx \sigma_{xx}(x,y,z) + \frac{\partial \sigma_{xx}}{\partial x}\,dx,
+\]
+y de manera análoga para las demás componentes. Al sumar las fuerzas que actúan sobre el elemento en la dirección $x$ —las contribuciones de $\sigma_{xx}$ en las caras normales a $x$, de $\sigma_{yx}=\tau_{xy}$ en las caras normales a $y$, de $\sigma_{zx}=\tau_{xz}$ en las caras normales a $z$, y la fuerza de cuerpo $b_x\,dx\,dy\,dz$— y exigir que dicha suma sea nula (equilibrio estático, sin términos de inercia, tal como se estableció como hipótesis en el Capítulo 1), los términos de orden cero de cada par de caras opuestas se cancelan entre sí, y solo sobreviven los términos de primer orden. Dividiendo el resultado por el volumen $dx\,dy\,dz$ del elemento, se obtiene
+\[
+\frac{\partial \sigma_{xx}}{\partial x} + \frac{\partial \sigma_{xy}}{\partial y} + \frac{\partial \sigma_{xz}}{\partial z} + b_x = 0,
+\]
+y repitiendo el mismo argumento para las direcciones $y$ y $z$ se obtienen las otras dos ecuaciones análogas. Este es exactamente el resultado que se anuncia en la caja siguiente: tres ecuaciones diferenciales en derivadas parciales, una por cada dirección coordenada, que deben satisfacerse en \emph{todo punto} de $\Omega$.
+
+\begin{ecnimportante}{Ecuaciones de equilibrio}{cap02-equilibrio}
+En todo punto del dominio $\Omega$, el tensor de tensiones $\bm\sigma$ y la fuerza de cuerpo $\bm b$ satisfacen
+\[
+\begin{gathered}
+\frac{\partial \sigma_{xx}}{\partial x} + \frac{\partial \sigma_{xy}}{\partial y} + \frac{\partial \sigma_{xz}}{\partial z} + b_x = 0, \\[4pt]
+\frac{\partial \sigma_{xy}}{\partial x} + \frac{\partial \sigma_{yy}}{\partial y} + \frac{\partial \sigma_{yz}}{\partial z} + b_y = 0, \\[4pt]
+\frac{\partial \sigma_{xz}}{\partial x} + \frac{\partial \sigma_{yz}}{\partial y} + \frac{\partial \sigma_{zz}}{\partial z} + b_z = 0,
+\end{gathered}
+\]
+o, de manera compacta, en notación indicial y en notación tensorial,
+\[
+\sigma_{ij,j} + b_i = 0 \quad \text{en } \Omega, \qquad\qquad \nabla\cdot\bm\sigma + \bm b = \bm 0 \quad \text{en } \Omega.
+\]
+\end{ecnimportante}
+
+Nótese que en la deducción anterior se usó $\sigma_{yx}=\sigma_{xy}$, $\sigma_{zx}=\sigma_{xz}$ y $\sigma_{zy}=\sigma_{yz}$, es decir, la simetría del tensor de tensiones. Esa simetría no es un supuesto adicional, sino una consecuencia directa del equilibrio de \emph{momentos} del elemento diferencial, para el caso —el único que se trata en este curso— de un sólido \emph{no polar} (es decir, uno en el que no existen momentos distribuidos por unidad de volumen ni pares de tensiones de superficie independientes de las fuerzas). En efecto, si se toma momento respecto de un eje que pasa por el centro del elemento y es paralelo, por ejemplo, al eje $z$, las únicas contribuciones que no se cancelan por simetría geométrica son las de los pares de tensiones de corte $\tau_{xy}$ y $\tau_{yx}$ actuando sobre brazos de palanca de longitud $dx/2$ y $dy/2$, respectivamente; igualando ese momento neto a cero (nuevamente, ausencia de aceleración angular) conduce, tras simplificar los términos de orden superior, a $\tau_{xy}=\tau_{yx}$. El mismo argumento aplicado a los otros dos ejes da $\tau_{xz}=\tau_{zx}$ y $\tau_{yz}=\tau_{zy}$. Es por esta razón que, ya desde la \cref{sec:cap02-tensores}, se escribió $\bm\sigma$ como una matriz simétrica.
+
+\begin{observacion}[Sobre la notación indicial de la simetría]
+En notación indicial, la simetría de $\bm\sigma$ se escribe simplemente $\sigma_{ij}=\sigma_{ji}$. Esta propiedad es la que permite escribir la divergencia del tensor de tensiones indistintamente como $\sigma_{ij,j}$ o como $\sigma_{ji,j}$ —ambas expresiones son la misma cantidad—, una libertad notacional que se usará repetidamente en la \cref{sec:cap02-transformacion} al deducir la ley de transformación de $\bm\sigma$ frente a un cambio de base.
+\end{observacion}
+
+\section{Relaciones cinemáticas: deformación--desplazamiento}
+\label{sec:cap02-cinematica}
+
+Las ecuaciones de equilibrio de la sección anterior vinculan las tensiones con las fuerzas aplicadas, pero no dicen nada, por sí solas, acerca de cómo se relacionan las tensiones con la forma en que el sólido se deforma. Esa segunda pieza del problema —puramente geométrica, y por tanto válida independientemente del material del que esté hecho el sólido— es la relación cinemática entre el campo de deformaciones $\bm\varepsilon$ y el campo de desplazamientos $\bm u$.
+
+Considérense dos puntos materiales vecinos, $P$ de coordenadas $x_j$ y $Q$ de coordenadas $x_j+dx_j$, separados en la configuración de referencia por el vector infinitesimal $dx_j$. Tras la deformación, sus desplazamientos son $u_i(x_j)$ y $u_i(x_j+dx_j)$, respectivamente, y la diferencia entre ambos —el desplazamiento \emph{relativo} de $Q$ respecto de $P$— se obtiene, para $dx_j$ suficientemente pequeño, mediante un desarrollo de Taylor de primer orden:
+\[
+du_i = u_i(x_j+dx_j) - u_i(x_j) \approx \frac{\partial u_i}{\partial x_j}\,dx_j = u_{i,j}\,dx_j.
+\]
+El objeto $u_{i,j}$ —el \emph{gradiente del desplazamiento}— contiene toda la información sobre cómo se mueven, relativamente entre sí, los puntos vecinos a $P$. Sin embargo, ese gradiente mezcla dos efectos físicamente distintos: una parte que produce cambios de longitud y de ángulo (es decir, deformación propiamente dicha) y una parte que corresponde a una rotación de cuerpo rígido local (que no produce ningún cambio de forma). Para separar ambos efectos, se descompone el tensor de segundo orden $u_{i,j}$ en su parte simétrica y su parte antisimétrica, lo cual siempre es posible para cualquier tensor de segundo orden:
+\[
+u_{i,j} = \underbrace{\frac{1}{2}\left(u_{i,j}+u_{j,i}\right)}_{\varepsilon_{ij} \ (\text{simétrica})} + \underbrace{\frac{1}{2}\left(u_{i,j}-u_{j,i}\right)}_{\omega_{ij} \ (\text{antisimétrica})}.
+\]
+La parte antisimétrica $\omega_{ij}$ es el tensor de rotación infinitesimal: puede demostrarse que, para un giro rígido puro (sin deformación), el gradiente de desplazamiento es exactamente antisimétrico, de modo que $\omega_{ij}$ no contribuye a ningún cambio de longitud ni de ángulo entre fibras materiales. La parte simétrica, en cambio, sí es responsable de dichos cambios, y es precisamente lo que se define como el tensor de deformaciones infinitesimales $\varepsilon_{ij}$.
+
+\begin{ecnimportante}{Relaciones cinemáticas (deformación--desplazamiento)}{cap02-cinematica}
+El tensor de deformaciones infinitesimales se define como la parte simétrica del gradiente del campo de desplazamientos:
+\[
+\varepsilon_{xx} = \frac{\partial u}{\partial x}, \qquad
+\varepsilon_{yy} = \frac{\partial v}{\partial y}, \qquad
+\varepsilon_{zz} = \frac{\partial w}{\partial z},
+\]
+\[
+\varepsilon_{xy} = \frac{1}{2}\left(\frac{\partial u}{\partial y}+\frac{\partial v}{\partial x}\right), \qquad
+\varepsilon_{xz} = \frac{1}{2}\left(\frac{\partial u}{\partial z}+\frac{\partial w}{\partial x}\right), \qquad
+\varepsilon_{yz} = \frac{1}{2}\left(\frac{\partial v}{\partial z}+\frac{\partial w}{\partial y}\right),
+\]
+o, de manera compacta, en notación indicial y en notación tensorial,
+\[
+\varepsilon_{ij} = \frac{1}{2}\left(u_{i,j}+u_{j,i}\right) = \frac{1}{2}\left(\nabla_i u_j + \nabla_j u_i\right) \quad \text{en } \Omega, \qquad\qquad \bm\varepsilon = \nabla^{s}\bm u \quad \text{en } \Omega,
+\]
+donde $\nabla^{s}(\cdot)$ denota el operador ``gradiente simétrico''. Por construcción, $\varepsilon_{ij}=\varepsilon_{ji}$.
+\end{ecnimportante}
+
+Físicamente, las tres componentes diagonales $\varepsilon_{xx}, \varepsilon_{yy}, \varepsilon_{zz}$ miden el alargamiento (o acortamiento) unitario de fibras materiales originalmente alineadas con los ejes $x$, $y$, $z$, respectivamente, mientras que las tres componentes fuera de la diagonal $\varepsilon_{xy}, \varepsilon_{xz}, \varepsilon_{yz}$ miden la mitad de la distorsión angular (el cambio del ángulo recto original) entre pares de fibras materiales inicialmente ortogonales según esos mismos ejes. Es importante señalar que esta definición de $\bm\varepsilon$ es \emph{lineal} en el gradiente de $\bm u$: se ha despreciado deliberadamente cualquier término cuadrático en las derivadas de $\bm u$ (que sí aparecería en una medida de deformación exacta, válida para grandes deformaciones). Esta linealización es, precisamente, la manifestación matemática de la hipótesis de ``pequeños desplazamientos y deformaciones'' adoptada en el Capítulo 1: solo bajo esa hipótesis $\bm\varepsilon=\nabla^s\bm u$ es una aproximación adecuada de la deformación real del sólido.
+
+\begin{observacion}[Notación de ingeniería para las deformaciones de corte]
+En muchos textos y en el formulario de este curso, las componentes de corte de la deformación se expresan mediante la llamada \emph{deformación angular de ingeniería}, definida como el doble de la componente tensorial: $\gamma_{xy}=2\varepsilon_{xy}$, $\gamma_{xz}=2\varepsilon_{xz}$, $\gamma_{yz}=2\varepsilon_{yz}$. Esta convención, que evita el factor $1/2$ al escribir la relación constitutiva en notación matricial, se retomará en el Capítulo 3 al introducir la notación de Voigt.
+\end{observacion}
+
+\section{Condiciones de borde esenciales y naturales}
+\label{sec:cap02-condiciones-borde}
+
+Las ecuaciones de equilibrio (\cref{eq:cap02-equilibrio}) y las relaciones cinemáticas (\cref{eq:cap02-cinematica}) son válidas en el interior de $\Omega$, pero un sistema de ecuaciones diferenciales en derivadas parciales no queda completamente determinado sin especificar qué ocurre en la frontera $\Gamma$. Como se adelantó en la \cref{sec:cap02-bvp}, la frontera se divide en $\Gamma_u$ (donde se conoce el desplazamiento) y $\Gamma_t$ (donde se conoce la tracción de superficie), y en cada una de ellas corresponde un tipo distinto de condición matemática.
+
+En $\Gamma_u$, la condición es directa: el campo de desplazamientos incógnita $\bm u$ debe coincidir con el valor prescrito $\bar{\bm u}$ en todo punto de esa porción de la frontera. Como esta condición restringe directamente a la variable primaria del problema (el desplazamiento), se denomina \textbf{condición de borde esencial} o \textbf{condición de Dirichlet}.
+
+En $\Gamma_t$, en cambio, lo que se prescribe es la tracción de superficie $\bar{\bm t}$, es decir, una cantidad relacionada con las \emph{derivadas} del campo de desplazamientos (a través de las tensiones, y estas a través de las deformaciones). Para escribir esta condición en términos de $\bm\sigma$ es necesario relacionar la tracción $\bm t$ que actúa sobre una faceta arbitraria de normal $\bm n$ con el tensor de tensiones $\bm\sigma$ ya definido en la \cref{sec:cap02-tensores}. Esta relación —uno de los resultados centrales de la mecánica del medio continuo— se obtiene mediante el siguiente argumento de equilibrio, atribuido a Cauchy.
+
+\begin{teorema}{Relación de Cauchy entre tracción y tensión}{cap02-cauchy}
+Considérese un tetraedro infinitesimal con tres caras alineadas con los planos coordenados (de áreas $dA_1, dA_2, dA_3$ y normales exteriores $-\bm e_1,-\bm e_2,-\bm e_3$) y una cuarta cara inclinada, de área $dA$ y normal exterior unitaria $\bm n=(n_1,n_2,n_3)$. Geométricamente, el área de cada cara coordenada es la proyección del área inclinada sobre el plano correspondiente, es decir $dA_i = n_i\,dA$.
+
+Sobre la cara inclinada actúa la tracción $\bm t(\bm n)$ (fuerza por unidad de área, en general distinta para cada orientación $\bm n$), y sobre las caras coordenadas actúan las tracciones asociadas a las normales $-\bm e_i$, que por la ley de acción y reacción son $-\bm t(\bm e_i)$, con componentes $-\sigma_{ji}$ en la dirección $x_j$ (adoptando la convención de que $\sigma_{ji}$ es la componente $j$ de la tracción sobre la cara de normal $\bm e_i$). El equilibrio de fuerzas del tetraedro en la dirección $x_j$ establece
+\[
+t_j(\bm n)\,dA - \sigma_{j1}\,dA_1 - \sigma_{j2}\,dA_2 - \sigma_{j3}\,dA_3 + b_j\left(\tfrac{1}{3}h\,dA\right) = 0,
+\]
+donde $h$ es la altura del tetraedro medida desde la cara inclinada. El término de fuerza de cuerpo es proporcional al volumen del tetraedro, que escala como $h^3$, mientras que los términos de superficie escalan como $h^2$; al hacer tender el tetraedro a un punto ($h\to 0$) dividiendo toda la ecuación por $dA$, el término de fuerza de cuerpo se anula en el límite frente a los términos de superficie, y usando $dA_i=n_i\,dA$ se obtiene
+\[
+t_j(\bm n) = \sigma_{ji}n_i = \sigma_{ij}n_j \qquad (\text{por la simetría } \sigma_{ij}=\sigma_{ji}).
+\]
+\end{teorema}
+
+Este resultado —que la tracción sobre \emph{cualquier} faceta que pasa por un punto queda completamente determinada por el tensor de tensiones $\bm\sigma$ en ese punto, a través de un simple producto matriz-vector con la normal— es lo que permite escribir la condición de borde en $\Gamma_t$ directamente en función de $\bm\sigma$. Como esta condición involucra derivadas del desplazamiento (a través de $\bm\sigma$) y surge de manera ``natural'' al plantear el equilibrio —en contraste con la condición esencial, que se impone directamente sobre $\bm u$—, se denomina \textbf{condición de borde natural} o \textbf{condición de Neumann}.
+
+\begin{ecnimportante}{Condiciones de borde esenciales y naturales}{cap02-condiciones-borde}
+El campo de desplazamientos $\bm u$ y el tensor de tensiones $\bm\sigma$ satisfacen, sobre las porciones complementarias de la frontera $\Gamma=\Gamma_u\cup\Gamma_t$,
+\[
+\text{(esencial, Dirichlet)} \qquad u_i = \bar u_i \ \text{ en } \Gamma_u, \qquad\qquad \bm u = \bar{\bm u} \ \text{ en } \Gamma_u,
+\]
+\[
+\text{(natural, Neumann)} \qquad \sigma_{ij}n_j = \bar t_i \ \text{ en } \Gamma_t, \qquad\qquad \bm\sigma\cdot\bm n = \bar{\bm t} \ \text{ en } \Gamma_t,
+\]
+donde $\bm n$ es la normal exterior unitaria a $\Gamma_t$. En componentes cartesianas, la condición natural se escribe explícitamente como
+\[
+\sigma_{xx}n_x + \sigma_{xy}n_y + \sigma_{xz}n_z = \bar t_x, \qquad
+\sigma_{xy}n_x + \sigma_{yy}n_y + \sigma_{yz}n_z = \bar t_y, \qquad
+\sigma_{xz}n_x + \sigma_{yz}n_y + \sigma_{zz}n_z = \bar t_z.
+\]
+\end{ecnimportante}
+
+\begin{observacion}[¿Está bien planteado el problema?]
+Antes de intentar resolver el problema conviene verificar que esté \emph{bien planteado}, en el sentido de que el número de ecuaciones disponibles iguale al número de incógnitas. Contando componentes independientes: el tensor de tensiones $\bm\sigma$ aporta 6 incógnitas (simétrico), el vector de desplazamientos $\bm u$ aporta 3, y el tensor de deformaciones $\bm\varepsilon$ aporta otras 6, para un total de $6+3+6=15$ incógnitas escalares en cada punto de $\Omega$. Del lado de las ecuaciones: el equilibrio (\cref{eq:cap02-equilibrio}) aporta 3 ecuaciones, la cinemática (\cref{eq:cap02-cinematica}) aporta 6, y la relación constitutiva —que se deducirá recién en el Capítulo 3, y que en su forma general se escribe $\sigma_{ij}=C_{ijkl}\varepsilon_{kl}$— aporta las 6 ecuaciones restantes, nuevamente para un total de $3+6+6=15$. El número de ecuaciones iguala exactamente al número de incógnitas, lo que confirma que el problema, junto con condiciones de borde apropiadas en $\Gamma_u$ y $\Gamma_t$, está bien planteado.
+\end{observacion}
+
+\section{Transformación de coordenadas de tensores}
+\label{sec:cap02-transformacion}
+
+Las componentes de $\bm\sigma$ y de $\bm\varepsilon$ que se han escrito hasta ahora están referidas a un sistema de coordenadas cartesiano particular $x=(x,y,z)$. Sin embargo, el propio tensor —el objeto físico que representa el estado de tensión o deformación en un punto— no depende de la elección de ejes: lo que cambia son sus \emph{componentes} al describirlo en un sistema distinto $x^*=(x^*,y^*,z^*)$, rotado respecto del original. Saber cómo se transforman esas componentes es indispensable por al menos dos razones que reaparecerán en este libro: primero, porque permite calcular tensiones y deformaciones en direcciones de interés (por ejemplo, tensiones normales y de corte en un plano de falla potencial); segundo, porque es la herramienta que permitirá, en el Capítulo 3, decidir cuántas constantes elásticas independientes necesita un material según su simetría —un material isótropo, precisamente, es aquel cuyo tensor constitutivo \emph{no cambia} al transformarlo a cualquier sistema rotado.
+
+\subsection{El tensor de transformación (matriz de rotación)}
+
+Sea $\bm T$ el tensor de segundo orden cuyas componentes son los cosenos directores de los ángulos entre los ejes del sistema original $x$ y los del sistema rotado $x^*$:
+\[
+\bm T =
+\begin{bmatrix}
+\cos(x^*,x) & \cos(x^*,y) & \cos(x^*,z) \\
+\cos(y^*,x) & \cos(y^*,y) & \cos(y^*,z) \\
+\cos(z^*,x) & \cos(z^*,y) & \cos(z^*,z)
+\end{bmatrix}, \qquad\qquad T_{ij} = \cos(x_i^*, x_j).
+\]
+Con esta definición, un vector cualquiera —por ejemplo, la tracción $\bm t$ o la normal $\bm n$— se transforma según $\bm t^* = \bm T\,\bm t$ y $\bm n^* = \bm T\,\bm n$. Una propiedad esencial de $\bm T$, que se usa repetidamente en lo que sigue, es que se trata de un \textbf{tensor ortogonal}: sus filas (y columnas) son los vectores unitarios de una base ortonormal, de modo que
+\[
+\bm T^{-1} = \bm T^{T} \qquad \Longleftrightarrow \qquad \bm T^{T}\cdot\bm T = \bm 1 \qquad \Longleftrightarrow \qquad T_{ik}T_{jk}=\delta_{ij}.
+\]
+
+\subsection{Transformación de tensores de segundo orden}
+
+Para deducir cómo se transforman las componentes de $\bm\sigma$ (y, de manera enteramente análoga, las de $\bm\varepsilon$), se aprovecha precisamente la relación de Cauchy $\bm\sigma\cdot\bm n=\bm t$ demostrada en la \cref{sec:cap02-condiciones-borde}, escrita una vez en el sistema original y otra vez en el sistema rotado:
+\[
+\bm\sigma\cdot\bm n = \bm t, \qquad\qquad \bm\sigma^{*}\cdot\bm n^{*} = \bm t^{*}.
+\]
+Como $\bm t^{*}=\bm T\,\bm t$ y $\bm n=\bm T^{T}\bm n^{*}$ (esta última, la inversa de $\bm n^*=\bm T\bm n$, usando $\bm T^{-1}=\bm T^T$), se puede sustituir en la primera relación:
+\[
+\bm\sigma\cdot\bm T^{T}\cdot\bm n^{*} = \bm t = \bm T^{T}\,\bm t^{*} \quad\Longrightarrow\quad \bm T\cdot\bm\sigma\cdot\bm T^{T}\cdot\bm n^{*} = \bm t^{*}.
+\]
+Comparando esta última expresión con $\bm\sigma^{*}\cdot\bm n^{*}=\bm t^{*}$, y como la normal $\bm n^*$ es arbitraria (el argumento vale para cualquier faceta), se concluye que los operadores que multiplican a $\bm n^*$ deben coincidir:
+\[
+\bm\sigma^{*} = \bm T\cdot\bm\sigma\cdot\bm T^{T} \qquad \Longleftrightarrow \qquad \bm\sigma = \bm T^{T}\cdot\bm\sigma^{*}\cdot\bm T.
+\]
+El mismo razonamiento, aplicado a $\bm\varepsilon$ en lugar de $\bm\sigma$ (la deducción es formalmente idéntica, ya que ambos son tensores simétricos de segundo orden), da $\bm\varepsilon^{*}=\bm T\cdot\bm\varepsilon\cdot\bm T^{T}$. Conviene además reobtener este resultado en notación indicial, pues es la forma que se generalizará de inmediato al tensor constitutivo de cuarto orden. Partiendo de $\sigma_{ij}n_j=t_i$ y de las leyes de transformación vectorial $t_i=t^*_k T_{ki}$, $n_j=n^*_lT_{lj}$ (las versiones indiciales de $\bm t=\bm T^T\bm t^*$ y $\bm n=\bm T^T\bm n^*$), se sustituye y se multiplican ambos miembros por $T_{mi}$, usando $T_{mi}T_{ki}=\delta_{mk}$ (ortogonalidad de $\bm T$). Tras renombrar índices mudos, el resultado es
+\[
+\sigma^{*}_{ij} = T_{ik}\,\sigma_{kl}\,T_{jl},
+\]
+que es exactamente la versión indicial de $\bm\sigma^{*}=\bm T\cdot\bm\sigma\cdot\bm T^{T}$.
+
+\begin{ecnimportante}{Transformación de tensores de segundo orden}{cap02-transformacion-tensores}
+Frente a un cambio de base cartesiano descrito por el tensor de rotación ortogonal $\bm T$ ($T_{ik}T_{jk}=\delta_{ij}$), las componentes de los tensores de tensión y deformación se transforman según
+\[
+\sigma^{*}_{ij} = T_{ik}\,T_{jl}\,\sigma_{kl}, \qquad\qquad \varepsilon^{*}_{ij} = T_{ik}\,T_{jl}\,\varepsilon_{kl},
+\]
+o, en notación tensorial compacta,
+\[
+\bm\sigma^{*} = \bm T\cdot\bm\sigma\cdot\bm T^{T}, \qquad\qquad \bm\varepsilon^{*} = \bm T\cdot\bm\varepsilon\cdot\bm T^{T}.
+\]
+\end{ecnimportante}
+
+\subsection{Transformación del tensor constitutivo de cuarto orden}
+
+El mismo procedimiento se extiende, sin dificultad conceptual adicional, al tensor constitutivo elástico $\bm C$ que se introducirá formalmente en el Capítulo 3 a través de $\sigma_{ij}=C_{ijkl}\varepsilon_{kl}$. Escribiendo esta relación en el sistema rotado, $\sigma^*_{ij}=C^*_{ijkl}\varepsilon^*_{kl}$, y usando la ley de transformación recién obtenida para $\sigma^*_{ij}$ junto con $\varepsilon_{kl}=T_{ok}T_{pl}\varepsilon^*_{op}$ (la transformación inversa de $\bm\varepsilon$), se llega, tras multiplicar por los cosenos directores correspondientes y agrupar términos, a
+\[
+C^{*}_{qrop} = T_{qi}\,T_{rj}\,C_{ijkl}\,T_{ok}\,T_{pl}, \qquad\qquad \bm C^{*} = \bm T\times\bm T : \bm C : \bm T^{T}\times\bm T^{T},
+\]
+donde $\bm T\times\bm T$ denota, de manera simbólica, la aplicación de $\bm T$ sobre cada uno de los dos primeros pares de índices de $\bm C$. Esta ley de transformación de cuarto orden es la que permitirá, en el Capítulo 3, formalizar la condición de isotropía de un material como la exigencia de que $\bm C^{*}=\bm C$ para \emph{cualquier} tensor de rotación $\bm T$.
+
+\subsection{Caso particular: rotación en torno a un eje}
+
+Un caso especialmente útil en la práctica —y que sirve además para verificar el resultado general recién obtenido— es el de una rotación de ángulo $\theta$ en torno al eje $z$ (es decir, $z^*=z$), como se ilustra en la \cref{fig:cap02-rotacion-ejes}. En este caso el tensor de rotación se reduce a
+\[
+\bm T =
+\begin{bmatrix}
+\cos\theta & \sin\theta & 0 \\
+-\sin\theta & \cos\theta & 0 \\
+0 & 0 & 1
+\end{bmatrix},
+\]
+y basta sustituir estas componentes en $\sigma^{*}_{ij}=T_{ik}T_{jl}\sigma_{kl}$ para obtener las fórmulas clásicas de transformación plana de tensiones (idénticas, en su estructura, a las que se emplean para construir el círculo de Mohr), que se desarrollan en el siguiente ejemplo.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.35, every node/.style={font=\small}]
+  % ejes originales
+  \draw[-{Latex[length=2mm]}, ucgray, thick] (0,0) -- (2.6,0) node[right] {$x$};
+  \draw[-{Latex[length=2mm]}, ucgray, thick] (0,0) -- (0,2.4) node[above] {$y$};
+  % ejes rotados
+  \draw[-{Latex[length=2mm]}, ucred, thick] (0,0) -- (30:2.5) node[above right] {$x^{*}$};
+  \draw[-{Latex[length=2mm]}, ucred, thick] (0,0) -- (120:2.3) node[above left] {$y^{*}$};
+  % arco de angulo
+  \draw[ucblue, thick] (0.75,0) arc[start angle=0, end angle=30, radius=0.75];
+  \node[ucblue] at (16:1.0) {$\theta$};
+  % z = z*
+  \node[ucgray] at (2.9,-0.35) {$z=z^{*}$ (fuera del plano)};
+\end{tikzpicture}
+\caption{Rotación plana de ejes en torno a $z$: el sistema $x^{*},y^{*}$ se obtiene rotando $x,y$ un ángulo $\theta$, con $z^{*}=z$.}
+\label{fig:cap02-rotacion-ejes}
+\end{figure}
+
+\begin{ejemplo}{Transformación plana de tensiones}{cap02-transformacion-2d}
+Para la rotación en torno a $z$ de la \cref{fig:cap02-rotacion-ejes}, sustituir $\bm T$ en $\sigma^{*}_{ij}=T_{ik}T_{jl}\sigma_{kl}$ da, para las componentes en el plano $x$-$y$,
+\[
+\sigma^{*}_{xx} = \cos^2\theta\,\sigma_{xx} + \sin^2\theta\,\sigma_{yy} + 2\sin\theta\cos\theta\,\sigma_{xy},
+\]
+\[
+\sigma^{*}_{yy} = \sin^2\theta\,\sigma_{xx} + \cos^2\theta\,\sigma_{yy} - 2\sin\theta\cos\theta\,\sigma_{xy},
+\]
+\[
+\sigma^{*}_{xy} = -\sin\theta\cos\theta\,\sigma_{xx} + \sin\theta\cos\theta\,\sigma_{yy} + \left(\cos^2\theta - \sin^2\theta\right)\sigma_{xy},
+\]
+mientras que las componentes fuera del plano de rotación resultan
+\[
+\sigma^{*}_{zz} = \sigma_{zz}, \qquad
+\sigma^{*}_{xz} = \cos\theta\,\sigma_{xz} + \sin\theta\,\sigma_{yz}, \qquad
+\sigma^{*}_{yz} = -\sin\theta\,\sigma_{xz} + \cos\theta\,\sigma_{yz}.
+\]
+Las mismas seis fórmulas son válidas, término a término, para las componentes de $\bm\varepsilon^{*}$ en función de $\bm\varepsilon$, simplemente reemplazando cada $\sigma$ por la $\varepsilon$ correspondiente. Estas expresiones —que el lector reconocerá como las mismas que sustentan la construcción gráfica del círculo de Mohr— son de gran utilidad práctica: permiten, por ejemplo, determinar las direcciones y magnitudes de las tensiones (o deformaciones) principales de un estado plano, buscando el ángulo $\theta$ que anula la componente de corte $\sigma^{*}_{xy}$.
+\end{ejemplo}
+
+Con las ecuaciones de equilibrio, las relaciones cinemáticas, las condiciones de borde y la ley de transformación de tensores ya establecidas, el problema de valor de frontera del sólido elástico queda formulado por completo salvo por una pieza: la relación constitutiva $\sigma_{ij}=C_{ijkl}\varepsilon_{kl}$, que hasta aquí se ha usado únicamente para contar ecuaciones e incógnitas y para anticipar su ley de transformación, pero cuya forma explícita —y, sobre todo, cuántas constantes independientes contiene el tensor $\bm C$ según la simetría del material— es precisamente el tema del Capítulo 3.

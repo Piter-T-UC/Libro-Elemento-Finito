@@ -1,0 +1,61 @@
+% ================================================================
+% Elementos Finitos en Diseño Mecánico -- ICM3323
+% Libro de apuntes de cátedra. Recopilado por Pedro Taboada.
+% ================================================================
+\documentclass[11pt,twoside,openright]{book}
+
+\usepackage{preambulo/preambulo}
+\usepackage{preambulo/cajas}
+
+% Includeonly: comentar/descomentar para compilar solo un subconjunto
+% de capitulos durante la edicion (compilacion mas rapida).
+% \includeonly{%
+%   capitulos/parte2-barras/cap06-formulacion-fem-barras%
+% }
+
+\begin{document}
+
+%================================================================
+% PORTADA
+%================================================================
+\input{portada/portada}
+
+%================================================================
+% FRONT MATTER
+%================================================================
+\frontmatter
+\input{frontmatter/creditos}
+\tableofcontents
+\input{frontmatter/prologo}
+\input{frontmatter/notacion}
+
+%================================================================
+% CUERPO DEL LIBRO
+%================================================================
+\mainmatter
+
+\part{Fundamentos de Mecánica del Medio Continuo}
+\include{capitulos/parte1-fundamentos/cap01-introduccion}
+\include{capitulos/parte1-fundamentos/cap02-cinematica-equilibrio}
+\include{capitulos/parte1-fundamentos/cap03-teoria-constitutiva}
+
+\part{Análisis y Formulación FEM de Elementos de Barra}
+\include{capitulos/parte2-barras/cap04-analisis-matricial-barras}
+\include{capitulos/parte2-barras/cap05-ptv}
+\include{capitulos/parte2-barras/cap06-formulacion-fem-barras}
+\include{capitulos/parte2-barras/cap07-convergencia}
+\include{capitulos/parte2-barras/cap08-isoparametrico-gauss}
+
+% Parte III -- reservada para capitulos futuros del curso
+% (vigas, elasticidad 2D/3D, placas, dinamica/no linealidad),
+% a medida que se incorporen nuevos apuntes (02-, 03-, ...).
+% \part{Elementos Estructurales y Sólidos de Orden Superior}
+% \include{capitulos/parte3-futuro/cap09-...}
+
+%================================================================
+% ANEXOS
+%================================================================
+\appendix
+\input{anexos/anexoA-formulario}
+
+\end{document}

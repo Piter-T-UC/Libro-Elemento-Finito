@@ -1,0 +1,177 @@
+\chapter{Introducción a la Discretización y al Método de los Elementos Finitos}
+\label{sec:cap01-introduccion}
+
+Todo curso de elementos finitos comienza, en el fondo, con una misma pregunta: ¿cómo se resuelve un problema físico que está gobernado por ecuaciones diferenciales válidas en un dominio continuo, cuando ese dominio tiene una geometría arbitraria, propiedades que varían punto a punto y condiciones de borde complicadas? La respuesta que la ingeniería moderna ha adoptado de forma casi universal consiste en \emph{discretizar} el problema: reemplazar el continuo, que posee infinitos grados de libertad, por un modelo matemático equivalente con un número finito de incógnitas, que sí puede resolverse con un computador. Este capítulo introduce las ideas conceptuales que sustentan esa transición —de lo continuo a lo discreto— y sitúa al Método de los Elementos Finitos (MEF) dentro del panorama más amplio de las técnicas de discretización, antes de que los capítulos siguientes desarrollen con rigor matemático la mecánica del sólido elástico que este libro discretiza.
+
+\section{Sistemas discretos y sistemas continuos}
+\label{sec:cap01-discreto-continuo}
+
+La distinción entre sistema discreto y sistema continuo es, probablemente, la primera clasificación que conviene tener clara antes de estudiar cualquier método numérico, porque de ella depende directamente si el problema puede resolverse ``exactamente'' con álgebra elemental o si requiere, por su propia naturaleza, algún tipo de aproximación.
+
+\begin{definicion}{Sistema discreto}{cap01-sistema-discreto}
+Un sistema discreto es aquel cuyo estado queda completamente determinado por un número \emph{finito} de variables (grados de libertad). Su comportamiento se describe mediante un sistema finito de ecuaciones algebraicas (caso estático) o de ecuaciones diferenciales ordinarias en el tiempo (caso dinámico), y —salvo por errores de redondeo numérico— dicho sistema puede resolverse de manera exacta.
+\end{definicion}
+
+El ejemplo canónico de sistema discreto es una cadena de masas conectadas por resortes, como la que se muestra esquemáticamente en el panel izquierdo de la \cref{fig:cap01-discreto-continuo}. Si la cadena tiene $n$ masas, el estado completo del sistema —sus posiciones, o más precisamente sus desplazamientos respecto de la posición de equilibrio— queda descrito por exactamente $n$ números: $u_1, u_2, \dots, u_n$. No existe ninguna incógnita ``entre'' la masa 3 y la masa 4: el resorte que las conecta solo transmite una fuerza que depende de la diferencia $u_4-u_3$, y nada más necesita ser calculado en ese tramo. El equilibrio estático de cada masa $i$ conduce a una ecuación algebraica lineal en las incógnitas $u_i$, de modo que el problema completo se reduce a un sistema de $n$ ecuaciones con $n$ incógnitas,
+\[
+\mathbf{K}\mathbf{u} = \mathbf{F},
+\]
+donde $\mathbf{K}$ es la matriz de rigidez del sistema (ensamblada a partir de las rigideces individuales de cada resorte) y $\mathbf{F}$ es el vector de fuerzas aplicadas. Este tipo de estructura —una matriz de rigidez que relaciona desplazamientos nodales con fuerzas nodales— reaparecerá una y otra vez a lo largo de este libro, porque es precisamente la forma final a la que el MEF reduce \emph{cualquier} problema, discreto o continuo.
+
+\begin{definicion}{Sistema continuo}{cap01-sistema-continuo}
+Un sistema continuo es aquel cuyo estado se describe mediante uno o más campos definidos en cada punto de un dominio $\Omega$ (por ejemplo, el campo de desplazamientos $\bm{u}(x,y,z)$ de un sólido). Formalmente, posee infinitos grados de libertad —uno por cada punto material de $\Omega$— y su comportamiento queda gobernado por ecuaciones diferenciales en derivadas parciales (EDP), junto con condiciones de borde apropiadas sobre la frontera $\Gamma$ del dominio.
+\end{definicion}
+
+El sólido elástico que ocupa este libro —representado en el panel derecho de la \cref{fig:cap01-discreto-continuo}— es el ejemplo por excelencia de sistema continuo. A diferencia de la cadena de masas, aquí no existe una lista finita de puntos cuyo desplazamiento haya que calcular: el bloque sólido está compuesto (idealmente) por un continuo de partículas materiales, y cada una de ellas experimenta, en general, un desplazamiento distinto $\bm{u}(x,y,z)$. El equilibrio de este sistema ya no se escribe como un conjunto finito de ecuaciones algebraicas, sino como una ecuación diferencial que debe satisfacerse en \emph{todos y cada uno} de los puntos del dominio $\Omega$, complementada con condiciones sobre la frontera $\Gamma$. Este es exactamente el tipo de problema —el problema de valor de frontera del sólido elástico— que se formulará con precisión en el Capítulo 2.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.0, every node/.style={font=\small}]
+  % ---------- Panel izquierdo: sistema discreto masa-resorte ----------
+  \begin{scope}[xshift=0cm]
+    \node at (2.0,3.0) {\bfseries Sistema discreto};
+    % pared
+    \fill[pattern=north east lines, pattern color=ucgray] (-0.3,-0.5) rectangle (0,1.0);
+    \draw[thick] (0,-0.5) -- (0,1.0);
+    % resortes y masas
+    \def\ymid{0.25}
+    \draw[thick, decorate, decoration={coil, aspect=0.4, segment length=2.8mm, amplitude=1.6mm}]
+      (0,\ymid) -- (1.1,\ymid);
+    \draw[ucblue, fill=ucblue!25, thick] (1.1,0) rectangle (1.7,0.5) node[pos=.5,black]{$m_1$};
+    \draw[thick, decorate, decoration={coil, aspect=0.4, segment length=2.8mm, amplitude=1.6mm}]
+      (1.7,\ymid) -- (2.8,\ymid);
+    \draw[ucblue, fill=ucblue!25, thick] (2.8,0) rectangle (3.4,0.5) node[pos=.5,black]{$m_2$};
+    \draw[thick, decorate, decoration={coil, aspect=0.4, segment length=2.8mm, amplitude=1.6mm}]
+      (3.4,\ymid) -- (4.5,\ymid);
+    \draw[ucblue, fill=ucblue!25, thick] (4.5,0) rectangle (5.1,0.5) node[pos=.5,black]{$m_3$};
+    % desplazamientos
+    \draw[-{Latex[length=1.8mm]}, ucred] (1.4,-0.35) -- ++(0.45,0) node[right] {$u_1$};
+    \draw[-{Latex[length=1.8mm]}, ucred] (3.1,-0.35) -- ++(0.45,0) node[right] {$u_2$};
+    \draw[-{Latex[length=1.8mm]}, ucred] (4.8,-0.35) -- ++(0.45,0) node[right] {$u_3$};
+    \node[align=center] at (2.55,-1.05) {\footnotesize $n=3$ grados de libertad\\[-1pt]\footnotesize $\mathbf{K}\mathbf{u}=\mathbf{F}$ (sistema finito)};
+  \end{scope}
+
+  % ---------- Panel derecho: sistema continuo (sólido) ----------
+  \begin{scope}[xshift=7.3cm]
+    \node at (2.0,3.0) {\bfseries Sistema continuo};
+    \draw[ucblue, fill=ucblue!15, thick, rounded corners=1pt] (0.3,-0.5) rectangle (4.1,2.2);
+    \shade[left color=ucblue!5, right color=ucblue!30] (0.3,-0.5) rectangle (4.1,2.2);
+    \draw[ucblue, thick, rounded corners=1pt] (0.3,-0.5) rectangle (4.1,2.2);
+    \fill[pattern=north east lines, pattern color=ucgray] (-0.25,-0.5) rectangle (0.3,2.2);
+    % puntos materiales con vectores de desplazamiento distintos
+    \foreach \p/\dx/\dy in {(1.1,0.3)/0.18/0.12, (2.1,1.5)/0.24/0.08, (3.2,0.6)/0.14/0.20, (1.7,-0.05)/0.2/0.15, (3.5,1.7)/0.1/0.22}{
+      \fill[ucred] \p circle (1.1pt);
+      \draw[-{Latex[length=1.5mm]}, ucred] \p -- ++(\dx,\dy);
+    }
+    \node[align=center] at (2.2,-1.05) {\footnotesize $\infty$ puntos materiales\\[-1pt]\footnotesize $\bm{u}(x,y,z)$ satisface una EDP en $\Omega$};
+  \end{scope}
+\end{tikzpicture}
+\caption{Comparación esquemática entre un sistema discreto (cadena masa--resorte, con un número finito de grados de libertad $u_i$) y un sistema continuo (sólido elástico, con un campo de desplazamientos $\bm{u}(x,y,z)$ definido en infinitos puntos materiales).}
+\label{fig:cap01-discreto-continuo}
+\end{figure}
+
+Conviene subrayar la consecuencia práctica de esta distinción. En el sistema discreto, ``resolver el problema'' significa despejar un vector finito $\mathbf{u}$ de un sistema lineal $\mathbf{K}\mathbf{u}=\mathbf{F}$: no hay aproximación involucrada, más allá de la que ya esté implícita en el modelo físico (por ejemplo, suponer resortes lineales). En el sistema continuo, en cambio, ``resolver el problema'' significa encontrar una función $\bm{u}(x,y,z)$ que satisfaga exactamente una ecuación diferencial en todo punto de $\Omega$ y las condiciones impuestas en $\Gamma$; salvo en geometrías y cargas muy simples, esta función no puede obtenerse en forma cerrada. El objetivo del Método de los Elementos Finitos es, precisamente, tender un puente entre ambos mundos: aproximar el sistema continuo por un sistema discreto equivalente —con la misma estructura $\mathbf{K}\mathbf{u}=\mathbf{F}$ que ya conocemos del ejemplo masa-resorte— cuya solución se acerque, tanto como se desee, a la solución exacta del continuo.
+
+\section{Métodos de discretización de problemas continuos}
+\label{sec:cap01-metodos-discretizacion}
+
+Puesto que la solución analítica exacta de un problema continuo rara vez está disponible para geometrías y cargas de interés práctico, la ingeniería recurre a métodos numéricos de discretización. Todos ellos comparten el mismo objetivo —transformar una EDP definida sobre un dominio continuo en un sistema algebraico finito—, pero difieren radicalmente en \emph{cómo} llevan a cabo esa transformación. Es útil distinguir dos grandes filosofías.
+
+\subsection{Métodos de diferencias finitas: una aproximación local}
+\label{sec:cap01-diferencias-finitas}
+
+El método de diferencias finitas (MDF) ataca directamente la ecuación diferencial en su forma \emph{fuerte}, es decir, la EDP escrita literalmente en términos de derivadas puntuales. La idea es sencilla: se define una malla (usualmente regular) de puntos sobre el dominio, y cada derivada que aparece en la ecuación se reemplaza por un cociente incremental —una aproximación basada en un desarrollo en serie de Taylor truncado— que involucra los valores de la función incógnita en los puntos vecinos de la malla. El resultado es un sistema algebraico cuyas incógnitas son los valores nodales de la función en cada punto de la malla.
+
+Se trata de un método conceptualmente directo y de fácil implementación en geometrías regulares, pero su naturaleza puntual y su dependencia de mallas estructuradas (tipo grilla) lo hacen perder precisión y sencillez cuando la geometría del dominio es irregular, cuando las propiedades del material cambian abruptamente, o cuando las condiciones de borde no son paralelas a los ejes coordenados. Imponer condiciones de borde naturales (es decir, sobre derivadas o flujos, como las tracciones en un sólido) también resulta menos natural que en los métodos integrales que se describen a continuación.
+
+\subsection{Métodos integrales: la forma débil del problema}
+\label{sec:cap01-metodos-integrales}
+
+La alternativa —y la que sigue este libro— consiste en no discretizar la ecuación diferencial en su forma fuerte, sino en reformular primero el problema como un enunciado \emph{integral} equivalente, válido sobre el dominio completo o sobre subdominios de él. Esta reformulación (llamada \emph{forma débil} o \emph{variacional}) se obtiene multiplicando la ecuación diferencial por una función arbitraria (``de ponderación'' o ``virtual'') e integrando por partes sobre $\Omega$; el resultado es una igualdad entre integrales que ya no exige que la solución sea derivable en el sentido clásico en cada punto, sino solo en un sentido integral, más débil y más permisivo. Sobre esa forma integral se construye luego una aproximación del campo incógnita mediante funciones de forma definidas sobre subdominios (o sobre todo el dominio), y de allí se obtiene el sistema algebraico final.
+
+Dentro de la familia de métodos integrales conviven varias técnicas, que se diferencian principalmente en cómo se subdivide el dominio y en el tipo de funciones de aproximación que emplean:
+
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{Método de los Elementos Finitos (MEF):} el dominio $\Omega$ se subdivide en un número finito de subdominios simples llamados \emph{elementos} (triángulos, cuadriláteros, tetraedros, hexaedros, \dots), sobre cada uno de los cuales el campo incógnita se aproxima mediante polinomios de bajo orden definidos a partir de sus valores en un conjunto de \emph{nodos}. Es el método predilecto en mecánica de sólidos y estructuras, precisamente por su enorme flexibilidad geométrica: la malla de elementos puede adaptarse a fronteras curvas, cambios de material y zonas de interés sin mayor dificultad. Este es el método que se desarrolla en el resto de este libro.
+\item \textbf{Volúmenes finitos (FV):} el dominio se divide en volúmenes de control, y la forma integral que se impone es directamente un principio de conservación (de masa, momentum o energía) sobre cada volumen. Es el método dominante en mecánica de fluidos y en problemas de transporte, donde la conservación estricta de flujos entre celdas vecinas es una propiedad deseable.
+\item \textbf{Elementos espectrales:} combinan la partición en elementos del MEF con funciones de forma polinomiales de \emph{orden muy alto} (a menudo basadas en polinomios de Chebyshev o Legendre), lo que produce una convergencia mucho más rápida (exponencial) para soluciones suaves, a costa de mallas típicamente más simples y de una implementación más exigente.
+\item \textbf{Elementos de contorno (BEM):} en lugar de discretizar todo el dominio $\Omega$, este método utiliza una solución fundamental conocida del problema para reescribir la EDP como una ecuación integral definida únicamente sobre la frontera $\Gamma$. Esto reduce en una dimensión el problema de discretización (solo hay que mallar el contorno, no el volumen), pero exige conocer la solución fundamental —lo cual no siempre es posible— y produce matrices densas, más costosas de resolver que las matrices dispersas típicas del MEF.
+\end{itemize}
+
+La \cref{fig:cap01-taxonomia} resume esta clasificación, y la \cref{tab:cap01-comparacion-metodos} compara las características más relevantes de cada familia desde el punto de vista de un ingeniero que debe elegir una herramienta de análisis.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  every node/.style={font=\small, align=center},
+  nivel1/.style={draw=ucred, fill=ucred!8, rounded corners=1.5pt, thick, minimum width=3.6cm, minimum height=0.9cm},
+  nivel2/.style={draw=ucblue, fill=ucblue!8, rounded corners=1.5pt, thick, minimum width=3.0cm, minimum height=0.8cm},
+  nivel3/.style={draw=ucteal, fill=ucteal!8, rounded corners=1.5pt, thick, minimum width=2.6cm, minimum height=0.9cm},
+  >={Latex[length=2mm]}
+]
+  \node[nivel1] (raiz) at (3.4,5.2) {Métodos de discretización\\ de problemas continuos};
+
+  \node[nivel2] (fd) at (0.2,3.4) {Diferencias\\ Finitas};
+  \node[nivel2] (integ) at (6.6,3.4) {Métodos\\ Integrales};
+
+  \node[nivel3] (fem)  at (3.4,1.3)  {Elementos\\ Finitos (MEF)};
+  \node[nivel3] (fv)   at (6.1,1.3)  {Volúmenes\\ Finitos};
+  \node[nivel3] (esp)  at (8.8,1.3)  {Elementos\\ Espectrales};
+  \node[nivel3] (bem)  at (11.5,1.3) {Elementos\\ de Contorno};
+
+  \draw[->] (raiz) -- (fd);
+  \draw[->] (raiz) -- (integ);
+  \draw[->] (integ) -- (fem);
+  \draw[->] (integ) -- (fv);
+  \draw[->] (integ) -- (esp);
+  \draw[->] (integ) -- (bem);
+\end{tikzpicture}
+\caption{Taxonomía de los métodos de discretización de problemas continuos. Este libro se concentra en la rama del Método de los Elementos Finitos aplicado a la mecánica de sólidos elásticos.}
+\label{fig:cap01-taxonomia}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Comparación cualitativa entre diferencias finitas y los principales métodos integrales.}
+\label{tab:cap01-comparacion-metodos}
+\begin{tabular}{@{}p{2.6cm}p{2.6cm}p{2.6cm}p{2.6cm}p{2.6cm}@{}}
+\toprule
+\textbf{Criterio} & \textbf{Dif. Finitas} & \textbf{Elem. Finitos} & \textbf{Vol. Finitos} & \textbf{Elem. de Contorno} \\
+\midrule
+Forma de la EDP que discretiza & Fuerte (puntual) & Débil (integral) & Débil (conservación integral) & Integral de frontera \\
+Tipo de malla & Estructurada, regular & No estructurada, muy flexible & No estructurada, flexible & Solo se malla $\Gamma$ \\
+Geometrías complejas & Difícil & Muy adecuado & Adecuado & Muy adecuado (menor dimensión) \\
+Condiciones de borde naturales & Poco naturales & Naturales (aparecen en la forma débil) & Naturales (flujos en las caras) & Naturales \\
+Estructura de la matriz & Dispersa, banda estrecha & Dispersa & Dispersa & Densa \\
+Ámbito típico de aplicación & Problemas simples, modelos didácticos & Mecánica de sólidos y estructuras & Mecánica de fluidos & Problemas con solución fundamental conocida \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Alcance del curso: mecánica de sólidos elásticos y el Principio de Trabajos Virtuales}
+\label{sec:cap01-alcance-curso}
+
+Este curso se enfoca exclusivamente en la aplicación del MEF a la mecánica de sólidos elásticos. En este contexto, el campo incógnita fundamental es el campo de desplazamientos $\bm{u}$, y el problema continuo que se busca resolver es el problema de valor de frontera del sólido elástico, que se formulará con precisión en el \textbf{Capítulo 2}: encontrar el campo $\bm{u}(x,y,z)$ que satisface las ecuaciones de equilibrio, las relaciones cinemáticas y la ley constitutiva del material en todo punto de $\Omega$, junto con las condiciones de borde impuestas en $\Gamma$.
+
+Como se explicó en la sección anterior, el MEF no discretiza directamente esas ecuaciones en su forma fuerte, sino una forma débil equivalente. En mecánica de sólidos, esa forma débil recibe un nombre propio y una interpretación física muy concreta: el \textbf{Principio de Trabajos Virtuales} (PTV). De manera anticipada —y sin entrar todavía en su demostración formal, que es materia del \textbf{Capítulo 5} de este libro— el PTV establece que un sólido está en equilibrio si y solo si, para \emph{cualquier} campo de desplazamientos virtuales $\delta\bm{u}$ (cinemáticamente admisible, es decir, compatible con las restricciones de apoyo), el trabajo virtual interno (asociado a las tensiones y deformaciones virtuales) iguala al trabajo virtual externo (asociado a las fuerzas de cuerpo y de superficie actuando sobre esos desplazamientos virtuales). Esta igualdad integral —trabajo interno igual a trabajo externo, para todo desplazamiento virtual admisible— es exactamente la forma débil del problema de equilibrio, y es el punto de partida sobre el cual se construye toda la discretización por elementos finitos que se desarrollará en la segunda parte de este libro.
+
+Por ahora basta con retener la idea central: en vez de exigir que las ecuaciones de equilibrio se cumplan puntualmente en cada partícula del sólido (lo cual, como se dijo, es intratable para geometrías generales), el PTV las reemplaza por una única igualdad integral que debe cumplirse para toda variación virtual admisible del desplazamiento. Sobre esa igualdad integral, aproximar el campo de desplazamientos mediante funciones de forma definidas en una malla de elementos —tal como se resumió en la \cref{sec:cap01-metodos-integrales}— conduce, después de un desarrollo algebraico que se presentará en detalle más adelante, exactamente al mismo tipo de sistema $\mathbf{K}\mathbf{u}=\mathbf{F}$ que ya apareció en el ejemplo discreto de la \cref{sec:cap01-discreto-continuo}. Ese es, en una frase, el programa completo de este curso: partir de la mecánica del sólido continuo (Parte I), pasar por el PTV como puerta de entrada a la discretización (Parte II), y llegar a las matrices de rigidez y vectores de fuerza que un computador puede ensamblar y resolver.
+
+\section{Hipótesis básicas del curso}
+\label{sec:cap01-hipotesis}
+
+Para que el desarrollo matemático de los capítulos siguientes sea manejable, este curso —como la gran mayoría de los cursos introductorios de elementos finitos en mecánica de sólidos— se restringe deliberadamente a un conjunto de hipótesis simplificatorias. Es importante tenerlas presentes desde ahora, porque cada una de ellas se traduce directamente en una simplificación matemática concreta de las ecuaciones que se deducirán en los capítulos siguientes.
+
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{Problema isotérmico.} No se consideran efectos térmicos: ni gradientes de temperatura, ni deformaciones ni tensiones de origen térmico. La temperatura no aparece como variable de estado del problema.
+\item \textbf{Análisis estático (o estáticamente equivalente).} Se ignoran los efectos inerciales (términos de aceleración) y los efectos dependientes de la velocidad de aplicación de la carga. Las cargas se aplican de forma suficientemente lenta como para que el sólido pase, en todo instante, por una sucesión de estados de equilibrio estático. Los efectos dinámicos (vibraciones, propagación de ondas) quedan fuera del alcance de este curso.
+\item \textbf{Material elástico lineal (linealidad material).} La relación entre tensiones y deformaciones es lineal: al duplicar la deformación se duplica la tensión asociada, y el sólido recupera completamente su forma original al retirar la carga. Esta hipótesis, junto con su formalización mediante el tensor constitutivo elástico $\bm{C}$, es el objeto central del \textbf{Capítulo 3}.
+\item \textbf{Pequeños desplazamientos, giros y deformaciones (linealidad geométrica).} Se supone que los desplazamientos, los giros y las deformaciones que experimenta el sólido son suficientemente pequeños como para que las ecuaciones de equilibrio puedan plantearse sobre la configuración \emph{no deformada} (es decir, se prescinde de la distinción entre configuración inicial y configuración deformada) y como para que las deformaciones puedan aproximarse por su parte lineal (infinitesimal). Esta hipótesis excluye del alcance del curso los problemas de pandeo, grandes giros o grandes deformaciones, y los problemas de contacto con cambios significativos de geometría.
+\item \textbf{Comportamiento isótropo del material.} Salvo indicación expresa, se supondrá que las propiedades elásticas del material no dependen de la dirección considerada. Esta hipótesis será relajada parcialmente en el \textbf{Capítulo 3}, donde se introducen también los materiales ortótropos y con simetrías intermedias, precisamente para dimensionar cuánto se simplifica el problema al asumir isotropía.
+\end{itemize}
+
+\begin{observacion}[Alcance geométrico de los problemas tratados]
+Bajo las hipótesis anteriores, el sólido elástico se estudiará en su formulación tridimensional completa (3D) en los Capítulos 2 y 3, que es la más general. Sin embargo, un número importante de problemas de interés práctico admite una reducción exacta o aproximada a dimensiones menores: los estados de \emph{tensión plana} y \emph{deformación plana} (ambos bidimensionales, 2D), el estado \emph{axisimétrico} (formalmente 2D en un plano meridiano, aunque representa un sólido de revolución 3D) y los elementos \emph{unidimensionales no polares} —como las barras, en las que el tensor de tensiones se reduce a una única componente normal y es, por definición, simétrico—. Estas idealizaciones geométricas se introducirán oportunamente en capítulos posteriores, comenzando por el caso unidimensional en la Parte II de este libro, que es el más simple y el que permite introducir la maquinaria del MEF sin la complejidad adicional del caso tensorial completo.
+\end{observacion}
+
+Con estas hipótesis y este marco conceptual ya establecidos, el \textbf{Capítulo 2} formaliza matemáticamente el problema de valor de frontera del sólido elástico lineal: sus ecuaciones de equilibrio, sus relaciones cinemáticas y sus condiciones de borde. El \textbf{Capítulo 3}, por su parte, cierra la Parte I del libro desarrollando la relación constitutiva que falta para cerrar el sistema de ecuaciones —la ley de Hooke generalizada— y estudiando en detalle cómo la simetría del material determina el número de constantes elásticas independientes que se requiere caracterizar experimentalmente.
