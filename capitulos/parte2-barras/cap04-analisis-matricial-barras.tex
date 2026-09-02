@@ -22,13 +22,13 @@ Considérese una barra prismática $(e)$, de longitud $L^{(e)}$, área de secci�
   \draw[thick, ucblue] (0,0) -- (4,0);
   \filldraw[ucred] (0,0) circle (2pt) node[below=5pt]{$1$};
   \filldraw[ucred] (4,0) circle (2pt) node[below=5pt]{$2$};
-  \draw[->, thick] (4.4,-0.3) -- (5.4,-0.3) node[right]{$z$};
-  \draw[<->] (0,-0.75) -- (4,-0.75) node[midway, above]{$L^{(e)}$};
+  \draw[->, thick] (4.4,0) -- (5.4,0) node[right]{$z$};
+  \draw[<->] (0,-0.75) -- (4,-0.75) node[midway, below]{$L^{(e)}$};
   \draw[->, ucamber, thick] (0,0.18) -- (0.75,0.18) node[right, font=\small]{$w_1^{(e)}$};
   \draw[->, ucamber, thick] (4,0.18) -- (4.75,0.18) node[right, font=\small]{$w_2^{(e)}$};
   \draw[->, ucteal, thick] (0,0.68) -- (0.75,0.68) node[right, font=\small]{$F_1^{(e)}$};
   \draw[->, ucteal, thick] (4,0.68) -- (4.75,0.68) node[right, font=\small]{$F_2^{(e)}$};
-  \node at (2,-1) {$E^{(e)},\, A^{(e)}$};
+  \node at (2,-1.3) {$E^{(e)},\, A^{(e)}$};
 \end{tikzpicture}
 \caption{Elemento de barra de dos nodos: desplazamientos axiales nodales $w_i^{(e)}$ (ámbar) y fuerzas nodales externas $F_i^{(e)}$ (verde) que las provocan.}
 \label{fig:cap04-elemento-barra}
@@ -299,16 +299,16 @@ Sin embargo, el equilibrio de cada nodo de la estructura debe plantearse en un �
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[>=Stealth, scale=1.3]
-  \def\dtheta{35}
+  \def\theta{35}
   \draw[->, thick] (0,0) -- (0,2.5) node[above]{$x$};
   \draw[->, thick] (0,0) -- (3.5,0) node[right]{$z$};
-  \draw[->, thick, ucblue] (0,0) -- (\dtheta:3.1) node[above right, font=\small]{$z_L$};
-  \draw[->, thick, ucblue] (0,0) -- (\dtheta+90:1.4) node[above left, font=\small]{$x_L$};
-  \draw[very thick, ucred] (\dtheta:0.5) -- (\dtheta:2.8);
-  \filldraw[ucred] (\dtheta:0.5) circle (2pt) node[above=1pt, font=\small]{$1$};
-  \filldraw[ucred] (\dtheta:2.8) circle (2pt) node[above=1pt, font=\small]{$2$};
-  \draw (0.75,0) arc (0:\dtheta:0.75);
-  \node[font=\small] at (\dtheta/2:1.05) {$\theta$};
+  \draw[->, thick, ucblue] (0,0) -- (\theta:3.1) node[above right, font=\small]{$z_L$};
+  \draw[->, thick, ucblue] (0,0) -- (\theta+90:1.4) node[above left, font=\small]{$x_L$};
+  \draw[very thick, ucred] (\theta:0.5) -- (\theta:2.8);
+  \filldraw[ucred] (\theta:0.5) circle (2pt) node[below right=1pt, font=\small]{$1$};
+  \filldraw[ucred] (\theta:2.8) circle (2pt) node[above right=1pt, font=\small]{$2$};
+  \draw (0.75,0) arc (0:\theta:0.75);
+  \node[font=\small] at (\theta/2:1.05) {$\theta$};
 \end{tikzpicture}
 \caption{Sistema de coordenadas local $(x_L,z_L)$ de un elemento de barra, girado un ángulo $\theta$ respecto del sistema de coordenadas global $(x,z)$. El eje $z_L$ es siempre el eje axial de la barra, orientado del nodo local $1$ al nodo local $2$.}
 \label{fig:cap04-rotacion-local-global}
@@ -318,7 +318,7 @@ Sea $\mathbf{U}_L$ el vector de desplazamientos nodales de la barra (dos compone
 \[
 \mathbf{U}_L = \mathbf{T}_b\,\mathbf{U} .
 \]
-Como $\mathbf{T}_b$ es ortonormal($\mathbf{T}_b^{-1}=\mathbf{T}_b^{\mathsf T}$), la transformación de fuerzas es idéntica: $\mathbf{F}_{\sigma L} = \mathbf{T}_b\,\mathbf{F}_\sigma$. En el sistema local, la relación fuerza-desplazamiento es $\mathbf{F}_{\sigma L} = \mathbf{K}_L\,\mathbf{U}_L$, con $\mathbf{K}_L$ la matriz de rigidez del elemento expandida al número total de grados de libertad por nodo (con ceros en las direcciones transversales, que no participan del comportamiento puramente axial). Sustituyendo,
+Como $\mathbf{T}_b$ es ortogonal ($\mathbf{T}_b^{-1}=\mathbf{T}_b^{\mathsf T}$), la transformación de fuerzas es idéntica: $\mathbf{F}_{\sigma L} = \mathbf{T}_b\,\mathbf{F}_\sigma$. En el sistema local, la relación fuerza-desplazamiento es $\mathbf{F}_{\sigma L} = \mathbf{K}_L\,\mathbf{U}_L$, con $\mathbf{K}_L$ la matriz de rigidez del elemento expandida al número total de grados de libertad por nodo (con ceros en las direcciones transversales, que no participan del comportamiento puramente axial). Sustituyendo,
 \[
 \mathbf{T}_b\,\mathbf{F}_\sigma = \mathbf{K}_L\,\mathbf{T}_b\,\mathbf{U} \quad\Longrightarrow\quad \mathbf{F}_\sigma = \underbrace{\mathbf{T}_b^{\mathsf T}\,\mathbf{K}_L\,\mathbf{T}_b}_{\displaystyle \mathbf{K}}\,\mathbf{U} ,
 \]

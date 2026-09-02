@@ -1,0 +1,19 @@
+# Artefactos de compilación LaTeX
+build/
+PDF/
+
+*.aux
+*.log
+*.toc
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+*.nav
+*.snm
+*.vrb
+*.ecnimportante
