@@ -1,0 +1,231 @@
+\chapter{PTV y Formulación de Elementos Finitos de Euler-Bernoulli}
+\label{chap:cap10-ptv-formulacion-fem-eb}
+
+% El vector de 12 GDL nodales del elemento de viga 3D excede el limite
+% por defecto de columnas de los entornos matriciales de amsmath (10).
+\setcounter{MaxMatrixCols}{12}
+
+\section{El PTV aplicado al elemento de viga}
+\label{sec:cap10-ptv-viga}
+
+El Capítulo 9 dejó planteado, para el elemento de viga tridimensional, el campo de desplazamientos combinado (\cref{eq:cap09-campo-combinado}) y la tensión combinada resultante (\cref{eq:cap09-tension-combinada}). Este capítulo repite, para ese elemento, exactamente el programa ya recorrido para la barra en los Capítulos 5 y 6: sustituir el campo cinemático en el PTV, identificar las \emph{deformaciones generalizadas} conjugadas de los esfuerzos internos, interpolar esas deformaciones mediante funciones de forma, y obtener así la matriz de rigidez $\bm K^{(e)}$ y el vector de fuerzas nodales equivalentes $\bm F^{(e)}$ del elemento.
+
+Sustituyendo $\varepsilon_{zz}=w_0'-xu_0''-yv_0''$, $\gamma_{xz}=-y\theta_z'$, $\gamma_{yz}=x\theta_z'$ y las tensiones correspondientes en el trabajo virtual interno $\delta W_{\text{int}}=\int_\Omega\left(\delta\varepsilon_{zz}\sigma_{zz}+\delta\gamma_{xz}\tau_{xz}+\delta\gamma_{yz}\tau_{yz}\right)d\Omega$, e integrando sobre la sección transversal (usando $\int_A dA=A$, $\int_A x\,dA=\int_A y\,dA=0$, $\int_A x^2\,dA=I_y$, $\int_A y^2\,dA=I_x$, $\int_A(x^2+y^2)\,dA=J_p$, y que los productos cruzados $\int_A xy\,dA=0$ se anulan por ser $x,y$ ejes principales de inercia), se obtiene --- tras un cálculo enteramente análogo al de la \cref{sec:cap09-estado-combinado}, ahora aplicado a $\delta W_{\text{int}}$ en vez de a la tensión puntual ---
+
+\begin{ecnimportante}{Trabajo virtual interno del elemento de viga, en deformaciones generalizadas}{cap10-wint-generalizado}
+\[
+\delta W_{\text{int}} = \int_L \left(\delta w_0'\,N + \delta(-u_0'')\,M_y + \delta v_0''\,M_x + \delta\theta_z'\,M_z\right) dz = \int_L \delta\tilde{\bm\varepsilon}^{\mathsf T}\tilde{\bm\sigma}\;dz ,
+\]
+con las \textbf{deformaciones generalizadas} $\tilde{\bm\varepsilon}$ y los \textbf{esfuerzos internos generalizados} $\tilde{\bm\sigma}$ (conjugados en el sentido del PTV, exactamente como $\varepsilon_{ij}$ y $\sigma_{ij}$ lo son en el Capítulo 5):
+\[
+\tilde{\bm\varepsilon} = \begin{bmatrix} w_0' \\ -u_0'' \\ v_0'' \\ \theta_z' \end{bmatrix}, \qquad
+\tilde{\bm\sigma} = \begin{bmatrix} N \\ M_y \\ M_x \\ M_z \end{bmatrix} = \tilde{\bm C}\,\tilde{\bm\varepsilon}, \qquad
+\tilde{\bm C} = \begin{bmatrix} EA & & & \\ & EI_y & & \\ & & EI_x & \\ & & & GJ_p \end{bmatrix} .
+\]
+\end{ecnimportante}
+
+Esta es la generalización, al elemento de viga, de la fórmula maestra $\delta W_{\text{int}}=\int\delta\varepsilon^{\mathsf T}C\varepsilon\,d\Omega$ de la \cref{eq:cap06-formula-maestra}: el volumen $\Omega$ se ha reducido a la línea $L$ (integral sobre el eje de la viga) porque la integración sobre la sección transversal ya se realizó explícitamente, quedando absorbida en $A$, $I_x$, $I_y$, $J_p$ --- las propiedades de sección --- y $\tilde{\bm C}$ resulta \emph{diagonal}: en un elemento recto, de sección constante y con $x,y$ ejes principales de inercia, los cuatro modos de solicitación (axial, flexión $x$--$z$, flexión $y$--$z$, torsión) están \textbf{desacoplados}, tanto en la deformación generalizada como en la matriz constitutiva. Esta observación --- ya anticipada en el Capítulo 9 por superposición --- es la que permitirá, en la \cref{sec:cap10-matriz-rigidez}, construir $\bm K^{(e)}$ como cuatro bloques independientes.
+
+El trabajo virtual externo se extiende de manera directa, agregando a la carga axial y transversal ya vistas en la barra un momento torsor distribuido $\bar m_z$ (si lo hubiera) y momentos concentrados en los nodos:
+\[
+\delta W_{\text{ext}} = \int_L \left(\delta u_0\,\bar t_x + \delta v_0\,\bar t_y + \delta w_0\,\bar t_z + \delta\theta_z\,\bar m_z\right) dz + \rho\!\int_L\! A\left(\delta u_0 b_x+\delta v_0 b_y+\delta w_0 b_z\right)dz + \delta\bm U^{\mathsf T}\bm P ,
+\]
+con $\bm P=\begin{bmatrix}P_x&P_y&P_z&M_x&M_y&M_z\end{bmatrix}^{\mathsf T}$ por nodo, agrupando las tres fuerzas y los tres momentos concentrados posibles.
+
+\section{Requisito de continuidad: dos tipos de grados de libertad}
+\label{sec:cap10-continuidad-mixta}
+
+\begin{observacion}[Por qué $u_0,v_0$ exigen más regularidad que $w_0,\theta_z$]
+La expresión de $\tilde{\bm\varepsilon}$ revela una asimetría importante entre los cuatro campos incógnitos. Las deformaciones axial ($w_0'$) y de torsión ($\theta_z'$) involucran solo \textbf{primeras} derivadas --- exactamente como en el elemento de barra del Capítulo 6 --- por lo que $w_0$ y $\theta_z$ requieren únicamente continuidad de clase $C^0$ entre elementos. Las curvaturas de flexión ($-u_0''$, $v_0''$), en cambio, involucran \textbf{segundas} derivadas, lo que --- por el mismo argumento de integrabilidad de la \cref{sec:cap07-condiciones-basicas} --- exige que $u_0$ y $v_0$ (y, por lo tanto, también $\theta_y=u_0'$ y $\theta_x=-v_0'$, sus propias derivadas primeras) sean de clase $C^1$: continuas \emph{junto con su primera derivada} entre elementos adyacentes. Este requisito de continuidad $C^1$ es la razón estructural por la cual, como se verá en la \cref{sec:cap10-interpolacion-flexion}, la interpolación de $u_0$ y $v_0$ no puede construirse con los mismos polinomios de Lagrange usados para $w_0$, $\theta_z$ y para toda la barra del Capítulo 6, sino que requiere una familia distinta: los polinomios de \textbf{Hermite}. El Capítulo 11 retomará esta distinción en detalle al discutir la convergencia de este elemento.
+\end{observacion}
+
+\section{Interpolación del desplazamiento axial y del giro por torsión}
+\label{sec:cap10-interpolacion-c0}
+
+Para $w_0$ y $\theta_z$, de clase $C^0$, se reutiliza sin cambios la interpolación lineal de dos nodos ya construida en la \cref{sec:cap06-elemento-2nodos} para la barra: con $\xi=z/L^{(e)}$,
+\[
+w_0 = N_1(\xi)\,W_1 + N_2(\xi)\,W_2, \qquad \theta_z = N_1(\xi)\,\Theta_{z1} + N_2(\xi)\,\Theta_{z2}, \qquad N_1=1-\xi,\quad N_2=\xi .
+\]
+Derivando, $w_0'=(W_2-W_1)/L^{(e)}$ y $\theta_z'=(\Theta_{z2}-\Theta_{z1})/L^{(e)}$ resultan constantes dentro del elemento --- exactamente como $\varepsilon_{zz}$ en la barra lineal --- y las matrices de rigidez elementales de estos dos modos son, por lo tanto, formalmente idénticas a la de la barra (\cref{eq:cap06-elemento-2nodos-K}), reemplazando $EA\to EA$ (sin cambio) para el modo axial y $EA\to GJ_p$ para el modo de torsión:
+\[
+\bm K_{\text{ax}}^{(e)} = \frac{EA}{L^{(e)}}\begin{bmatrix}1&-1\\-1&1\end{bmatrix}, \qquad
+\bm K_{\text{tor}}^{(e)} = \frac{GJ_p}{L^{(e)}}\begin{bmatrix}1&-1\\-1&1\end{bmatrix} .
+\]
+Esta coincidencia formal --- $M_z=GJ_p\theta_z'$ tiene exactamente la misma estructura matemática que $N=EAw_0'$ --- es consecuencia directa de que ambas son teorías de un único grado de libertad escalar gobernado por una ecuación diferencial de primer orden, y permite reutilizar sin modificación todo el aparato de la barra (incluidas las cargas nodales equivalentes de la \cref{sec:cap06-cargas-equivalentes}, con $\bar t_z\to\bar m_z$).
+
+\section{Interpolación de la flexión: funciones de forma de Hermite}
+\label{sec:cap10-interpolacion-flexion}
+
+Considérese el desplazamiento transversal $u_0(z)$ en el plano $x$--$z$ (el caso de $v_0$ en el plano $y$--$z$ es idéntico, con los reemplazos de la \cref{sec:cap09-flexion-yz}). Los grados de libertad nodales naturales son el desplazamiento $U_i$ \emph{y} el giro $\Theta_{yi}=u_0'|_{z_i}$ en cada uno de los dos nodos --- cuatro condiciones en total --- lo que exige un polinomio cúbico:
+\[
+u_0(\xi) = a_0+a_1\xi+a_2\xi^2+a_3\xi^3, \qquad \xi=z/L^{(e)}\in[0,1] .
+\]
+Imponiendo $u_0(0)=U_1$, $u_0'(0)=L^{(e)}\Theta_{y1}$, $u_0(1)=U_2$, $u_0'(1)=L^{(e)}\Theta_{y2}$ (la regla de la cadena introduce el factor $L^{(e)}$, ya que $u_0'=du_0/dz=(du_0/d\xi)/L^{(e)}$) y resolviendo el sistema lineal $4\times4$ resultante para $a_0,\dots,a_3$, se obtienen las funciones de forma de \textbf{Hermite cúbicas}:
+
+\begin{ecnimportante}{Funciones de forma de Hermite para la flexión de Euler-Bernoulli}{cap10-hermite}
+\[
+u_0(\xi) = \varphi_1(\xi)\,U_1 + \psi_1(\xi)\,\Theta_{y1} + \varphi_2(\xi)\,U_2 + \psi_2(\xi)\,\Theta_{y2} ,
+\]
+con
+\[
+\varphi_1=1-3\xi^2+2\xi^3, \quad \psi_1=L^{(e)}\left(\xi-2\xi^2+\xi^3\right), \quad
+\varphi_2=3\xi^2-2\xi^3, \quad \psi_2=L^{(e)}\left(-\xi^2+\xi^3\right) .
+\]
+Las funciones $\varphi_i$ (asociadas a un desplazamiento nodal unitario) satisfacen $\varphi_i(\xi_j)=\delta_{ij}$ y $\varphi_i'(\xi_j)=0$; las funciones $\psi_i$ (asociadas a un giro nodal unitario) satisfacen $\psi_i(\xi_j)=0$ y $\psi_i'(\xi_j)=\delta_{ij}\,L^{(e)}$ --- la generalización, a la interpolación de Hermite, de la propiedad de interpolación nodal $N_i(\xi_j)=\delta_{ij}$ de la \cref{eq:cap06-interpolacion-desplazamientos}: ahora se exige interpolación nodal tanto del valor como de la derivada.
+\end{ecnimportante}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.0]
+\draw[->] (-0.3,0) -- (6.3,0) node[right, font=\small] {$\xi$};
+\draw[->] (0,-0.7) -- (0,1.35) node[above, font=\small] {};
+\draw (6,0.04) -- (6,-0.04) node[below, font=\small] {$1$};
+\draw (0,1) -- (-0.05,1) node[left, font=\small] {$1$};
+\draw[dashed, gray!60] (-0.3,0) -- (6.3,0);
+\draw[ucred, thick, domain=0:6, samples=80] plot (\x,{1-3*(\x/6)*(\x/6)+2*(\x/6)*(\x/6)*(\x/6)});
+\draw[ucblue, thick, domain=0:6, samples=80] plot (\x,{3*(\x/6)*(\x/6)-2*(\x/6)*(\x/6)*(\x/6)});
+\draw[ucteal, thick, domain=0:6, samples=80] plot (\x,{0.55*((\x/6)-2*(\x/6)*(\x/6)+(\x/6)*(\x/6)*(\x/6))});
+\draw[ucamber, thick, domain=0:6, samples=80] plot (\x,{0.55*(-(\x/6)*(\x/6)+(\x/6)*(\x/6)*(\x/6))});
+\filldraw (0,0) circle (1.3pt); \filldraw (6,0) circle (1.3pt);
+\node[ucred] at (0.9,1.12) {$\varphi_1$};
+\node[ucblue] at (5.1,1.12) {$\varphi_2$};
+\node[ucteal] at (2.3,0.28) {$\psi_1/L^{(e)}$};
+\node[ucamber] at (4.6,-0.3) {$\psi_2/L^{(e)}$};
+\node[below] at (0,-0.9) {nodo 1};
+\node[below] at (6,-0.9) {nodo 2};
+\end{tikzpicture}
+\caption{Las cuatro funciones de forma de Hermite cúbicas del elemento de viga de Euler-Bernoulli: $\varphi_1,\varphi_2$ (asociadas a los desplazamientos nodales) y $\psi_1,\psi_2$ (asociadas a los giros nodales, graficadas como $\psi_i/L^{(e)}$ para comparar en la misma escala).}
+\label{fig:cap10-funciones-hermite}
+\end{figure}
+
+Nótese que $\varphi_1+\varphi_2\equiv1$ y $\psi_1+\psi_2+L^{(e)}\varphi_2\cdot0\equiv$ --- más precisamente, se verifica directamente que $u_0=\bar U+\bar\Theta_y\cdot z$ (con $\bar U,\bar\Theta_y$ arbitrarios) se reproduce exactamente al imponer $U_1=\bar U$, $\Theta_{y1}=\Theta_{y2}=\bar\Theta_y$, $U_2=\bar U+\bar\Theta_y L^{(e)}$: la interpolación de Hermite satisface la condición de sólido rígido (traslación \emph{y} rotación), como se retomará formalmente en el Capítulo 11.
+
+\begin{ecnimportante}{Matriz de deformación-desplazamiento para la flexión de Euler-Bernoulli}{cap10-matriz-B-flexion}
+Con $\bm U^{(e)}_{xz}=\begin{bmatrix}U_1&\Theta_{y1}&U_2&\Theta_{y2}\end{bmatrix}^{\mathsf T}$, la curvatura generalizada $\tilde\varepsilon=-u_0''$ se obtiene derivando dos veces (con $d/dz = L^{(e)-1}\,d/d\xi$, de modo que $d^2/dz^2=L^{(e)-2}\,d^2/d\xi^2$):
+\[
+-u_0'' = -\bm B^{(e)}_{xz}\,\bm U^{(e)}_{xz}, \qquad
+\bm B^{(e)}_{xz} = \frac{1}{(L^{(e)})^2}\begin{bmatrix} -6+12\xi & L^{(e)}(-4+6\xi) & 6-12\xi & L^{(e)}(-2+6\xi)\end{bmatrix} ,
+\]
+lineal en $\xi$ --- a diferencia de la barra, donde $\bm B$ resultaba constante --- porque el polinomio interpolador es ahora cúbico y su segunda derivada, por lo tanto, lineal.
+\end{ecnimportante}
+
+\section{Matriz de rigidez del elemento de viga tridimensional}
+\label{sec:cap10-matriz-rigidez}
+
+Sustituyendo $\bm B^{(e)}_{xz}$ en $\bm K^{(e)}_{xz}=\int_0^{L^{(e)}} \bm B_{xz}^{(e)\mathsf T} EI_y \bm B_{xz}^{(e)}\,dz$ (cambiando la variable de integración a $\xi$, con $dz=L^{(e)}d\xi$) e integrando término a término --- un cálculo mecánicamente idéntico al de la \cref{eq:cap06-elemento-2nodos-K}, solo que ahora con un integrando lineal en $\xi$ en vez de constante --- se obtiene la clásica matriz de rigidez de flexión de Euler-Bernoulli:
+
+\begin{ecnimportante}{Matriz de rigidez de flexión de Euler-Bernoulli (plano \texorpdfstring{$x$--$z$}{x-z})}{cap10-K-flexion-xz}
+Con $\bm U^{(e)}_{xz}=\begin{bmatrix}U_1&\Theta_{y1}&U_2&\Theta_{y2}\end{bmatrix}^{\mathsf T}$ y $L\doteq L^{(e)}$:
+\[
+\bm K^{(e)}_{xz} = \frac{EI_y}{L^3}
+\begin{bmatrix}
+12 & 6L & -12 & 6L \\
+6L & 4L^2 & -6L & 2L^2 \\
+-12 & -6L & 12 & -6L \\
+6L & 2L^2 & -6L & 4L^2
+\end{bmatrix} .
+\]
+\end{ecnimportante}
+
+Para el plano $y$--$z$, con $\bm U^{(e)}_{yz}=\begin{bmatrix}V_1&\Theta_{x1}&V_2&\Theta_{x2}\end{bmatrix}^{\mathsf T}$, el mismo cálculo se repite reemplazando $I_y\to I_x$; sin embargo, como $\theta_x=-v_0'$ (con signo opuesto a $\theta_y=u_0'$, según se estableció en la \cref{sec:cap09-flexion-yz}), la interpolación de $v_0'$ en términos de $\Theta_{x1},\Theta_{x2}$ introduce un signo menos frente a la de la \cref{eq:cap10-hermite}, que se propaga a los términos de $\bm K^{(e)}_{yz}$ que involucran un número \emph{impar} de factores de giro (es decir, a los términos de acoplamiento desplazamiento-giro, pero no a los términos puramente de desplazamiento ni puramente de giro):
+
+\begin{ecnimportante}{Matriz de rigidez de flexión de Euler-Bernoulli (plano \texorpdfstring{$y$--$z$}{y-z})}{cap10-K-flexion-yz}
+\[
+\bm K^{(e)}_{yz} = \frac{EI_x}{L^3}
+\begin{bmatrix}
+12 & -6L & -12 & -6L \\
+-6L & 4L^2 & 6L & 2L^2 \\
+-12 & 6L & 12 & 6L \\
+-6L & 2L^2 & 6L & 4L^2
+\end{bmatrix} .
+\]
+\end{ecnimportante}
+
+\begin{ecnimportante}{Matriz de rigidez del elemento de viga tridimensional de dos nodos}{cap10-K-viga-3d}
+Agrupando los doce grados de libertad por \emph{efecto} --- en vez de por nodo --- como $\hat{\bm U}^{(e)} = \begin{bmatrix}\bm U^{(e)\mathsf T}_{\text{ax}} & \bm U^{(e)\mathsf T}_{xz} & \bm U^{(e)\mathsf T}_{yz} & \bm U^{(e)\mathsf T}_{\text{tor}}\end{bmatrix}^{\mathsf T}$, con $\bm U^{(e)}_{\text{ax}}=[W_1,W_2]^{\mathsf T}$ y $\bm U^{(e)}_{\text{tor}}=[\Theta_{z1},\Theta_{z2}]^{\mathsf T}$, la matriz de rigidez elemental resulta \textbf{block-diagonal}, consecuencia directa del desacoplamiento de $\tilde{\bm C}$ señalado en la \cref{sec:cap10-ptv-viga}:
+\[
+\hat{\bm K}^{(e)} = \begin{bmatrix}
+\bm K^{(e)}_{\text{ax}} & & & \\
+& \bm K^{(e)}_{xz} & & \\
+& & \bm K^{(e)}_{yz} & \\
+& & & \bm K^{(e)}_{\text{tor}}
+\end{bmatrix} .
+\]
+En la práctica --- y para poder ensamblar el elemento con otros elementos concurrentes en un mismo nodo, como se hizo en el Capítulo 4 --- las doce filas y columnas se reordenan agrupando por \emph{nodo} en vez de por efecto, con el vector de desplazamientos nodales estándar
+\[
+\bm U^{(e)} = \begin{bmatrix} U_1&V_1&W_1&\Theta_{x1}&\Theta_{y1}&\Theta_{z1}&U_2&V_2&W_2&\Theta_{x2}&\Theta_{y2}&\Theta_{z2}\end{bmatrix}^{\mathsf T} .
+\]
+Esta reordenación es una \textbf{permutación} $\bm K^{(e)}=\bm P^{\mathsf T}\hat{\bm K}^{(e)}\bm P$ de filas y columnas de $\hat{\bm K}^{(e)}$ (con $\bm P$ la matriz de permutación correspondiente), sin contenido físico adicional: los mismos doce valores no nulos de $\hat{\bm K}^{(e)}$, en las mismas posiciones relativas dentro de cada bloque de $4\times4$ (o $2\times2$), simplemente redistribuidos en la matriz $12\times12$.
+\end{ecnimportante}
+
+\begin{observacion}[Seis modos de sólido rígido]
+Un elemento de viga tridimensional libre (sin restricciones) admite exactamente $n_{\text{sr}}=6$ movimientos de sólido rígido: tres traslaciones ($u,v,w$ constantes) y tres rotaciones (respecto de $x$, $y$, $z$). Cada uno de los cuatro bloques desacoplados contribuye a estos modos: el bloque axial y el de torsión aportan, cada uno, un modo (traslación en $z$; rotación respecto de $z$, ya vista en el Capítulo 7 para la barra), y cada bloque de flexión $4\times4$ aporta \emph{dos} modos --- traslación transversal pura y rotación pura --- ya que, como se verificó explícitamente para las funciones de Hermite en la \cref{sec:cap10-interpolacion-flexion}, el polinomio cúbico reproduce exactamente cualquier movimiento de sólido rígido plano $\bar U+\bar\Theta z$. En total, $2+2+2+2=8$ grados de libertad de sólido rígido \emph{aparentes}, pero solo $6$ son \emph{independientes} entre los cuatro bloques a nivel de un único elemento aislado (la traslación axial es un modo genuino, pero las dos rotaciones ``puras'' de cada bloque de flexión, evaluadas simultáneamente con la coherencia geométrica de un cuerpo rígido tridimensional, no son en general independientes salvo que se imponga la condición cinemática correcta de cuerpo rígido); el rango correcto de $\bm K^{(e)}$ se retoma con precisión en el Capítulo 11.
+\end{observacion}
+
+\section{Cargas nodales equivalentes}
+\label{sec:cap10-cargas-equivalentes}
+
+Para la carga axial y el momento torsor distribuidos, el resultado de la \cref{eq:cap06-cargas-equivalentes} se traslada sin cambios (reemplazando $\bar t_z\to\bar t_x$ o $\bar t_y$, según el plano, y $\bar t_z\to\bar m_z$ para la torsión): reparto por igual entre ambos nodos, $\bar t\,L^{(e)}/2$ en cada uno.
+
+Para una carga transversal uniforme $\bar t_x$ actuando en el plano $x$--$z$, la carga nodal equivalente se calcula, como siempre, integrando $\bm N^{(e)\mathsf T}\bar t_x$ --- ahora con $\bm N^{(e)}=\begin{bmatrix}\varphi_1&\psi_1&\varphi_2&\psi_2\end{bmatrix}$, las funciones de Hermite de la \cref{eq:cap10-hermite}:
+
+\begin{ecnimportante}{Cargas nodales equivalentes de una carga transversal uniforme}{cap10-cargas-hermite}
+\[
+\bm F^{(e)}_{xz} = \bar t_x\int_0^{L}\begin{bmatrix}\varphi_1\\\psi_1\\\varphi_2\\\psi_2\end{bmatrix}dz
+= \bar t_x\,L\begin{bmatrix} 1/2 \\ L/12 \\ 1/2 \\ -L/12 \end{bmatrix} .
+\]
+\end{ecnimportante}
+
+\begin{observacion}[Momentos de empotramiento perfecto]
+El resultado anterior --- una fuerza $\bar t_x L/2$ en cada nodo, \emph{más} un momento $\pm\bar t_xL^2/12$ --- es exactamente el conjunto de \textbf{reacciones de empotramiento perfecto} de la resistencia de materiales clásica: las fuerzas y momentos que aparecerían en los extremos de una viga biempotrada bajo carga uniforme, con signo tal que equilibran la carga distribuida. Esta coincidencia no es casual: la equivalencia de trabajo virtual que define $\bm F^{(e)}$ es, precisamente, la que garantiza que una viga biempotrada de un solo elemento (con $\bm U^{(e)}=\bm 0$ impuesto en ambos nodos) reproduzca la solución analítica exacta de la ecuación de la elástica bajo carga uniforme --- un caso en el que, como en la validación cruzada del Capítulo 6, el espacio de interpolación (cúbico) contiene la solución exacta del problema (que es, en efecto, un polinomio de grado $4$ en general, pero cuyas reacciones de extremo coinciden con las de la interpolación cúbica porque la ecuación de equilibrio de la viga con extremos fijos determina unívocamente esas reacciones a partir de sólo los dos primeros momentos de la carga).
+\end{observacion}
+
+\section{Transformación a coordenadas globales}
+\label{sec:cap10-transformacion}
+
+Igual que en la \cref{sec:cap04-transformacion-coordenadas} (Capítulo 4) para la barra en 2D y 3D, la matriz de rigidez elemental $\bm K^{(e)}_L$ recién obtenida está referida al sistema de coordenadas \emph{local} del elemento $(x_L,y_L,z_L)$, con $z_L$ a lo largo del eje de la viga. Para ensamblar elementos con orientaciones arbitrarias en el espacio es necesario expresar $\bm K^{(e)}_L$ en el sistema de coordenadas global $(x,y,z)$ de la estructura. Sea $\bm T$ la matriz de rotación $3\times3$ (ortogonal, $\bm T^{-1}=\bm T^{\mathsf T}$) que relaciona ambos sistemas; como cada nodo del elemento de viga tiene \emph{seis} componentes (tres desplazamientos y tres giros, que se transforman como vectores bajo un cambio de base), la matriz de transformación del elemento completo es block-diagonal con cuatro copias de $\bm T$:
+
+\begin{ecnimportante}{Transformación de la matriz de rigidez a coordenadas globales}{cap10-transformacion}
+\[
+\bm U_L^{(e)} = \bm T_v\,\bm U^{(e)}, \qquad \bm T_v = \begin{bmatrix}\bm T&&&\\&\bm T&&\\&&\bm T&\\&&&\bm T\end{bmatrix}, \qquad
+\bm K^{(e)} = \bm T_v^{\mathsf T}\,\bm K_L^{(e)}\,\bm T_v ,
+\]
+con $\bm T_v$ ortogonal ($\bm T_v^{-1}=\bm T_v^{\mathsf T}$) por serlo cada bloque $\bm T$. La deducción es idéntica, término a término, a la de la \cref{eq:cap04-transformacion} del Capítulo 4 para la barra, sustituyendo la matriz de transformación escalar (o de $2\times2$) de la barra por esta versión de $12\times12$, apropiada para los seis grados de libertad por nodo del elemento de viga.
+\end{ecnimportante}
+
+\begin{ejemplo}{Ensamblaje de un pórtico plano de dos elementos}{cap10-portico-plano}
+Considérese un pórtico plano simple: dos columnas verticales empotradas en su base (nodos 1 y 3) conectadas por una viga horizontal (Figura~\ref{fig:cap10-portico}), con nodos intermedios 2 y 4 en la unión columna-viga. Cada elemento --- columna izquierda (1--2), viga (2--4) y columna derecha (3--4) --- es un elemento de viga plano (flexión en un solo plano más axial, es decir, $3$ GDL por nodo: $U_i,V_i,\Theta_{zi}$, un caso particular de $\bm K^{(e)}$ con solo los bloques axial y de flexión en un plano) cuya matriz de rigidez local $\bm K_L^{(e)}$ se calcula como en la \cref{eq:cap10-K-viga-3d}, y cuya matriz de rigidez global se obtiene aplicando la \cref{eq:cap10-transformacion} con el ángulo de inclinación propio de cada elemento (las columnas están giradas $90^\circ$ respecto de la viga).
+
+La matriz de rigidez \emph{global} de la estructura, de tamaño $4\times3=12$ (cuatro nodos, tres GDL cada uno), se ensambla exactamente con la misma regla de superposición de la \cref{eq:cap04-regla-ensamblaje} del Capítulo 4: cada matriz elemental $\bm K^{(i)}$, ya rotada a coordenadas globales, se suma en las filas y columnas correspondientes a los GDL globales de sus dos nodos. Denotando $\bm K^{(i)}_{jk}$ el bloque de $3\times3$ de $\bm K^{(i)}$ que relaciona el nodo local $j$ con el nodo local $k$ del elemento $i$, la matriz global ensamblada tiene la estructura de banda característica de una estructura reticulada:
+\[
+\bm K = \begin{bmatrix}
+\bm K^{(1)}_{11} & \bm K^{(1)}_{12} & & \\
+\bm K^{(1)}_{21} & \bm K^{(1)}_{22}+\bm K^{(2)}_{11} & \bm K^{(2)}_{12} & \\
+& \bm K^{(2)}_{21} & \bm K^{(2)}_{22}+\bm K^{(3)}_{11} & \bm K^{(3)}_{12} \\
+& & \bm K^{(3)}_{21} & \bm K^{(3)}_{22}
+\end{bmatrix} ,
+\]
+donde los bloques diagonales de los nodos 2 y 3 (numerados aquí genéricamente $2$ y $3$ en el orden de recorrido de la estructura) suman las contribuciones de \emph{ambos} elementos que concurren a ese nodo --- exactamente la misma regla, ahora en bloques de $3\times3$ en vez de escalares, ya usada para las barras en el Capítulo 4. Tras imponer las condiciones de borde esenciales en los nodos empotrados (los tres GDL nulos en cada base), el sistema reducido $\bm K_r\bm U_r=\bm F_r$ se resuelve exactamente como en el Capítulo 4.
+\end{ejemplo}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=0.9]
+\draw[thick, ucblue] (0,0) -- (0,3);
+\draw[thick, ucblue] (4,0) -- (4,3);
+\draw[thick, ucred] (0,3) -- (4,3);
+\draw[->, ucamber, thick] (-0.7,2.3) -- (0,2.3) node[midway, above, font=\small] {$P$};
+\draw[->, ucamber, thick] (1.6,3.55) -- (1.6,3.05) node[midway, right, font=\small] {$Q$};
+\foreach \p/\lbl/\pos in {{(0,0)}/{1}/below, {(0,3)}/{2}/left, {(4,3)}/{4}/right, {(4,0)}/{3}/below}
+  { \filldraw \p circle (2.2pt) node[\pos, font=\small] {\lbl}; }
+\draw[thick] (-0.3,0) -- (0.3,0); \draw[thick] (3.7,0) -- (4.3,0);
+\foreach \x in {-0.25,-0.05,...,0.25} \draw (\x,0) -- (\x-0.12,-0.18);
+\foreach \x in {3.75,3.95,...,4.25} \draw (\x,0) -- (\x-0.12,-0.18);
+\end{tikzpicture}
+\caption{Pórtico plano de dos columnas (nodos 1--2 y 3--4) y una viga horizontal (nodos 2--4), con bases empotradas en 1 y 3. Cada elemento tiene su propia matriz de rigidez local, rotada al sistema global mediante la \cref{eq:cap10-transformacion} antes del ensamblaje.}
+\label{fig:cap10-portico}
+\end{figure}
+
+\section{Síntesis}
+
+Este capítulo completó, para el elemento de viga tridimensional, el mismo programa que los Capítulos 5 y 6 completaron para la barra: se identificaron las deformaciones y esfuerzos generalizados conjugados del PTV (\cref{eq:cap10-wint-generalizado}), se señaló la distinción esencial entre los grados de libertad de continuidad $C^0$ (axial, torsión, interpolados con los mismos polinomios de Lagrange de la barra) y los de continuidad $C^1$ (flexión, que exigen las funciones de forma de Hermite de la \cref{eq:cap10-hermite}), y se dedujo la matriz de rigidez elemental de $12\times12$ como el ensamblaje de cuatro bloques desacoplados --- axial, flexión en cada plano, torsión --- consecuencia de que $\tilde{\bm C}$ es diagonal para un elemento recto de sección constante. Se completó la formulación con las cargas nodales equivalentes (recuperando las clásicas reacciones de empotramiento perfecto de la resistencia de materiales) y con la transformación a coordenadas globales necesaria para ensamblar estructuras reticuladas tridimensionales, ilustrada en un pórtico plano simple. Quedan pendientes, exactamente como al cierre del Capítulo 6, las mismas dos preguntas: ¿bajo qué condiciones converge esta formulación al refinar la malla, dada la continuidad $C^1$ exigida a la flexión? (Capítulo 11); y ¿qué ocurre cuando se abandona la hipótesis de Bernoulli y se incorpora la distorsión de corte como grado de libertad independiente? (Capítulos 12 a 14).

@@ -1,0 +1,283 @@
+\chapter{Cinemática y Equilibrio de la Viga de Euler-Bernoulli}
+\label{chap:cap09-cinematica-equilibrio-vigas-eb}
+
+\section{De la barra a la viga}
+\label{sec:cap09-introduccion}
+
+La Parte II se dedicó por completo a un elemento estructural que solo transmite esfuerzo axial: la barra articulada. Ese caso, aunque instructivo como primer ejemplo completo del programa Cap.~4--8 (análisis matricial, PTV, formulación FEM, convergencia, isoparamétrico), es una simplificación extrema del comportamiento de un sólido prismático esbelto. La mayoría de los elementos estructurales reales --- vigas de un edificio, ejes de una máquina, alas de un avión --- están sometidos, además de a fuerza axial, a \textbf{flexión} (momento flector) y a \textbf{torsión} (momento torsor), y deben poder transmitir esas solicitaciones a través de nodos rígidamente conectados (capaces de transmitir momentos, no solo fuerzas).
+
+Este capítulo desarrolla, para un sólido prismático esbelto ($L/h\gtrsim 10$, con $h$ la dimensión característica de la sección transversal y $L$ la longitud del elemento), la cinemática y el equilibrio de la \textbf{viga de Euler-Bernoulli}: la teoría clásica de flexión de vigas esbeltas, construida --- igual que se hizo para el sólido continuo general en el Capítulo 2 y para la barra en el Capítulo 4 --- a partir de hipótesis cinemáticas simplificadoras, de las cuales se deducen sistemáticamente el campo de deformación, el campo de tensión y las ecuaciones de equilibrio. Se estudian, en orden, la flexión plana en cada uno de los dos planos principales de la sección, la torsión, la fuerza axial, y finalmente el estado general combinado de un elemento de viga tridimensional sometido a las cuatro solicitaciones simultáneamente --- el elemento que se discretizará por el MEF en el Capítulo 10.
+
+\begin{observacion}[Por qué ``esbelta'']
+La condición $L/h\gtrsim 10$ no es un detalle accesorio: es la que permite despreciar, como se verá en la \cref{sec:cap09-corte-jouravski}, la distorsión angular producida por el esfuerzo de corte frente a la producida por la flexión. Vigas \emph{cortas} ($L/h$ pequeño) requieren una teoría más rica --- la teoría de Timoshenko, desarrollada en los Capítulos 12 a 14 --- que no descarta dicha distorsión.
+\end{observacion}
+
+\section{Flexión plana en el plano \texorpdfstring{$x$--$z$}{x-z}}
+\label{sec:cap09-flexion-xz}
+
+Considérese una viga prismática de eje recto, coincidente con el eje $z$, de longitud $L$, con el origen del eje $x$ en el centroide $O$ de la sección transversal (Figura~\ref{fig:cap09-viga-flexion-xz}). Se analiza primero el caso de \textbf{flexión plana}: cargas y momentos aplicados exclusivamente en el plano $x$--$z$ (fuerzas según $x$, momentos según $y$), de modo que la viga se deforma únicamente en ese plano.
+
+\begin{definicion}{Hipótesis cinemáticas de Euler-Bernoulli}{cap09-hipotesis-eb}
+La teoría de vigas esbeltas de Euler-Bernoulli se construye sobre cuatro hipótesis cinemáticas:
+\begin{enumerate}[leftmargin=1.8em]
+  \item El desplazamiento axial del centroide $u_0$ es pequeño ($\partial u_0/\partial z = u_0'\ll1$) e igual en toda la sección transversal; además, la sección transversal es indeformable en su propio plano (se desprecia el efecto Poisson).
+  \item Las secciones transversales, planas y normales al eje de la viga antes de la deformación, \textbf{permanecen planas y normales a dicho eje después de la deformación} (hipótesis de Bernoulli).
+  \item No hay desplazamiento horizontal del centroide.
+  \item No hay desplazamiento lateral (según el eje $y$) de la viga.
+\end{enumerate}
+\end{definicion}
+
+La hipótesis 2 --- la más restrictiva, y la que distingue a Euler-Bernoulli de la teoría de Timoshenko del Capítulo 12 --- implica que el giro de la sección transversal queda completamente determinado por la pendiente de la deformada: si $u_0(z)$ es el desplazamiento transversal (según $x$) del centroide y $\theta_y(z)$ es el giro de la sección respecto del eje $y$, la condición de normalidad exige $u_0'=\theta_y$ (Figura~\ref{fig:cap09-viga-flexion-xz}). En consecuencia, el campo de desplazamientos de un punto genérico $P=(x,z)$ de la viga, situado a una distancia $x$ del centroide, es
+\[
+u = u_0(z), \qquad v=0, \qquad w = w(x,z) = -x\,u_0'(z), \qquad u_0\big|_{z=0}=0 ,
+\]
+donde el desplazamiento axial local $w$ (Figura~\ref{fig:cap09-viga-flexion-xz}) surge exclusivamente del giro de la sección: un punto a distancia $x$ por debajo del centroide se desplaza axialmente $w=-x\theta_y=-x u_0'$ al girar la sección un ángulo $\theta_y\simeq\tan\theta_y=u_0'$.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.05]
+\draw[->, thick] (0,2.3) -- (0,-0.3) node[below] {$x$};
+\draw[->, thick] (0,2.3) -- (4.6,2.3) node[right] {$z$};
+\draw[thick, ucblue] (0,2.3) -- (4,2.3);
+\filldraw[ucgray] (0,2.3) circle (1.3pt) node[above left, font=\small] {$O$};
+\draw[dashed, ucgray] (1.6,2.55) -- (1.6,2.05);
+\node[above, font=\scriptsize] at (1.6,2.55) {$P$};
+\draw[thick, ucred, domain=0:4, samples=60, smooth]
+  plot ({\x}, {2.3 - 0.55*(\x/4)*(\x/4)*(3-2*\x/4)});
+\draw[dashed, ucred] (1.6,2.11) -- (1.6,1.21)
+  node[pos=1, below, font=\scriptsize, ucred] {$w=-x\,u_0'$};
+\draw[->, ucteal, thick] (1.6,2.3) -- (1.6,2.11) node[right, font=\scriptsize] {$u_0(z)$};
+\draw[ucamber, thick] (1.15,2.05) to[out=-10,in=200] (1.75,1.95);
+\node[ucamber, font=\scriptsize] at (1.85,1.85) {$\theta_y$};
+\node[below, font=\small] at (2,-0.15) {configuración deformada (línea elástica)};
+\end{tikzpicture}
+\caption{Flexión plana en el plano $x$--$z$: el eje de la viga (línea de centroides) se deforma según $u_0(z)$; por la hipótesis de Bernoulli, la sección permanece normal a la elástica, girando un ángulo $\theta_y=u_0'$, lo que produce un desplazamiento axial local $w=-x\,u_0'(z)$ en un punto $P$ a distancia $x$ del centroide.}
+\label{fig:cap09-viga-flexion-xz}
+\end{figure}
+
+\subsection{Deformación, tensión y momento flector}
+
+Del campo de desplazamientos anterior, el tensor de deformación tiene una única componente no nula:
+\[
+\varepsilon_{zz} = \pdv{w}{z} = -x\,u_0''(z) , \qquad \delta\varepsilon_{zz}=-x\,\delta u_0'' ,
+\]
+donde $u_0''$ es la \textbf{curvatura} de la elástica. Bajo la hipótesis de estado uniaxial de tensión (caras laterales libres de tracción, igual que en la barra del Capítulo 4), el tensor de tensiones también tiene una única componente no nula, $\sigma_{zz}=E\varepsilon_{zz}=-xEu_0''$. Integrando el momento de esta distribución de tensión respecto del eje $y$ se define el \textbf{momento flector}:
+\[
+M_y = \int_A \sigma_{zz}\,x\,dA = -Eu_0''\int_A x^2\,dA = -EI_y\,u_0'' , \qquad I_y \doteq \int_A x^2\,dA ,
+\]
+con $I_y$ el momento de inercia de segundo orden de la sección respecto del eje $y$. Nótese que $N=\int_A\sigma_{zz}\,dA=-Eu_0''\int_A x\,dA=0$ automáticamente, ya que $\int_A x\,dA=0$ por definición del centroide: la flexión pura no genera fuerza axial neta, consistente con la ausencia de acoplamiento axial-flector en una sección homogénea con origen en el centroide.
+
+\begin{ecnimportante}{Tensión normal y momento flector en flexión plana \texorpdfstring{$x$--$z$}{x-z}}{cap09-momento-flector-my}
+\[
+\sigma_{zz} = \frac{M_y}{I_y}\,x , \qquad M_y = -EI_y\,u_0'' .
+\]
+\end{ecnimportante}
+
+\subsection{Equilibrio de una rebanada diferencial}
+\label{sec:cap09-equilibrio-rebanada}
+
+Considérese una rebanada diferencial de viga, de espesor $dz$, sometida a una carga transversal distribuida $q_x(z)$ (fuerza por unidad de longitud, según $x$), a un esfuerzo de corte $Q_x(z)$ y a un momento flector $M_y(z)$ en cada cara (Figura~\ref{fig:cap09-rebanada-diferencial}). El equilibrio de fuerzas según $x$ y de momentos respecto de un punto sobre la cara derecha entrega, reteniendo solo términos de primer orden en $dz$:
+\[
+\sum F_x = 0 \;\Rightarrow\; q_x = \dv{Q_x}{z} , \qquad\qquad
+\sum M_y = 0 \;\Rightarrow\; Q_x = -\dv{M_y}{z} .
+\]
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+\draw[thick] (0,0) rectangle (2.6,1.4);
+\draw[->, thick] (0,1.9) -- (0,1.4) node[midway, left, font=\small] {$M_y$};
+\draw[->, thick] (2.6,1.9) -- (2.6,1.4) node[midway, right, font=\small] {$M_y+dM_y$};
+\draw[->, thick] (0,1.0) -- (0,0.4) node[midway, left, font=\small] {$Q_x$};
+\draw[->, thick] (2.6,1.0) -- (2.6,0.4) node[midway, right, font=\small] {$Q_x+dQ_x$};
+\foreach \i in {0.3,0.8,...,2.3} { \draw[->, ucred, thick] (\i,2.35) -- (\i,1.85); }
+\node[ucred, above] at (1.3,2.4) {$q_x(z)$};
+\draw[->] (2.9,0.7) -- (3.7,0.7) node[right, font=\small] {$z$};
+\draw[<->] (0,-0.35) -- (2.6,-0.35) node[midway, below, font=\small] {$dz$};
+\end{tikzpicture}
+\caption{Equilibrio de una rebanada diferencial de viga bajo carga transversal distribuida $q_x(z)$, esfuerzo de corte $Q_x$ y momento flector $M_y$.}
+\label{fig:cap09-rebanada-diferencial}
+\end{figure}
+
+Combinando ambas relaciones, $q_x=-d^2M_y/dz^2$, y sustituyendo $M_y=-EI_y u_0''$ (para $EI_y$ constante):
+
+\begin{ecnimportante}{Ecuación diferencial de la elástica (equilibrio de Euler-Bernoulli)}{cap09-ecuacion-elastica}
+\[
+Q_x = -\dv{M_y}{z} = EI_y\,u_0''' , \qquad\qquad q_x = EI_y\,u_0'''' .
+\]
+\end{ecnimportante}
+
+Esta ecuación diferencial de cuarto orden --- la \emph{ecuación de la elástica} --- es la forma fuerte del problema de flexión de vigas esbeltas: dado $q_x(z)$ y condiciones de borde adecuadas (dos por extremo, en desplazamiento $u_0$ o giro $u_0'$, o bien en fuerza $Q_x$ o momento $M_y$), determina la deformada $u_0(z)$. Nótese, en particular, que $Q_x=EI_yu_0'''\neq0$ en general: el corte no es, salvo casos particulares, idénticamente nulo.
+
+\subsection{Distorsión de corte y fórmula de Jouravski}
+\label{sec:cap09-corte-jouravski}
+
+\begin{observacion}[Una contradicción interna, y su justificación]
+Si $Q_x\neq0$, entonces --- por la relación constitutiva de corte $\tau_{xz}=G\gamma_{xz}$ --- debe existir una distorsión angular $\gamma_{xz}\neq0$ en la sección. Esto \textbf{contradice} la hipótesis 2 de la \cref{def:cap09-hipotesis-eb}: si la sección permanece exactamente normal al eje deformado, $\gamma_{xz}$ debería ser idénticamente nulo. La teoría de Euler-Bernoulli es, en este sentido preciso, internamente inconsistente. Sin embargo, para vigas esbeltas ($L/h\gtrsim10$) esta distorsión es \emph{pequeña} frente a la producida por la flexión, y se verifica experimentalmente que la teoría --- que simplemente descarta el efecto de $\tau_{xz}$ sobre la cinemática --- aproxima bien el comportamiento observado. Cuando esta aproximación deja de ser aceptable (vigas cortas, $L/h$ pequeño), es necesario recurrir a una teoría que incorpore la distorsión de corte como grado de libertad independiente: la teoría de Timoshenko, tema de los Capítulos 12 a 14.
+\end{observacion}
+
+Aunque $\gamma_{xz}$ se descarta de la cinemática, la tensión de corte $\tau_{xz}$ asociada al equilibrio de $Q_x$ sigue siendo de interés práctico (por ejemplo, para verificar la resistencia al corte de la sección). Su distribución --- no uniforme en la sección, a diferencia de $\sigma_{zz}$ que es lineal --- se obtiene de la \textbf{fórmula de Jouravski}, derivada del equilibrio de una porción de la sección transversal por encima (o por debajo) de una fibra a distancia $x$ del centroide:
+\[
+\tau_{xz}\Big|_{\text{promedio}} = \frac{Q_x\,S_y^*}{s^*\,I_y} , \qquad S_y^* \doteq \int_{A^*} x\,dA ,
+\]
+donde $A^*$ es el área de la sección por encima (o por debajo) de la fibra considerada, $S_y^*$ es el momento estático de esa área respecto del eje $y$ (con $S_y^*=0$ para $A^*=A$, ya que $S_y=\int_A x\,dA=0$ por definición del centroide), y $s^*$ es el ancho de la sección en esa fibra. Para secciones rectangulares, esta distribución es parabólica, con $\tau_{xz}=0$ en las fibras extremas y máxima en el eje neutro; para secciones transversales generales, $\tau_{xz}|_{\max}$ suele estar tabulado.
+
+\section{Flexión plana en el plano \texorpdfstring{$y$--$z$}{y-z}}
+\label{sec:cap09-flexion-yz}
+
+Por simetría del problema, la flexión en el plano $y$--$z$ (cargas y momentos respecto del eje $x$) se trata de manera idéntica, intercambiando los roles de los ejes: sea $v_0(z)$ el desplazamiento transversal según $y$ del centroide, y $\theta_x(z)=-v_0'(z)$ el giro de la sección respecto de $x$ (el signo negativo, a diferencia del caso anterior, es consecuencia de la orientación relativa de los ejes $x$--$y$--$z$ como triedro directo). El campo de desplazamientos es
+\[
+u=0, \qquad v=v_0(z), \qquad w=w(y,z)=-y\,v_0'(z) , \qquad v_0\big|_{z=0}=0 .
+\]
+Repitiendo exactamente el procedimiento de la \cref{sec:cap09-flexion-xz},
+\[
+\varepsilon_{zz}=\pdv{w}{z}=-y\,v_0''(z), \qquad \sigma_{zz}=-yEv_0'' ,
+\]
+y definiendo el momento flector respecto del eje $x$ como $M_x\doteq-\int_A\sigma_{zz}\,y\,dA$ (nótese el signo, opuesto por convención al de $M_y$, de modo que ambos momentos flectores sean positivos según la regla de la mano derecha aplicada consistentemente a los ejes $x,y,z$):
+\[
+M_x = -\int_A\sigma_{zz}\,y\,dA = Ev_0''\int_A y^2\,dA = EI_x\,v_0'' , \qquad I_x\doteq\int_A y^2\,dA .
+\]
+
+\begin{ecnimportante}{Tensión normal y momento flector en flexión plana \texorpdfstring{$y$--$z$}{y-z}}{cap09-momento-flector-mx}
+\[
+\sigma_{zz} = -\frac{M_x}{I_x}\,y , \qquad M_x = EI_x\,v_0'' .
+\]
+\end{ecnimportante}
+
+El mismo equilibrio de rebanada diferencial de la \cref{sec:cap09-equilibrio-rebanada}, aplicado ahora a este plano, entrega $Q_y=-dM_x/dz$ y $q_y=EI_x v_0''''$, con $q_y(z)$ la carga transversal distribuida según $y$.
+
+\section{Torsión}
+\label{sec:cap09-torsion}
+
+Considérese ahora una viga de sección \textbf{circular} (maciza o hueca), con $x,y$ los ejes principales de inercia, sometida a un momento torsor $M_z(z)$ respecto del eje longitudinal.
+
+\begin{definicion}{Hipótesis cinemáticas de la torsión de Saint-Venant (sección circular)}{cap09-hipotesis-torsion}
+\begin{enumerate}[leftmargin=1.8em]
+  \item El ángulo de giro por torsión, $\theta_z(z)$, es pequeño.
+  \item Las secciones transversales circulares no se alabean bajo un momento torsor: permanecen planas y paralelas entre sí (aunque giradas) después de la deformación.
+\end{enumerate}
+\end{definicion}
+
+Bajo estas hipótesis, un punto $P=(x,y)$ de la sección, a distancia $r=\sqrt{x^2+y^2}$ del centro, gira rígidamente un ángulo $\theta_z(z)$ dentro del plano de la sección (sin desplazamiento axial: $\theta_z$ no produce alabeo, y por lo tanto no afecta a $w$):
+\[
+u(y,z) = -y\,\theta_z(z), \qquad v(x,z) = x\,\theta_z(z), \qquad w = 0 .
+\]
+De este campo, todas las componentes del tensor de deformación son nulas salvo las de corte $\gamma_{xz}$ y $\gamma_{yz}$:
+\[
+\gamma_{xz} = \pdv{u}{z}+\pdv{w}{x} = -y\,\theta_z', \qquad \gamma_{yz} = \pdv{v}{z}+\pdv{w}{y} = x\,\theta_z' ,
+\]
+con $\theta_z'$ el \emph{ángulo de torsión específico} (torsión por unidad de longitud). Las tensiones de corte asociadas, $\tau_{xz}=G\gamma_{xz}$ y $\tau_{yz}=G\gamma_{yz}$, se integran para definir el momento torsor:
+\[
+M_z = \int_A\left(-\tau_{xz}\,y+\tau_{yz}\,x\right)dA = G\theta_z'\int_A\left(y^2+x^2\right)dA = GJ_p\,\theta_z' , \qquad J_p\doteq\int_A(x^2+y^2)\,dA ,
+\]
+con $J_p$ el momento polar de inercia de la sección.
+
+\begin{ecnimportante}{Tensión de corte y momento torsor en torsión de sección circular}{cap09-momento-torsor}
+\[
+\tau_{xz} = -\frac{M_z}{J_p}\,y , \qquad \tau_{yz} = \frac{M_z}{J_p}\,x , \qquad M_z = GJ_p\,\theta_z' .
+\]
+\end{ecnimportante}
+
+\begin{observacion}[Secciones no circulares y de paredes delgadas]
+La teoría de torsión de Saint-Venant para secciones transversales genéricas (no circulares) es considerablemente más compleja, ya que dichas secciones sí se alabean bajo torsión (el alabeo, descrito por la teoría de vigas de Vlasov, queda fuera del alcance de este libro). Para secciones de \textbf{paredes delgadas}, sin embargo, se dispone de fórmulas prácticas simples que preservan la relación $M_z=GJ_p\theta_z'$ redefiniendo únicamente $J_p$: para una sección \textbf{abierta} de paredes delgadas, formada por $n_{\text{seg}}$ segmentos de longitud $\ell_i$ y espesor $e_i$, $J_p=\tfrac13\sum_{i=1}^{n_{\text{seg}}}\ell_i e_i^3$ (la misma expresión que resulta de la solución analítica de un rectángulo delgado, $\ell\gg e$). Para una sección \textbf{cerrada} de pared delgada de espesor $e$ y radio medio $R_m$, en cambio, $J_p\simeq2\pi R_m e^3/3$ (para un tubo circular de radios $R_e,R_i$). La razón entre ambos casos, para $e/R_i\ll1$,
+\[
+\frac{J_p\big|_{\text{abierta}}}{J_p\big|_{\text{cerrada}}} \simeq \frac13\left(\frac{e}{R_i}\right)^2 \ll 1 ,
+\]
+cuantifica un hecho de gran relevancia práctica en diseño: una sección abierta de pared delgada (por ejemplo, un perfil C o I) es dramáticamente menos rígida a la torsión que una sección cerrada equivalente (un tubo), aun cuando ambas tengan área transversal comparable.
+\end{observacion}
+
+\section{Fuerza axial}
+\label{sec:cap09-axial}
+
+El caso de carga puramente axial ya fue estudiado en detalle para la barra en el Capítulo 4; se resume aquí por completitud y para unificar notación con el resto del capítulo. Con $w_0(z)$ el desplazamiento axial del centroide,
+\[
+u=0, \qquad v=0, \qquad w=w_0(z) \quad\Longrightarrow\quad \varepsilon_{zz}=w_0'(z), \qquad \sigma_{zz}=Ew_0' ,
+\]
+y definiendo la fuerza axial $N\doteq\int_A\sigma_{zz}\,dA=EA\,w_0'$:
+\[
+\sigma_{zz} = \frac{N}{A} , \qquad N = EA\,w_0' .
+\]
+
+\section{Estado general combinado: el elemento de viga tridimensional}
+\label{sec:cap09-estado-combinado}
+
+Las cuatro solicitaciones anteriores --- flexión en $x$--$z$, flexión en $y$--$z$, torsión y fuerza axial --- actúan, en general, \textbf{simultáneamente} sobre un elemento de viga tridimensional. Como el material se supone linealmente elástico y las deformaciones pequeñas (linealidad geométrica), es válido el \textbf{principio de superposición}: el campo de desplazamientos combinado es, simplemente, la suma de los cuatro campos individuales ya derivados.
+
+\begin{ecnimportante}{Campo de desplazamientos del elemento de viga tridimensional}{cap09-campo-combinado}
+\[
+\begin{gathered}
+u(y,z) = u_0(z) - y\,\theta_z(z), \qquad
+v(x,z) = v_0(z) + x\,\theta_z(z), \\[4pt]
+w(x,y,z) = w_0(z) - x\,u_0'(z) - y\,v_0'(z) .
+\end{gathered}
+\]
+Las seis funciones incógnitas $u_0,v_0,w_0,\theta_x=-v_0',\theta_y=u_0',\theta_z$ describen, respectivamente, los tres desplazamientos y los tres giros del centroide de cada sección transversal a lo largo del eje de la viga.
+\end{ecnimportante}
+
+Derivando este campo, las componentes no nulas del tensor de deformación son
+\[
+\varepsilon_{zz} = w_0'(z) - x\,u_0''(z) - y\,v_0''(z), \qquad
+\gamma_{xz} = -y\,\theta_z'(z), \qquad
+\gamma_{yz} = x\,\theta_z'(z) ,
+\]
+es decir, la superposición exacta de las deformaciones individuales de la \cref{sec:cap09-flexion-xz,sec:cap09-flexion-yz,sec:cap09-torsion,sec:cap09-axial}. Las tensiones correspondientes, $\sigma_{zz}=E\varepsilon_{zz}$, $\tau_{xz}=G\gamma_{xz}$, $\tau_{yz}=G\gamma_{yz}$, y los cuatro esfuerzos internos ya definidos ($N$, $M_x$, $M_y$, $M_z$) se combinan en la siguiente expresión, central para todo lo que sigue:
+
+\begin{ecnimportante}{Tensión combinada en un elemento de viga tridimensional}{cap09-tension-combinada}
+\[
+\sigma_{zz} = \frac{N}{A} + \frac{M_y}{I_y}\,x - \frac{M_x}{I_x}\,y , \qquad
+\tau_{xz} = -\frac{M_z}{J_p}\,y , \qquad
+\tau_{yz} = \frac{M_z}{J_p}\,x ,
+\]
+con
+\[
+N=EA\,w_0', \qquad M_y=-EI_y\,u_0'', \qquad M_x=EI_x\,v_0'', \qquad M_z=GJ_p\,\theta_z' .
+\]
+\end{ecnimportante}
+
+\subsection{Tensión normal máxima en flexión compuesta}
+
+Un caso de interés práctico directo, previo a la formulación FEM del Capítulo 10, es la determinación del punto de la sección donde $\sigma_{zz}$ (sin componente axial, $N=0$) alcanza su valor máximo, relevante para el dimensionamiento de la sección frente a flexión compuesta ($M_x,M_y$ simultáneos).
+
+\begin{ejemplo}{Tensión normal máxima en secciones rectangular y circular bajo flexión compuesta}{cap09-flexion-compuesta}
+\textbf{Sección rectangular.} Para una sección rectangular con vértices $A$ y $B$ en esquinas opuestas (Figura~\ref{fig:cap09-flexion-compuesta}a), la tensión $\sigma_{zz}=(M_y/I_y)x-(M_x/I_x)y$ es lineal en $x$ e $y$, de modo que su valor extremo (máximo o mínimo) ocurre necesariamente en un vértice de la sección: evaluando en cada esquina se identifican directamente el punto de tracción máxima ($A$) y el de compresión máxima ($B$), sin necesidad de optimización adicional.
+
+\textbf{Sección circular.} Para una sección circular de radio $r$, con $I_x=I_y=I$ (por simetría polar) y coordenadas paramétricas $x=r\cos\alpha$, $y=r\sin\alpha$ sobre el borde,
+\[
+\sigma_{zz}(\alpha) = \frac{r}{I}\left(M_y\cos\alpha - M_x\sin\alpha\right) .
+\]
+El ángulo de tensión extrema se obtiene de $d\sigma_{zz}/d\alpha=0$:
+\[
+-M_y\sin\alpha - M_x\cos\alpha = 0 \quad\Longrightarrow\quad \tan\alpha = -\frac{M_x}{M_y} ,
+\]
+ecuación que tiene dos soluciones en $[0,2\pi)$, separadas por $\pi$ (los puntos diametralmente opuestos $A$ y $B$ de tracción y compresión máximas), consistente con que la distribución de tensión en el borde de una sección circular bajo flexión compuesta es sinusoidal, con un único máximo y un único mínimo por vuelta.
+\end{ejemplo}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=0.95]
+\begin{scope}
+\draw[thick, ucblue, fill=ucblue!6] (0,-1.1) rectangle (1.4,1.1);
+\filldraw[ucred] (1.4,1.1) circle (1.6pt) node[right, font=\small] {$A$};
+\filldraw[ucred] (0,-1.1) circle (1.6pt) node[left, font=\small] {$B$};
+\draw[->] (0.7,0) -- (2.1,0) node[right, font=\small] {$x$};
+\draw[->] (0.7,0) -- (0.7,1.5) node[above, font=\small] {$y$};
+\node[below] at (0.7,-1.5) {(a) Rectangular};
+\end{scope}
+\begin{scope}[xshift=5.2cm]
+\draw[thick, ucblue, fill=ucblue!6] (0,0) circle (1.15);
+\filldraw[ucred] (0.85,0.78) circle (1.6pt) node[right, font=\small] {$A$};
+\filldraw[ucred] (-0.85,-0.78) circle (1.6pt) node[left, font=\small] {$B$};
+\draw[->] (0,0) -- (1.6,0) node[right, font=\small] {$x$};
+\draw[->] (0,0) -- (0,1.6) node[above, font=\small] {$y$};
+\draw[ucamber] (0,0) -- (0.85,0.78);
+\node[ucamber, font=\scriptsize] at (0.35,0.15) {$\alpha$};
+\node[below] at (0,-1.5) {(b) Circular};
+\end{scope}
+\end{tikzpicture}
+\caption{Ubicación de la tensión normal máxima de tracción ($A$) y de compresión ($B$) bajo flexión compuesta, para secciones rectangular y circular.}
+\label{fig:cap09-flexion-compuesta}
+\end{figure}
+
+\section{Síntesis}
+
+Este capítulo extendió el programa de construcción de una teoría estructural --- hipótesis cinemáticas, deformación, tensión, equilibrio --- ya aplicado a la barra en el Capítulo 4, ahora a la viga esbelta de Euler-Bernoulli. Se desarrollaron, en orden, la flexión plana en cada uno de los dos planos principales (con la hipótesis distintiva de Bernoulli: la sección permanece normal al eje deformado, $\theta=u_0'$), la torsión de secciones circulares y de pared delgada, la fuerza axial, y --- por superposición, válida bajo linealidad geométrica y material --- el estado general combinado de un elemento de viga tridimensional, resumido en la fórmula de tensión combinada de la \cref{eq:cap09-tension-combinada}. Se señaló, además, una limitación estructural de la teoría: la hipótesis de normalidad es estrictamente incompatible con la existencia de esfuerzo de corte no nulo, aproximación aceptable solo para vigas esbeltas y que motivará, en los Capítulos 12 a 14, la teoría de Timoshenko. El capítulo siguiente aplica el PTV a este mismo elemento --- siguiendo exactamente el camino recorrido para la barra en los Capítulos 5 y 6 --- para obtener su matriz de rigidez y su vector de fuerzas nodales equivalentes por elementos finitos.

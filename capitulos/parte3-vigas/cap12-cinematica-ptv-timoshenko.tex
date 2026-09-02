@@ -1,0 +1,154 @@
+\chapter{Cinemática y PTV de la Viga de Timoshenko}
+\label{chap:cap12-cinematica-ptv-timoshenko}
+
+\section{Abandonando la hipótesis de Bernoulli}
+\label{sec:cap12-introduccion}
+
+La \cref{sec:cap09-corte-jouravski} señaló una inconsistencia interna de la teoría de Euler-Bernoulli: la hipótesis de normalidad --- la sección permanece exactamente normal al eje deformado --- es incompatible con la existencia de un esfuerzo de corte $Q_x\neq0$, que exigiría una distorsión angular $\gamma_{xz}\neq0$ no nula. Esa incompatibilidad se toleró en los Capítulos 9 a 11 porque, para vigas esbeltas ($L/h\gtrsim10$), la distorsión de corte real es pequeña frente a la producida por la flexión, y el error resultante es despreciable en la práctica.
+
+Esta aproximación deja de ser aceptable en varias situaciones de interés: vigas \textbf{cortas} o de \emph{gran altura} ($L/h$ no grande), vigas \emph{sándwich} o de materiales compuestos con baja rigidez al corte transversal en relación con su rigidez a flexión, y el análisis dinámico de vibraciones en frecuencias altas (donde la inercia rotacional y la deformación por corte dejan de ser despreciables incluso en vigas moderadamente esbeltas). Para estos casos, S.\,Timoshenko propuso, en 1921, una teoría de vigas que \textbf{incorpora la distorsión de corte como parte de la cinemática}, en vez de descartarla: es el objeto de este capítulo y de los dos siguientes.
+
+\begin{observacion}[Qué cambia y qué no]
+La teoría de Timoshenko modifica \emph{únicamente} la hipótesis 2 de la \cref{def:cap09-hipotesis-eb} (la de normalidad de la sección). Las hipótesis 1, 3 y 4 --- desplazamiento axial pequeño e igual en toda la sección, sección transversal indeformable en su plano, ausencia de desplazamiento horizontal y lateral del centroide --- se mantienen sin cambios, y en consecuencia la fuerza axial (\cref{sec:cap09-axial}) y la torsión (\cref{sec:cap09-torsion}) del Capítulo 9 \textbf{no se modifican en absoluto}: solo la flexión (en ambos planos) se ve afectada.
+\end{observacion}
+
+\section{Hipótesis cinemáticas y flexión plana en el plano \texorpdfstring{$x$--$z$}{x-z}}
+\label{sec:cap12-hipotesis}
+
+\begin{definicion}{Hipótesis cinemáticas de Timoshenko}{cap12-hipotesis-timoshenko}
+La teoría de vigas de Timoshenko sustituye la hipótesis 2 de la \cref{def:cap09-hipotesis-eb} por una versión más débil:
+\begin{enumerate}[leftmargin=1.8em]
+  \item[2$'$.] Las secciones transversales, planas antes de la deformación, \textbf{permanecen planas} después de la deformación, pero \textbf{no necesariamente normales} al eje deformado: el giro de la sección, $\theta_y(z)$, es un grado de libertad cinemático \emph{independiente} del desplazamiento transversal $u_0(z)$.
+\end{enumerate}
+Las hipótesis 1, 3 y 4 de la \cref{def:cap09-hipotesis-eb} se mantienen sin cambios.
+\end{definicion}
+
+Como ya se observó en la \cref{sec:cap09-flexion-xz} (antes incluso de imponer la normalidad), un giro $\theta_y(z)$ de la sección --- cualquiera sea su origen cinemático --- produce, por pura geometría, un desplazamiento axial local $w=-x\theta_y(z)$ en un punto a distancia $x$ del centroide (Figura~\ref{fig:cap12-cinematica-timoshenko}). El campo de desplazamientos de la teoría de Timoshenko es, entonces, formalmente idéntico al de Euler-Bernoulli, \emph{salvo que $\theta_y$ ya no está ligado a $u_0'$}:
+\[
+u=u_0(z), \qquad v=0, \qquad w=w(x,z)=-x\,\theta_y(z), \qquad u_0\big|_{z=0}=0 ,
+\]
+con $u_0(z)$ y $\theta_y(z)$ dos funciones incógnitas \emph{independientes} (mientras que en Euler-Bernoulli $\theta_y=u_0'$ era una consecuencia forzada de la hipótesis de normalidad).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.05]
+\draw[->, thick] (0,2.3) -- (0,-0.3) node[below] {$x$};
+\draw[->, thick] (0,2.3) -- (4.6,2.3) node[right] {$z$};
+\draw[thick, ucblue] (0,2.3) -- (4,2.3);
+\filldraw[ucgray] (0,2.3) circle (1.3pt) node[above left, font=\small] {$O$};
+\draw[thick, ucred, domain=0:4, samples=60, smooth]
+  plot ({\x}, {2.3 - 0.55*(\x/4)*(\x/4)*(3-2*\x/4)});
+\draw[ucteal, thick] (1.6,2.11) -- (1.15,1.55);
+\node[ucteal, font=\scriptsize] at (0.85,1.7) {sección (girada $\theta_y$)};
+\draw[dashed, gray!70, thick] (1.6,2.11) -- (1.15,2.65);
+\node[gray!70, font=\scriptsize] at (0.75,2.55) {normal a la elástica};
+\draw[ucamber, thick] (1.35,2.35) to[out=190,in=60] (1.2,2.05);
+\node[ucamber, font=\scriptsize] at (1.65,2.42) {$\gamma_{xz}$};
+\draw[ucteal, thick] (1.05,1.95) to[out=-10,in=210] (1.5,1.85);
+\node[ucteal, font=\scriptsize] at (1.75,1.72) {$\theta_y$};
+\node[below, font=\small] at (2,-0.15) {$u_0'\neq\theta_y$: la sección ya no es normal a la elástica};
+\end{tikzpicture}
+\caption{Cinemática de Timoshenko: la sección permanece plana pero gira un ángulo $\theta_y(z)$ \emph{independiente} de la pendiente $u_0'(z)$ de la línea elástica. La diferencia entre ambas es, precisamente, la distorsión de corte $\gamma_{xz}=u_0'-\theta_y$.}
+\label{fig:cap12-cinematica-timoshenko}
+\end{figure}
+
+\subsection{Deformación y tensión}
+
+Del campo de desplazamientos, el tensor de deformación tiene ahora \textbf{dos} componentes no nulas (en vez de una sola, como en Euler-Bernoulli):
+\[
+\varepsilon_{zz} = \pdv{w}{z} = -x\,\theta_y'(z), \qquad\qquad
+\gamma_{xz} = \pdv{u}{z}+\pdv{w}{x} = u_0'(z) - \theta_y(z) .
+\]
+La primera, $\varepsilon_{zz}$, tiene la misma forma que en Euler-Bernoulli (\cref{eq:cap09-momento-flector-my}), con $\theta_y$ en el lugar de $u_0'$; integrando su momento respecto de $A$ se obtiene, exactamente como antes,
+\[
+M_y = \int_A \sigma_{zz}\,x\,dA = -EI_y\,\theta_y' .
+\]
+La segunda, $\gamma_{xz}$, es enteramente nueva: es la distorsión angular que la hipótesis de Bernoulli forzaba a ser idénticamente nula, y que ahora se admite explícitamente como parte de la cinemática. Integrando la tensión de corte asociada sobre la sección se obtiene el esfuerzo de corte:
+\[
+Q_x = \int_A \tau_{xz}\,dA .
+\]
+
+\begin{observacion}[El factor de corrección por corte $\kappa$]
+La cinemática de Timoshenko, al suponer que la sección permanece \emph{plana}, entrega una distorsión $\gamma_{xz}=u_0'-\theta_y$ \textbf{uniforme} en toda la sección (no depende de $x$). Sin embargo, la fórmula de Jouravski (\cref{sec:cap09-corte-jouravski}) muestra que la distribución \emph{real} de $\tau_{xz}$ --- y por lo tanto de $\gamma_{xz}=\tau_{xz}/G$ --- no es uniforme (es parabólica en una sección rectangular, y se anula en las fibras extremas, donde $\tau_{xz}=0$ es una condición de borde exacta al ser superficies libres). La cinemática de Timoshenko es, en este sentido preciso, una aproximación tan burda para el corte como lo era, en sentido opuesto, la hipótesis de Bernoulli (que aproximaba la distorsión real por cero). La corrección estándar consiste en introducir un \textbf{factor de corrección por corte} $\kappa$ (con $0<\kappa\leq1$, también denotado $k_s$ en la literatura), definido de modo que la energía de deformación por corte calculada con la distorsión \emph{uniforme} de Timoshenko, $\kappa GA\gamma_{xz}^2/2$ por unidad de longitud, coincida con la energía de deformación real (calculada con la distribución no uniforme de Jouravski). Para una sección rectangular, el valor clásico (Timoshenko, 1921) es $\kappa=5/6$; valores más refinados (Cowper, 1966), que dependen también del coeficiente de Poisson, se encuentran tabulados para las secciones transversales de uso común (rectangular, circular, perfiles I y C, tubulares). En lo que sigue, $\kappa$ se trata como una propiedad de sección conocida, análoga a $A$, $I_x$, $I_y$, $J_p$.
+\end{observacion}
+
+\begin{ecnimportante}{Esfuerzos internos generalizados de la viga de Timoshenko (plano \texorpdfstring{$x$--$z$}{x-z})}{cap12-esfuerzos-timoshenko}
+\[
+M_y = -EI_y\,\theta_y', \qquad\qquad Q_x = \kappa GA\,\gamma_{xz} = \kappa GA\left(u_0'-\theta_y\right) .
+\]
+\end{ecnimportante}
+
+\subsection{Ecuaciones de equilibrio}
+
+El equilibrio de una rebanada diferencial de viga (\cref{sec:cap09-equilibrio-rebanada}) es un balance de fuerzas y momentos que \textbf{no depende de ninguna hipótesis cinemática}: las relaciones $q_x=dQ_x/dz$ y $Q_x=-dM_y/dz$ deducidas en el Capítulo 9 son válidas, sin modificación, también en la teoría de Timoshenko. Lo que cambia es únicamente la relación constitutiva que sustituye $Q_x$ y $M_y$ en términos de los desplazamientos: sustituyendo la \cref{eq:cap12-esfuerzos-timoshenko} en las dos ecuaciones de equilibrio se obtiene, en vez de la única ecuación diferencial de cuarto orden de Euler-Bernoulli (\cref{eq:cap09-ecuacion-elastica}), un \textbf{sistema acoplado} de dos ecuaciones diferenciales de segundo orden para las dos incógnitas $u_0(z)$, $\theta_y(z)$:
+
+\begin{ecnimportante}{Ecuaciones de equilibrio de la viga de Timoshenko (plano \texorpdfstring{$x$--$z$}{x-z})}{cap12-ecuaciones-equilibrio-timoshenko}
+\[
+\kappa GA\left(u_0''-\theta_y'\right) = q_x , \qquad\qquad
+EI_y\,\theta_y'' + \kappa GA\left(u_0'-\theta_y\right) = 0 .
+\]
+\end{ecnimportante}
+
+\begin{observacion}[Consistencia con Euler-Bernoulli en el límite esbelto]
+Un resultado que confirma que la teoría de Timoshenko \emph{generaliza} --- en vez de contradecir --- a la de Euler-Bernoulli se obtiene al examinar el límite de rigidez al corte infinita, $\kappa GA\to\infty$ (formalmente, el límite en que la viga se vuelve infinitamente esbelta, $L/h\to\infty$, ya que la rigidez relativa al corte $\kappa GA$ frente a la rigidez a flexión $EI_y/L^2$ crece sin límite). En ese límite, la segunda ecuación de la \cref{eq:cap12-ecuaciones-equilibrio-timoshenko} solo puede permanecer acotada si $u_0'-\theta_y\to0$, es decir, si se recupera exactamente la condición de normalidad de Bernoulli $\theta_y=u_0'$. Sustituyendo esta condición en la primera ecuación, y usando que $M_y=-EI_y\theta_y'=-EI_yu_0''$ en ese límite, se recupera exactamente la ecuación de la elástica de Euler-Bernoulli (\cref{eq:cap09-ecuacion-elastica}). La teoría de Timoshenko no es, entonces, una teoría distinta de la de Euler-Bernoulli, sino una generalización que la contiene como caso límite --- y esta misma observación, vista ``al revés'', anticipa la dificultad numérica central del Capítulo 13: un elemento finito que, por la rigidez de su interpolación, se vea forzado a satisfacer $\gamma_{xz}\approx0$ \emph{en todo punto} para vigas esbeltas, sin ser capaz de representar la deformación de flexión pura, exhibirá una rigidez espuria (\emph{bloqueo por corte}) en ese mismo límite.
+\end{observacion}
+
+\section{Flexión plana en el plano \texorpdfstring{$y$--$z$}{y-z}}
+\label{sec:cap12-flexion-yz}
+
+Por el mismo argumento geométrico de la \cref{sec:cap09-flexion-yz} --- ahora sin imponer la condición de normalidad --- un giro $\theta_x(z)$ de la sección respecto del eje $x$ produce un desplazamiento axial local $w(y,z)=y\,\theta_x(z)$ (el signo positivo, en vez de $-y\theta_x$, es consistente con que, bajo la hipótesis de Bernoulli, $\theta_x=-v_0'$ recupera exactamente $w=-yv_0'$ de la \cref{sec:cap09-flexion-yz}). El campo de desplazamientos es
+\[
+u=0, \qquad v=v_0(z), \qquad w=w(y,z)=y\,\theta_x(z) , \qquad v_0\big|_{z=0}=0 ,
+\]
+con $v_0(z)$ y $\theta_x(z)$ independientes. Repitiendo el procedimiento anterior,
+\[
+\varepsilon_{zz}=\pdv{w}{z}=y\,\theta_x'(z), \qquad
+\gamma_{yz}=\pdv{v}{z}+\pdv{w}{y}=v_0'(z)+\theta_x(z) ,
+\]
+y, con $M_x\doteq-\int_A\sigma_{zz}\,y\,dA$ (la misma convención de signo de la \cref{sec:cap09-flexion-yz}):
+
+\begin{ecnimportante}{Esfuerzos internos generalizados de la viga de Timoshenko (plano \texorpdfstring{$y$--$z$}{y-z})}{cap12-esfuerzos-timoshenko-yz}
+\[
+M_x = -EI_x\,\theta_x', \qquad\qquad Q_y = \kappa GA\,\gamma_{yz} = \kappa GA\left(v_0'+\theta_x\right) .
+\]
+\end{ecnimportante}
+
+\begin{observacion}[Una simetría que Euler-Bernoulli ocultaba]
+Nótese que, en la teoría de Timoshenko, las fórmulas de $M_y$ y $M_x$ tienen exactamente la \textbf{misma forma} ($-EI\theta'$), sin el signo relativo distinto que aparecía en Euler-Bernoulli entre $M_y=-EI_yu_0''$ y $M_x=EI_xv_0''$ (\cref{eq:cap09-momento-flector-mx}). Esa asimetría era, en realidad, un artefacto de haber sustituido la relación de Bernoulli $\theta_x=-v_0'$ (con su signo particular, consecuencia de la orientación relativa de los ejes $x,y,z$) directamente en la fórmula del momento; al mantener $\theta_x$ y $\theta_y$ como variables independientes, la simetría subyacente entre ambos planos de flexión queda de manifiesto.
+\end{observacion}
+
+Las ecuaciones de equilibrio se obtienen de manera análoga a la \cref{sec:cap09-equilibrio-rebanada} (con $Q_y=-dM_x/dz$, ya usado sin demostración explícita en la \cref{sec:cap09-flexion-yz}):
+\[
+\kappa GA\left(v_0''+\theta_x'\right) = q_y , \qquad\qquad
+EI_x\,\theta_x'' - \kappa GA\left(v_0'+\theta_x\right) = 0 .
+\]
+
+\section{Axial y torsión: sin cambios}
+
+Como se anticipó en la \cref{sec:cap12-introduccion}, la fuerza axial y la torsión no involucran flexión ni, por lo tanto, la hipótesis de normalidad: las relaciones $N=EAw_0'$ (\cref{sec:cap09-axial}) y $M_z=GJ_p\theta_z'$ (\cref{sec:cap09-torsion}) del Capítulo 9 se trasladan sin modificación alguna a la teoría de Timoshenko.
+
+\section{El PTV para la viga de Timoshenko}
+\label{sec:cap12-ptv-timoshenko}
+
+Repitiendo el procedimiento de la \cref{sec:cap10-ptv-viga} --- sustituir el campo cinemático combinado en $\delta W_{\text{int}}=\int_\Omega\left(\delta\varepsilon_{zz}\sigma_{zz}+\delta\gamma_{xz}\tau_{xz}+\delta\gamma_{yz}\tau_{yz}\right)d\Omega$ e integrar sobre la sección transversal --- se obtiene, ahora con \textbf{seis} deformaciones generalizadas en vez de cuatro (dos por cada plano de flexión: curvatura y distorsión de corte, en vez de solo curvatura):
+
+\begin{ecnimportante}{Trabajo virtual interno del elemento de viga de Timoshenko, en deformaciones generalizadas}{cap12-wint-timoshenko}
+\[
+\begin{gathered}
+\delta W_{\text{int}} = \int_L \delta\tilde{\bm\varepsilon}^{\mathsf T}\tilde{\bm\sigma}\;dz , \\[6pt]
+\tilde{\bm\varepsilon} = \begin{bmatrix} w_0' \\ -\theta_y' \\ \gamma_{xz} \\ -\theta_x' \\ \gamma_{yz} \\ \theta_z' \end{bmatrix}, \qquad
+\tilde{\bm\sigma} = \begin{bmatrix} N \\ M_y \\ Q_x \\ M_x \\ Q_y \\ M_z \end{bmatrix} = \tilde{\bm C}\,\tilde{\bm\varepsilon}, \\[6pt]
+\tilde{\bm C} = \operatorname{diag}\!\left(EA,\ EI_y,\ \kappa GA,\ EI_x,\ \kappa GA,\ GJ_p\right) .
+\end{gathered}
+\]
+\end{ecnimportante}
+
+Como en el Capítulo 10, $\tilde{\bm C}$ resulta diagonal --- los seis modos de solicitación siguen desacoplados en un elemento recto de sección constante ---, pero ahora la flexión en cada plano contribuye \textbf{dos} términos en vez de uno, reflejando que el momento flector y el esfuerzo de corte son, en Timoshenko, dos esfuerzos generalizados \emph{independientes} entre sí (conjugados de dos deformaciones generalizadas independientes, la curvatura y la distorsión de corte), mientras que en Euler-Bernoulli el esfuerzo de corte no era una variable independiente, sino una cantidad \emph{derivada} del momento flector vía la ecuación de equilibrio $Q_x=-dM_y/dz$.
+
+El trabajo virtual externo, $\delta W_{\text{ext}}$, es idéntico al de la \cref{sec:cap10-ptv-viga}, sin cambios: las cargas distribuidas y concentradas se acoplan de la misma manera a $u_0,v_0,w_0,\theta_x,\theta_y,\theta_z$, independientemente de la relación cinemática (o ausencia de ella) entre estos campos.
+
+\section{Síntesis}
+
+Este capítulo reemplazó la hipótesis de normalidad de Euler-Bernoulli por la hipótesis, más general, de Timoshenko: la sección permanece plana pero gira un ángulo $\theta_y$ (o $\theta_x$) \emph{independiente} de la pendiente de la línea elástica, con la diferencia entre ambos igual a la distorsión de corte $\gamma_{xz}=u_0'-\theta_y$ (o $\gamma_{yz}=v_0'+\theta_x$). Se dedujeron los esfuerzos generalizados correspondientes --- ahora el corte $Q_x$ es una cantidad constitutiva independiente, $Q_x=\kappa GA\gamma_{xz}$, y no una derivada del momento flector ---, las ecuaciones de equilibrio (un sistema acoplado de segundo orden, en vez de una única ecuación de cuarto orden), y se verificó que la teoría de Euler-Bernoulli se recupera exactamente en el límite de rigidez al corte infinita. Se completó la formulación con el PTV, identificando seis deformaciones generalizadas (en vez de cuatro) conjugadas de los correspondientes esfuerzos internos.
+
+Un punto merece destacarse antes de proseguir: a diferencia de la curvatura de Euler-Bernoulli ($-u_0''$, que involucraba segundas derivadas de $u_0$), las deformaciones generalizadas de Timoshenko --- $\theta_y'$, $\gamma_{xz}=u_0'-\theta_y$ --- involucran únicamente \textbf{primeras} derivadas, tanto de $u_0$ como de $\theta_y$. Por el mismo argumento de integrabilidad usado repetidamente en este libro (Capítulos 7 y 11), esto sugiere que $u_0$ y $\theta_y$ podrían interpolarse con funciones de forma de clase $C^0$ --- polinomios de Lagrange simples, como los ya usados para la barra y para el modo axial y de torsión de la viga ---, evitando por completo la necesidad de las funciones de Hermite del Capítulo 10. El Capítulo 13 desarrolla esa formulación FEM y muestra que, en efecto, es posible; sin embargo, revela también un fenómeno numérico patológico --- el \emph{bloqueo por corte} --- que no tiene contraparte en la teoría de Euler-Bernoulli, y cuyo origen y solución serán el tema central de ese capítulo.

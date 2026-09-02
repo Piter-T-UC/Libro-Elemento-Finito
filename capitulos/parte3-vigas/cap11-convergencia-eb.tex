@@ -1,0 +1,100 @@
+\chapter{Convergencia del Elemento de Viga de Euler-Bernoulli}
+\label{chap:cap11-convergencia-eb}
+
+\section{Introducción}
+
+El Capítulo 7 estableció, para el elemento de barra, el marco general que permite decidir si un elemento finito es apto para su uso práctico: continuidad, derivabilidad e integrabilidad exigidas directamente por el PTV, y el patch test de Irons (deformación constante y sólido rígido) como criterio operativo que las resume. Este capítulo aplica exactamente ese mismo marco al elemento de viga de Euler-Bernoulli del Capítulo 10, con una diferencia central que lo distingue de todo lo visto hasta ahora: el elemento combina, en un mismo vector de doce grados de libertad, campos de dos exigencias de continuidad distintas --- $C^0$ para el desplazamiento axial y el giro por torsión, $C^1$ para los dos giros de flexión --- señalada ya como observación en la \cref{sec:cap10-continuidad-mixta} del capítulo anterior. Verificar con cuidado que la interpolación de Hermite satisface el requisito, más exigente, de continuidad $C^1$, es el objetivo central de este capítulo.
+
+\section{Continuidad, derivabilidad e integrabilidad}
+\label{sec:cap11-condiciones-basicas}
+
+Los grados de libertad de continuidad $C^0$ del elemento (axial $w_0$, torsión $\theta_z$) son idénticos, en su interpolación lineal de Lagrange, a los de la barra del Capítulo 6, y por lo tanto satisfacen automáticamente las condiciones de continuidad, derivabilidad e integrabilidad ya verificadas en la \cref{sec:cap07-condiciones-basicas} para ese caso: no hay nada nuevo que discutir para estos dos modos.
+
+El caso de la flexión es distinto. Como se estableció en la \cref{sec:cap10-continuidad-mixta}, el trabajo virtual interno de flexión involucra la curvatura $-u_0''$ (segunda derivada de $u_0$), de modo que la matriz $\bm B_{xz}$ de la \cref{eq:cap10-matriz-B-flexion} contiene derivadas \emph{segundas} de las funciones de forma. Repitiendo el argumento de integrabilidad de la \cref{sec:cap07-condiciones-basicas} --- la derivada de orden $m$ de una función es integrable si sus primeras $m-1$ derivadas son continuas --- con $m=2$, se concluye que $u_0$ (y, análogamente, $v_0$) debe tener continuidad de clase $C^1$ \textbf{entre elementos}: no solo el valor de $u_0$, sino también su primera derivada $u_0'=\theta_y$, deben coincidir en los nodos compartidos por elementos adyacentes.
+
+\begin{ecnimportante}{Requisito de continuidad del elemento de viga de Euler-Bernoulli}{cap11-continuidad-mixta}
+\[
+w_0,\ \theta_z \ \in\ C^0 \qquad \text{(axial, torsión)}, \qquad\qquad u_0,\ v_0 \ \in\ C^1 \qquad \text{(flexión)} .
+\]
+\end{ecnimportante}
+
+\begin{observacion}[Por qué esto es más fácil en 1D de lo que parece]
+Lograr continuidad $C^1$ entre elementos es, en general, un problema numérico delicado: para elementos de placas y láminas en 2D (donde la ecuación gobernante también involucra curvaturas, es decir, segundas derivadas del desplazamiento transversal), construir elementos $C^1$ \emph{conformes} --- que compartan exactamente valor y las tres derivadas relevantes en cada arista --- es notoriamente difícil, y una parte importante de la literatura clásica del MEF (de las décadas de 1960 y 1970) se dedica a esta dificultad y a las alternativas para evitarla (formulaciones no conformes, formulaciones mixtas, elementos de placa basados en la teoría de Reissner-Mindlin --- el análogo bidimensional de la teoría de viga de Timoshenko que se estudia, para el caso unidimensional, en el Capítulo 12). En una viga (problema unidimensional), en cambio, la continuidad $C^1$ se logra de manera directa y exacta: basta con que cada nodo comparta \emph{un único} valor de desplazamiento transversal \emph{y} un único valor de giro con los elementos que concurren a él --- exactamente lo que garantiza, por construcción, la interpolación de Hermite de la \cref{sec:cap10-interpolacion-flexion}, como se demuestra formalmente a continuación.
+\end{observacion}
+
+\section{El patch test de Irons para el elemento de viga}
+\label{sec:cap11-patch-test}
+
+\begin{teorema}{El patch test de Irons, adaptado a la flexión de Euler-Bernoulli}{cap11-patch-test}
+\textbf{Condición 1 (curvatura constante).} A medida que una malla se refina, el tamaño de cada elemento tiende a cero y, por continuidad del campo de curvatura exacto, la curvatura $u_0''$ dentro de cada elemento individual tiende a un valor constante. Todo elemento de flexión debe, por lo tanto, ser capaz de reproducir exactamente un estado de curvatura constante: al prescribir en el contorno de una parcela de elementos el campo $\bar u_0(z)=c_0+c_1z+c_2z^2$ (que produce analíticamente $u_0''=2c_2=\text{cte.}$), la solución de EF en el interior de la parcela debe coincidir exactamente con $\bar u_0(z)$.
+
+\emph{Demostración de que el elemento de Hermite lo satisface.} Con los valores nodales prescritos por $\bar u_0(z)=c_0+c_1z+c_2z^2$, es decir $U_i=\bar u_0(z_i)$ y $\Theta_{yi}=\bar u_0'(z_i)=c_1+2c_2z_i$, la interpolación cúbica de Hermite --- que, por construcción (\cref{sec:cap10-interpolacion-flexion}), es \emph{exacta} para cualquier polinomio de grado $\leq3$, ya que se obtuvo precisamente resolviendo un sistema $4\times4$ para los cuatro coeficientes de un polinomio cúbico general --- reproduce $u_0(z)=\bar u_0(z)$ exactamente en todo punto interior del elemento (en particular, para el caso más simple de $\bar u_0$ cuadrático, que es un caso particular de cúbico con coeficiente de $z^3$ nulo). En consecuencia, $u_0''(z)=\bar u_0''(z)=2c_2$ exactamente. $\blacksquare$
+
+\textbf{Condición 2 (sólido rígido, curvatura y giro relativo nulos).} Es el caso particular $c_2=0$ de la condición anterior: un movimiento de sólido rígido plano, $\bar u_0(z)=c_0+c_1z$ (traslación $c_0$ más rotación rígida de ángulo $c_1$), debe reproducirse exactamente, con curvatura nula en todo punto. Esto ya fue verificado explícitamente en la \cref{sec:cap10-interpolacion-flexion} del Capítulo 10 (con $\bar U=c_0$, $\bar\Theta_y=c_1$), y es, en cualquier caso, consecuencia directa de la Condición 1 con $c_2=0$. $\blacksquare$
+\end{teorema}
+
+A diferencia del elemento de barra (donde la condición de sólido rígido se reducía a verificar $\sum_i N_i\equiv1$), aquí la demostración se apoya en un argumento distinto pero igualmente general: la \textbf{completitud polinómica} de la interpolación de Hermite, que se formaliza a continuación.
+
+\section{Condición de polinomio completo}
+\label{sec:cap11-polinomio-completo}
+
+\begin{ecnimportante}{Completitud del polinomio de Hermite cúbico}{cap11-completitud-hermite}
+Las cuatro funciones de forma de Hermite $\varphi_1,\psi_1,\varphi_2,\psi_2$ de la \cref{eq:cap10-hermite} generan, como combinación lineal, el espacio \emph{completo} de los polinomios de grado $\leq3$ en $z$: $\{1,z,z^2,z^3\}\subset\operatorname{span}\{\varphi_1,\psi_1,\varphi_2,\psi_2\}$. Esto es consecuencia directa de la construcción de la \cref{sec:cap10-interpolacion-flexion}: por definición, $u_0(\xi)=\varphi_1U_1+\psi_1\Theta_{y1}+\varphi_2U_2+\psi_2\Theta_{y2}$ es \emph{la} solución del sistema lineal que impone los cuatro valores nodales sobre un polinomio cúbico \emph{general} $a_0+a_1\xi+a_2\xi^2+a_3\xi^3$; como los cuatro coeficientes $a_0,\dots,a_3$ recorren $\mathbb R^4$ sin restricción alguna al variar $U_1,\Theta_{y1},U_2,\Theta_{y2}$ (la matriz del sistema $4\times4$ de la \cref{sec:cap10-interpolacion-flexion} es invertible), \emph{todo} polinomio cúbico es representable.
+\end{ecnimportante}
+
+Esta es, precisamente, la condición de polinomio completo de la \cref{eq:cap07-polinomio-completo} del Capítulo 7, aplicada ahora al polinomio de grado $m=3$: como $\bm B_{xz}$ involucra la \emph{segunda} derivada de $u_0$, y el desarrollo de Taylor de la solución exacta hasta orden $2$ (el orden relevante para la curvatura) requiere disponer de los términos $1,z,z^2$ --- todos presentes en el espacio generado por Hermite, que de hecho llega hasta $z^3$ ---, la completitud queda garantizada con un grado de holgura adicional (el término cúbico, que no es estrictamente necesario para representar curvatura constante, pero que aparece de manera natural al exigir simultáneamente interpolación nodal de valor y de derivada con solo dos nodos).
+
+\begin{observacion}[Por qué se necesita un polinomio de grado 3 y no de grado 2]
+Podría parecer que, si solo se necesita representar curvatura constante (grado 2), bastaría con un polinomio cuadrático. Sin embargo, un polinomio cuadrático tiene solo \emph{tres} coeficientes libres, insuficientes para imponer \emph{cuatro} condiciones nodales independientes (valor y giro en dos nodos) de manera general: forzaría una relación adicional, no deseada, entre $U_1,\Theta_{y1},U_2,\Theta_{y2}$. El polinomio cúbico, con sus cuatro coeficientes, es el de menor grado que admite exactamente cuatro condiciones nodales independientes --- razón estructural, ya insinuada en el Capítulo 10, por la cual la interpolación de Hermite de dos nodos es necesariamente cúbica.
+\end{observacion}
+
+\section{Estabilidad: rango de la matriz de rigidez}
+\label{sec:cap11-estabilidad}
+
+Como en el Capítulo 7, se exige que el rango de la matriz de rigidez elemental $\bm K^{(e)}_{xz}$ (o $\bm K^{(e)}_{yz}$) de un elemento aislado sea exactamente $n_{\text{gdl}}-n_{\text{sr}}$: aquí, $n_{\text{gdl}}=4$ grados de libertad por bloque de flexión, y $n_{\text{sr}}=2$ movimientos de sólido rígido posibles en el plano (traslación transversal pura, y rotación pura), de modo que el rango correcto es $4-2=2$.
+
+\begin{ejemplo}{Análisis espectral de \texorpdfstring{$\bm K^{(e)}_{xz}$}{K\_xz} del elemento de Hermite}{cap11-autovalores-hermite}
+Antes de calcular los autovalores de $\bm K^{(e)}_{xz}$ es necesario resolver un obstáculo técnico: a diferencia del elemento de barra --- donde los cuatro (dos) grados de libertad tienen todos unidades de longitud ---, aquí $\bm U^{(e)}_{xz}=[U_1,\Theta_{y1},U_2,\Theta_{y2}]^{\mathsf T}$ mezcla desplazamientos (unidades de longitud) con giros (adimensionales). Los autovalores de una matriz que actúa sobre un espacio vectorial con componentes de unidades físicas distintas \emph{no tienen significado físico invariante} (dependerían, por ejemplo, de si el giro se mide en radianes o en grados). Para obtener autovalores físicamente significativos, se introduce el giro adimensionalizado por longitud $\hat\Theta_{yi}\doteq L^{(e)}\Theta_{yi}$ (con unidades de longitud, como $U_i$), y la matriz de rigidez \emph{congruente} correspondiente,
+\[
+\hat{\bm K}^{(e)}_{xz} = \bm D\,\bm K^{(e)}_{xz}\,\bm D, \qquad \bm D=\operatorname{diag}\!\left(1,\tfrac1{L^{(e)}},1,\tfrac1{L^{(e)}}\right) ,
+\]
+que preserva el trabajo virtual ($\hat{\bm f}^{\mathsf T}\hat{\bm U}=\bm f^{\mathsf T}\bm U$, con $\hat{\bm f}=\bm D\bm f$) y cuyos autovalores sí son física y numéricamente significativos. Sustituyendo $\bm K^{(e)}_{xz}$ de la \cref{eq:cap10-K-flexion-xz},
+\[
+\hat{\bm K}^{(e)}_{xz} = \frac{EI_y}{L^3}
+\begin{bmatrix}
+12 & 6 & -12 & 6 \\
+6 & 4 & -6 & 2 \\
+-12 & -6 & 12 & -6 \\
+6 & 2 & -6 & 4
+\end{bmatrix} \doteq \frac{EI_y}{L^3}\,\bm M .
+\]
+
+\textbf{Rango y modos de sólido rígido.} Se verifica directamente que la fila 1 de $\bm M$ es la suma de las filas 2 y 4, y que la fila 3 es el negativo de la fila 1; por lo tanto $\operatorname{rango}(\bm M)\leq2$, y --- al no ser las filas 2 y 4 proporcionales entre sí --- $\operatorname{rango}(\bm M)=2$ exactamente, el valor correcto. Los dos autovectores de autovalor nulo se identifican físicamente: $\hat{\bm U}=[1,0,1,0]^{\mathsf T}$ (traslación transversal pura, $U_1=U_2$, $\Theta_{y1}=\Theta_{y2}=0$) y $\hat{\bm U}=[0,1,1,1]^{\mathsf T}$ (rotación rígida pura respecto del nodo 1, con $\Theta_{y1}=\Theta_{y2}=\bar\Theta$ y $U_2-U_1=\bar\Theta L^{(e)}$, la condición de sólido rígido ya verificada en la \cref{sec:cap10-interpolacion-flexion}); en ambos casos se comprueba por sustitución directa que $\bm M\hat{\bm U}=\bm 0$.
+
+\textbf{Autovalores no nulos.} De $\operatorname{tr}(\bm M)=12+4+12+4=32=\lambda_3+\lambda_4$ y $\operatorname{tr}(\bm M^2)=\sum_{ij}M_{ij}^2=904=\lambda_3^2+\lambda_4^2$ (usando $\lambda_1=\lambda_2=0$), se obtiene $\lambda_3\lambda_4=\left[(\lambda_3+\lambda_4)^2-(\lambda_3^2+\lambda_4^2)\right]/2=(1024-904)/2=60$, de modo que $\lambda_3,\lambda_4$ son las raíces de $t^2-32t+60=0$:
+
+\begin{ecnimportante}{Autovalores de la matriz de rigidez de flexión de Hermite}{cap11-autovalores-hermite}
+\[
+\hat\lambda_1=\hat\lambda_2=0 \quad\text{(sólido rígido)}, \qquad
+\hat\lambda_3 = \frac{2EI_y}{L^3}, \qquad \hat\lambda_4 = \frac{30EI_y}{L^3} .
+\]
+\end{ecnimportante}
+
+Los dos autovalores no nulos, ambos estrictamente positivos, confirman --- exactamente como en el Capítulo 7 para la barra --- que el elemento es \textbf{estable}: no exhibe modos de energía nula espurios más allá de los dos genuinos movimientos de sólido rígido plano.
+\end{ejemplo}
+
+\section{Invariancia geométrica}
+
+La invariancia geométrica --- que el comportamiento del elemento no dependa de la numeración de sus nodos ni de la orientación del sistema local --- se satisface para el elemento de Hermite por el mismo argumento que para la barra (\cref{sec:cap07-condiciones-basicas} del Capítulo 7): las funciones de forma se construyen de manera simétrica respecto de los dos nodos del elemento (intercambiar los roles de nodo 1 y nodo 2, junto con $z\to L^{(e)}-z$, deja invariantes las expresiones de $\varphi_i,\psi_i$ salvo el intercambio de índices esperado). Para los bloques de flexión en los dos planos principales, la invariancia entre $x$ e $y$ está garantizada por la simetría de la deducción del Capítulo 9 y del Capítulo 10 (\cref{sec:cap09-flexion-yz} y \cref{eq:cap10-K-flexion-xz,eq:cap10-K-flexion-yz}): ambos planos se tratan mediante el mismo procedimiento, con los únicos cambios siendo el intercambio $I_y\leftrightarrow I_x$ y el signo relativo ya explicado, consecuencia de la orientación del triedro $(x,y,z)$ y no de una preferencia direccional del elemento.
+
+\section{Compatibilidad y equilibrio de la solución numérica}
+
+\begin{observacion}[Qué garantiza exactamente el elemento de Hermite]
+Adaptando la síntesis de la \cref{sec:cap07-condiciones-basicas} (observación ``Qué satisface exactamente el MEF, y qué no'') al caso de la viga: la \textbf{compatibilidad} de $u_0$, $v_0$ (valor \emph{y} pendiente) se satisface exactamente en los nodos, por construcción de la interpolación de Hermite, y --- a diferencia de lo que ocurre típicamente en 2D y 3D --- también \emph{dentro} de cada arista compartida, ya que en una viga la ``arista'' compartida entre dos elementos es un único punto (el nodo), de modo que compatibilidad nodal y compatibilidad interelemental completa coinciden. El \textbf{equilibrio nodal} ($\bm K\bm U=\bm F$) se satisface siempre, por construcción. El \textbf{equilibrio de momentos flectores} en el contorno entre dos elementos, en cambio, \emph{no} se satisface en general: como $\bm B_{xz}$ es lineal en $z$ dentro de cada elemento (a diferencia de la barra, donde era constante), el momento flector calculado como $M_y=-EI_y u_0''$ es, en general, \emph{discontinuo} de un elemento a otro (salvo que $EI_y$ sea igual en ambos y la curvatura exacta sea, coincidentemente, continua en ese punto) --- la misma limitación fundamental ya señalada para la barra, ahora aplicada al momento flector en vez de a la tensión axial.
+\end{observacion}
+
+\section{Síntesis}
+
+Este capítulo cerró la formulación del elemento de viga de Euler-Bernoulli verificando, con el mismo rigor aplicado a la barra en el Capítulo 7, que satisface todos los requisitos de convergencia del MEF: continuidad $C^1$ (más exigente que la $C^0$ de la barra, pero lograda de manera exacta gracias a la interpolación de Hermite), el patch test de Irons (curvatura constante y sólido rígido, ambos garantizados por la completitud del polinomio cúbico), estabilidad (rango correcto, verificado por análisis espectral explícito) e invariancia geométrica. Con esto, el programa completo de los Capítulos 9--11 --- cinemática, equilibrio, PTV, formulación FEM y convergencia --- queda cerrado para la teoría clásica de Euler-Bernoulli, en total paralelismo con el programa ya completado para la barra en los Capítulos 4--7.
+
+Sin embargo, la propia \cref{sec:cap11-condiciones-basicas} deja planteada una tensión no resuelta: la continuidad $C^1$, aunque alcanzable de manera exacta en 1D, es una exigencia \emph{estructural} de la hipótesis de Bernoulli --- la sección permanece exactamente normal al eje deformado --- que, como se anticipó en la \cref{sec:cap09-corte-jouravski}, es físicamente inconsistente con la existencia de esfuerzo de corte. Los Capítulos 12 a 14 abandonan esa hipótesis: al tratar el giro de la sección $\theta_y$ como un grado de libertad \textbf{independiente} del desplazamiento transversal $u_0$ --- en vez de forzar $\theta_y=u_0'$ ---, la teoría de Timoshenko reduce el orden de derivación exigido (de curvatura, con segundas derivadas, a distorsión de corte, con solo primeras derivadas de ambos campos), permitiendo interpolaciones de continuidad $C^0$, mucho más simples que las de Hermite. Se verá, sin embargo, que esta simplificación tiene un costo numérico propio --- el fenómeno de \emph{bloqueo por corte} (\emph{shear locking}) --- que no tiene contraparte en la teoría de Euler-Bernoulli aquí desarrollada, y cuyo tratamiento requerirá recuperar, del Capítulo 8, la integración numérica de Gauss.

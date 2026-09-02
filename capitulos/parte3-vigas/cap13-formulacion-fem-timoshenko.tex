@@ -1,0 +1,152 @@
+\chapter{Formulación de Elementos Finitos de Timoshenko}
+\label{chap:cap13-formulacion-fem-timoshenko}
+
+\section{Interpolación \texorpdfstring{$C^0$}{C0} de \texorpdfstring{$u_0$}{u0} y \texorpdfstring{$\theta_y$}{theta\_y}}
+\label{sec:cap13-interpolacion-c0}
+
+El Capítulo 12 cerró señalando que, como las deformaciones generalizadas de Timoshenko --- $-\theta_y'$ y $\gamma_{xz}=u_0'-\theta_y$ --- involucran solo primeras derivadas de $u_0$ y $\theta_y$, ambos campos requieren únicamente continuidad $C^0$. Esto permite interpolarlos con los mismos polinomios de Lagrange lineales ya usados repetidamente en este libro (barra, Capítulo 6; axial y torsión de la viga, \cref{sec:cap10-interpolacion-c0}), \textbf{tratando $u_0$ y $\theta_y$ como dos campos independientes, cada uno interpolado por separado}:
+\[
+\begin{gathered}
+u_0(\xi) = N_1(\xi)\,U_1 + N_2(\xi)\,U_2, \qquad
+\theta_y(\xi) = N_1(\xi)\,\Theta_{y1} + N_2(\xi)\,\Theta_{y2}, \\[4pt]
+N_1=1-\xi,\quad N_2=\xi,\quad \xi=\frac{z}{L^{(e)}} .
+\end{gathered}
+\]
+Con $\bm U^{(e)}_{xz}=\begin{bmatrix}U_1&\Theta_{y1}&U_2&\Theta_{y2}\end{bmatrix}^{\mathsf T}$ --- el mismo vector de cuatro grados de libertad por elemento que en la \cref{sec:cap10-interpolacion-flexion}, pero ahora interpolado de manera enteramente distinta ---, esta es la generalización directa, a dos campos simultáneos, de la interpolación lineal de dos nodos ya usada para la barra.
+
+\begin{observacion}[Un elemento notablemente más simple]
+Nótese el contraste con la interpolación de Hermite del Capítulo 10: allí, un único campo ($u_0$) se interpolaba con cuatro funciones de forma cúbicas acopladas, exigiendo continuidad $C^1$. Aquí, \emph{dos} campos independientes ($u_0$, $\theta_y$) se interpolan cada uno con las funciones lineales más simples posibles, sin ninguna relación cinemática forzada entre ellos dentro del elemento --- el giro nodal $\Theta_{yi}$ ya no es la derivada de $u_0$ en ese nodo, sino un grado de libertad interpolado de manera completamente independiente. Esta simplicidad aparente es, como se mostrará en este capítulo, engañosa.
+\end{observacion}
+
+\section{Deformaciones generalizadas interpoladas}
+\label{sec:cap13-deformaciones-interpoladas}
+
+Derivando la interpolación anterior se obtienen las dos deformaciones generalizadas del plano $x$--$z$:
+\[
+-\theta_y' = \frac{\Theta_{y1}-\Theta_{y2}}{L^{(e)}} \doteq \bm B_\kappa\,\bm U^{(e)}_{xz}, \qquad
+\bm B_\kappa = \frac{1}{L^{(e)}}\begin{bmatrix}0&1&0&-1\end{bmatrix} ,
+\]
+\[
+\begin{gathered}
+\gamma_{xz} = u_0'-\theta_y = \frac{U_2-U_1}{L^{(e)}} - \left[(1-\xi)\Theta_{y1}+\xi\Theta_{y2}\right] \doteq \bm B_\gamma(\xi)\,\bm U^{(e)}_{xz}, \\[4pt]
+\bm B_\gamma(\xi) = \begin{bmatrix} -\dfrac1{L^{(e)}} & \xi-1 & \dfrac1{L^{(e)}} & -\xi \end{bmatrix} .
+\end{gathered}
+\]
+
+\begin{observacion}[Una asimetría estructural, origen del bloqueo por corte]
+Adviértase una diferencia esencial entre $\bm B_\kappa$ y $\bm B_\gamma$: la curvatura, $-\theta_y'$, es \textbf{constante} dentro del elemento (depende únicamente de $\Theta_{y1},\Theta_{y2}$, interpolados linealmente, cuya derivada es constante). La distorsión de corte, $\gamma_{xz}(\xi)$, en cambio, es \textbf{lineal} en $\xi$: combina el término constante $u_0'=(U_2-U_1)/L^{(e)}$ con el término $-\theta_y(\xi)$, que sí varía linealmente dentro del elemento. Esta asimetría --- consecuencia directa de interpolar $u_0$ y $\theta_y$ con el mismo orden polinómico (lineal), cuando sus respectivas deformaciones generalizadas involucran órdenes de derivación efectivamente distintos en la práctica --- es, como se verá en la \cref{sec:cap13-bloqueo-corte}, la raíz matemática del fenómeno de bloqueo por corte.
+\end{observacion}
+
+\section{Matriz de rigidez con integración exacta}
+\label{sec:cap13-K-exacta}
+
+Sustituyendo $\bm B_\kappa$ y $\bm B_\gamma$ en la fórmula maestra $\bm K^{(e)}_{xz}=\int_0^{L^{(e)}}\left(\bm B_\kappa^{\mathsf T}EI_y\bm B_\kappa + \bm B_\gamma^{\mathsf T}\kappa GA\,\bm B_\gamma\right)dz$ --- la generalización directa de la \cref{eq:cap12-wint-timoshenko} al caso discreto, sumando las contribuciones de flexión y de corte --- e integrando \emph{exactamente} cada término (con $L\doteq L^{(e)}$):
+
+\begin{ecnimportante}{Matriz de rigidez del elemento de Timoshenko con integración exacta}{cap13-K-exacta}
+\[
+\bm K^{(e)}_{xz,\text{exacta}} =
+\underbrace{\frac{EI_y}{L}\begin{bmatrix}0&0&0&0\\0&1&0&-1\\0&0&0&0\\0&-1&0&1\end{bmatrix}}_{\bm K_\kappa}
+\ +\
+\underbrace{\kappa GA\begin{bmatrix}
+\dfrac1L & \dfrac12 & -\dfrac1L & \dfrac12 \\[4pt]
+\dfrac12 & \dfrac{L}{3} & -\dfrac12 & \dfrac{L}{6} \\[4pt]
+-\dfrac1L & -\dfrac12 & \dfrac1L & -\dfrac12 \\[4pt]
+\dfrac12 & \dfrac{L}{6} & -\dfrac12 & \dfrac{L}{3}
+\end{bmatrix}}_{\bm K_\gamma} .
+\]
+\end{ecnimportante}
+
+El bloque $\bm K_\kappa$ (rango 1, análogo al de la barra o la torsión) proviene de la curvatura constante; el bloque $\bm K_\gamma$ (rango 2, ya que $\bm B_\gamma$ toma dos valores linealmente independientes al variar $\xi$) proviene de la distorsión de corte lineal. Se verifica directamente --- como es de esperar de cualquier matriz de rigidez consistente --- que $\bm K^{(e)}_{xz,\text{exacta}}\,[1,0,1,0]^{\mathsf T}=\bm 0$ (traslación rígida) y $\bm K^{(e)}_{xz,\text{exacta}}\,[0,1,L,1]^{\mathsf T}=\bm 0$ (rotación rígida, con $U_2-U_1=L\Theta_{y1}=L\Theta_{y2}$): ambos movimientos de sólido rígido producen curvatura y distorsión de corte nulas, y por lo tanto energía de deformación nula, tal como exige el patch test.
+
+\section{El fenómeno de bloqueo por corte}
+\label{sec:cap13-bloqueo-corte}
+
+\begin{ejemplo}{Bloqueo por corte en la viga en voladizo de un solo elemento}{cap13-bloqueo-voladizo}
+Considérese una viga en voladizo (empotrada en el nodo 1: $U_1=\Theta_{y1}=0$; libre en el nodo 2, con una carga transversal puntual $P$ y sin momento aplicado) modelada con un \emph{único} elemento de Timoshenko de la \cref{eq:cap13-K-exacta}. El sistema reducido a los grados de libertad libres $(U_2,\Theta_{y2})$ es $\bm K_r\begin{bmatrix}U_2\\\Theta_{y2}\end{bmatrix}=\begin{bmatrix}P\\0\end{bmatrix}$, con
+\[
+\bm K_r = \begin{bmatrix} \kappa GA/L & -\kappa GA/2 \\ -\kappa GA/2 & EI_y/L+\kappa GAL/3 \end{bmatrix} .
+\]
+Introduciendo el \textbf{parámetro de esbeltez al corte} adimensional $\phi\doteq12EI_y/(\kappa GAL^2)$ (pequeño para vigas esbeltas, $\phi\to0$ cuando $L/h\to\infty$; grande para vigas cortas), resolver el sistema $2\times2$ entrega, tras simplificar,
+\[
+U_2 = \frac{PL^3}{12EI_y}\cdot\frac{\phi(\phi+4)}{\phi+1} .
+\]
+Compárese con la deflexión de punta \emph{exacta} de la teoría de Timoshenko (solución analítica de las \cref{eq:cap12-ecuaciones-equilibrio-timoshenko}, suma de la deflexión de flexión de Euler-Bernoulli más la deflexión adicional por corte, un resultado clásico de la resistencia de materiales):
+\[
+\delta_{\text{exacta}} = \frac{PL^3}{3EI_y} + \frac{PL}{\kappa GA} = \frac{PL^3}{12EI_y}\left(\phi+4\right) .
+\]
+
+\begin{ecnimportante}{Razón de bloqueo por corte, integración exacta}{cap13-razon-bloqueo}
+\[
+\frac{U_2}{\delta_{\text{exacta}}} = \frac{\phi}{\phi+1} .
+\]
+\end{ecnimportante}
+
+Para una viga \textbf{esbelta} ($\phi\to0$, el régimen donde Euler-Bernoulli es válido y donde, por lo tanto, cabría esperar que un único elemento razonablemente formulado entregara al menos una aproximación aceptable de la flexión), esta razón tiende a \textbf{cero}: el elemento predice una deflexión de punta que se anula frente a la exacta, sin importar cuán fina sea la malla \emph{en otras direcciones} de refinamiento --- el elemento se vuelve, en la práctica, infinitamente rígido a la flexión. Este es el fenómeno de \textbf{bloqueo por corte} (\emph{shear locking}): la energía de deformación de corte, calculada con la distorsión $\gamma_{xz}(\xi)$ linealmente interpolada, domina espuriamente sobre la energía de flexión en el límite esbelto, ``bloqueando'' al elemento en un estado de deformación casi nula.
+\end{ejemplo}
+
+\section{La cura: integración reducida selectiva}
+\label{sec:cap13-integracion-reducida}
+
+El origen matemático preciso del bloqueo se identifica volviendo a la \cref{sec:cap13-deformaciones-interpoladas}: $\bm B_\gamma(\xi)$ es \emph{lineal} en $\xi$, de modo que $\bm B_\gamma^{\mathsf T}\bm B_\gamma$ es \emph{cuadrático}, y su integración \textbf{exacta} --- la que se usó en la \cref{eq:cap13-K-exacta} --- requiere, según la \cref{eq:cap08-formula-gauss} del Capítulo 8, una cuadratura de Gauss de $m=2$ puntos (exacta hasta grado $2m-1=3\geq2$). La solución estándar, propuesta independientemente por varios autores a comienzos de la década de 1970, consiste en integrar el bloque de corte $\bm K_\gamma$ con \textbf{un solo} punto de Gauss ($m=1$, exacto solo hasta grado $2m-1=1<2$): una integración \emph{deliberadamente insuficiente} --- \emph{reducida} --- para ese término específico.
+
+\begin{ecnimportante}{Integración reducida selectiva (\emph{selective reduced integration}, SRI)}{cap13-sri}
+\begin{itemize}[leftmargin=1.6em]
+  \item $\bm K_\kappa$: integración \textbf{exacta} (1 punto de Gauss, suficiente ya que el integrando es constante).
+  \item $\bm K_\gamma$: integración \textbf{reducida} (1 punto de Gauss, en vez de los 2 que exigiría su integración exacta).
+\end{itemize}
+Con un único punto de Gauss evaluado en el centro del elemento ($\xi=1/2$, peso $1$ en $[0,1]$), $\bm B_\gamma$ se aproxima por su valor constante $\bm B_\gamma(1/2)=\begin{bmatrix}-1/L & -1/2 & 1/L & -1/2\end{bmatrix}$ en todo el elemento, y
+\[
+\bm K_{\gamma,\text{red}} = L\,\kappa GA\,\bm B_\gamma(\tfrac12)^{\mathsf T}\bm B_\gamma(\tfrac12) =
+\kappa GA\begin{bmatrix}
+\dfrac1L & \dfrac12 & -\dfrac1L & \dfrac12 \\[4pt]
+\dfrac12 & \dfrac{L}{4} & -\dfrac12 & \dfrac{L}{4} \\[4pt]
+-\dfrac1L & -\dfrac12 & \dfrac1L & -\dfrac12 \\[4pt]
+\dfrac12 & \dfrac{L}{4} & -\dfrac12 & \dfrac{L}{4}
+\end{bmatrix} .
+\]
+Se recomienda al lector comparar cada entrada con las de $\bm K_\gamma$ (integración exacta) en la \cref{eq:cap13-K-exacta}: solo las entradas $(\Theta_{y1},\Theta_{y1})$, $(\Theta_{y1},\Theta_{y2})$ y $(\Theta_{y2},\Theta_{y2})$ --- las que involucran el producto de \emph{dos} factores lineales en $\xi$, es decir, un integrando de grado $2$ --- cambian de valor; todas las demás, cuyo integrando es de grado $\leq1$, ya eran integradas exactamente por un solo punto de Gauss y permanecen sin cambios.
+\end{ecnimportante}
+
+\begin{ejemplo}{El mismo voladizo, con integración reducida}{cap13-voladizo-reducido}
+Repitiendo el cálculo de la \cref{sec:cap13-bloqueo-corte} con $\bm K^{(e)}_{xz,\text{red}}=\bm K_\kappa+\bm K_{\gamma,\text{red}}$ en vez de $\bm K^{(e)}_{xz,\text{exacta}}$, el sistema reducido tiene ahora
+\[
+\bm K_{r,\text{red}} = \begin{bmatrix}\kappa GA/L & -\kappa GA/2 \\ -\kappa GA/2 & EI_y/L+\kappa GAL/4\end{bmatrix}, \qquad
+\det\bm K_{r,\text{red}} = \frac{\kappa GA\,EI_y}{L^2} ,
+\]
+donde --- a diferencia del caso de integración exacta --- el término $(\kappa GA)^2/4$ del determinante se \textbf{cancela exactamente} entre el producto de la diagonal y el cuadrado del término fuera de la diagonal, dejando un determinante \emph{sin} contribución de $\kappa GA$ al cuadrado. Resolviendo,
+\[
+U_2 = \frac{PL^3}{12EI_y}\left(\phi+3\right) .
+\]
+
+\begin{ecnimportante}{Razón de bloqueo por corte, integración reducida}{cap13-razon-sin-bloqueo}
+\[
+\frac{U_2}{\delta_{\text{exacta}}} = \frac{\phi+3}{\phi+4} \qquad\xrightarrow[\ \phi\to0\ ]{}\qquad \frac34 .
+\]
+\end{ecnimportante}
+
+A diferencia de la \cref{eq:cap13-razon-bloqueo}, esta razón \textbf{no se anula} en el límite esbelto: tiende a $3/4$, un error de discretización \emph{ordinario} (y esperable: un único elemento con interpolación lineal de $\theta_y$ no puede representar exactamente la curvatura linealmente variable de un voladizo bajo carga puntual, que requeriría --- como en el Capítulo 10 --- una interpolación al menos cuadrática; este es el mismo tipo de error de discretización, corregible por refinamiento de malla, discutido en el Capítulo 7), y no el colapso patológico, independiente del refinamiento, de la \cref{eq:cap13-razon-bloqueo}. La integración reducida selectiva \textbf{cura el bloqueo por corte}.
+\end{ejemplo}
+
+\begin{observacion}[¿Por qué no reducir también la integración de la flexión?]
+Podría pensarse en integrar \emph{ambos} términos, $\bm K_\kappa$ y $\bm K_\gamma$, con un solo punto de Gauss. Para $\bm K_\kappa$ esto no cambia nada (su integrando ya es constante, de modo que $1$ punto ya es exacto), por lo que la pregunta carece de contenido para ese bloque; la integración se llama ``selectiva'' precisamente porque \emph{solo} reduce el orden de cuadratura del bloque que verdaderamente lo necesita ($\bm K_\gamma$), dejando exacta la integración de $\bm K_\kappa$. Reducir la integración de un término que ya se integra exactamente no tendría efecto alguno, pero tampoco lo perjudicaría; la verdadera exigencia de la técnica es no reducir \emph{de más}: integrar $\bm K_\gamma$ con \emph{cero} puntos (omitirlo por completo) eliminaría toda resistencia al corte del elemento, introduciendo modos de energía nula espurios --- el problema opuesto, y tan grave como el bloqueo, que se discutirá en el Capítulo 14.
+\end{observacion}
+
+\section{Extensión al elemento de viga tridimensional}
+\label{sec:cap13-extension-3d}
+
+El resto de la formulación se extiende exactamente como en el Capítulo 10 (\cref{sec:cap10-matriz-rigidez}). Axial y torsión, sin cambios respecto de Euler-Bernoulli (\cref{sec:cap12-introduccion}), conservan las matrices $\bm K^{(e)}_{\text{ax}}$ y $\bm K^{(e)}_{\text{tor}}$ ya deducidas en la \cref{sec:cap10-interpolacion-c0}. El bloque de flexión en el plano $y$--$z$ se obtiene por el mismo procedimiento de este capítulo, con los reemplazos $I_y\to I_x$, $u_0\to v_0$, $\theta_y\to\theta_x$ y el signo relativo ya establecido en la \cref{sec:cap12-flexion-yz} ($\gamma_{yz}=v_0'+\theta_x$, en vez de $u_0'-\theta_y$), integrando su bloque de corte con el mismo esquema reducido de un punto. La matriz de rigidez del elemento de viga de Timoshenko de $12\times12$ conserva, por lo tanto, la misma estructura block-diagonal de la \cref{eq:cap10-K-viga-3d}:
+\[
+\hat{\bm K}^{(e)}_{\text{Tim}} = \begin{bmatrix}
+\bm K^{(e)}_{\text{ax}} & & & \\
+& \bm K^{(e)}_{xz,\text{red}} & & \\
+& & \bm K^{(e)}_{yz,\text{red}} & \\
+& & & \bm K^{(e)}_{\text{tor}}
+\end{bmatrix} ,
+\]
+con la misma reordenación por nodo, y la misma transformación a coordenadas globales de la \cref{eq:cap10-transformacion}, ya deducidas en el Capítulo 10 sin dependencia alguna de la teoría de flexión particular empleada.
+
+Las cargas nodales equivalentes se calculan de la misma manera (integrando $\bm N^{(e)\mathsf T}\bar t_x$, ahora con $\bm N^{(e)}=\begin{bmatrix}N_1&0&N_2&0\end{bmatrix}$ para la parte de $u_0$, sin contribución directa de $\theta_y$ a una carga transversal); para una carga uniforme $\bar t_x$, el resultado es el reparto simple por igual, $\bar t_xL/2$ en cada nodo, \textbf{sin} el momento de empotramiento $\pm\bar t_xL^2/12$ que sí aparecía con Hermite (\cref{eq:cap10-cargas-hermite}) --- consecuencia directa de que, aquí, $\theta_y$ no está ligado a la pendiente de $u_0$, y por lo tanto una carga transversal no genera, por sí sola, ningún momento nodal equivalente.
+
+\section{Síntesis}
+
+Este capítulo formuló el elemento finito de Timoshenko: interpolación lineal de Lagrange, independiente para $u_0$ y $\theta_y$, de continuidad $C^0$ --- mucho más simple que la interpolación de Hermite del Capítulo 10 ---, pero que revela, bajo integración exacta, un defecto numérico severo: el \textbf{bloqueo por corte}, cuantificado explícitamente en la \cref{eq:cap13-razon-bloqueo} para el caso de un voladizo de un solo elemento, donde la deflexión predicha se anula frente a la exacta a medida que la viga se vuelve más esbelta. Se mostró que la \textbf{integración reducida selectiva} --- evaluar el bloque de rigidez al corte con un solo punto de Gauss, en vez de los dos que exigiría su integración exacta --- elimina por completo esta patología, dejando solo el error de discretización ordinario esperable de una malla gruesa (\cref{eq:cap13-razon-sin-bloqueo}). El Capítulo 14 retoma esta comparación con mayor generalidad: verificará que el elemento con integración reducida satisface el patch test y posee el rango correcto de $\bm K^{(e)}$ (a diferencia de la integración nula, mencionada de paso en la última observación), y comparará sistemáticamente la convergencia del elemento de Timoshenko con la del elemento de Euler-Bernoulli del Capítulo 10 en función de la esbeltez de la viga.

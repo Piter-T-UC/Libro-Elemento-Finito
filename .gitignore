@@ -1,3 +1,6 @@
+# Herramientas locales
+.claude/
+
 # Artefactos de compilación LaTeX
 build/
 PDF/

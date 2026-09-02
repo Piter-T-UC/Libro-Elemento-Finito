@@ -1,0 +1,101 @@
+\chapter{Convergencia de Timoshenko y Comparación con Euler-Bernoulli}
+\label{chap:cap14-convergencia-timoshenko}
+
+\section{Introducción}
+
+El Capítulo 13 mostró que el elemento de Timoshenko con integración reducida selectiva (SRI) cura el bloqueo por corte en el caso concreto de un voladizo de un solo elemento. Este capítulo cierra la Parte III generalizando esa verificación con el mismo rigor exigido a los elementos de barra (Capítulo 7) y de Euler-Bernoulli (Capítulo 11): continuidad, sólido rígido, estabilidad (rango de $\bm K^{(e)}$), y --- el punto genuinamente nuevo de este capítulo, sin equivalente en los anteriores --- una explicación precisa de \emph{por qué} reducir deliberadamente el orden de una cuadratura, lejos de ser un truco \emph{ad hoc}, es una técnica justificable y segura para este elemento en particular. Se cierra con una comparación sistemática entre Euler-Bernoulli y Timoshenko en función de la esbeltez de la viga, y con una síntesis que abarca toda la Parte III.
+
+\section{Continuidad, derivabilidad e integrabilidad}
+
+Como ya se estableció en el Capítulo 12 y se explotó en el Capítulo 13, las deformaciones generalizadas de Timoshenko involucran solo primeras derivadas de $u_0$ y $\theta_y$, de modo que ambos campos requieren únicamente continuidad $C^0$ --- satisfecha automáticamente por la interpolación lineal de Lagrange de la \cref{sec:cap13-interpolacion-c0}, exactamente como para la barra (Capítulo 6) y para los modos axial y de torsión de la viga (\cref{sec:cap10-interpolacion-c0}). No hay nada adicional que verificar en este punto: es, de hecho, la ventaja central de la teoría de Timoshenko frente a Euler-Bernoulli, ya destacada en el Capítulo 12.
+
+\section{Reproducción de movimientos de sólido rígido}
+\label{sec:cap14-solido-rigido}
+
+\begin{teorema}{Condición de sólido rígido para el elemento de Timoshenko}{cap14-solido-rigido}
+Un movimiento de sólido rígido plano --- traslación transversal pura ($U_1=U_2$, $\Theta_{y1}=\Theta_{y2}=0$) o rotación rígida pura respecto del nodo 1 ($\Theta_{y1}=\Theta_{y2}=\bar\Theta$, $U_2-U_1=\bar\Theta L^{(e)}$) --- debe producir curvatura y distorsión de corte nulas, y por lo tanto energía de deformación nula, tanto con integración exacta como con integración reducida.
+
+\emph{Demostración.} Para la traslación pura, $\bm U^{(e)}_{xz}=[1,0,1,0]^{\mathsf T}$: $\bm B_\kappa\bm U^{(e)}_{xz}=0$ trivialmente (no hay giros), y $\bm B_\gamma(\xi)\bm U^{(e)}_{xz}=-1/L^{(e)}+1/L^{(e)}=0$ para todo $\xi$ --- en particular, en el punto de Gauss reducido $\xi=1/2$. Para la rotación pura, $\bm U^{(e)}_{xz}=[0,1,L^{(e)},1]^{\mathsf T}$: $\bm B_\kappa\bm U^{(e)}_{xz}=(1-1)/L^{(e)}=0$, y $\bm B_\gamma(\xi)\bm U^{(e)}_{xz}=L^{(e)}/L^{(e)}-[(1-\xi)+\xi]=1-1=0$ para todo $\xi$ (nuevamente, en particular en $\xi=1/2$). Como ambas deformaciones generalizadas se anulan \emph{para todo} $\xi$ --- no solo en el punto de integración reducida ---, la conclusión es independiente del esquema de integración empleado. $\blacksquare$
+\end{teorema}
+
+Este es, precisamente, el cálculo ya realizado (sin llamarlo ``patch test'') al verificar, en la \cref{sec:cap13-K-exacta}, que $\bm K^{(e)}_{xz,\text{exacta}}$ aniquila los vectores de traslación y de rotación rígida, ahora formalizado como la condición de sólido rígido del patch test de Irons, y verificado explícitamente para \emph{ambas} distorsiones de corte --- constante e idénticamente nula en este caso particular --- de modo que la conclusión vale sin importar el número de puntos de Gauss usados para $\bm K_\gamma$.
+
+\begin{observacion}[Por qué no se plantea aquí un patch test de ``deformación constante'' análogo al del Capítulo 7]
+Para la barra y para Euler-Bernoulli, la condición de deformación constante del patch test (\cref{teo:cap07-patch-test,teo:cap11-patch-test}) se podía plantear de manera directa porque había una \emph{única} deformación generalizada en juego. Para Timoshenko, en cambio, hay \emph{dos} deformaciones generalizadas simultáneas ($\kappa=-\theta_y'$ y $\gamma_{xz}$), y --- como revela un examen cuidadoso de la solución analítica homogénea de las \cref{eq:cap12-ecuaciones-equilibrio-timoshenko} --- un estado de corte constante genuino ($\gamma_{xz}=\text{cte.}\neq0$, con momento flector linealmente variable, la solución exacta de una viga sin carga distribuida) exige que $\theta_y$ sea \emph{cuadrático} en $z$ y $u_0$ \emph{cúbico}: ninguno de los dos es representable exactamente por la interpolación lineal de este capítulo, exactamente como un elemento de barra lineal tampoco representa exactamente un campo de deformación axial cuadrático. Esto no es una falla del elemento --- es el error de discretización ordinario del Capítulo 7, corregible por refinamiento de malla ---, y no debe confundirse con el bloqueo por corte, que es un defecto \emph{cualitativamente distinto} (no desaparece con el refinamiento de malla a esbeltez fija, como se precisa en la \cref{sec:cap14-conteo-restricciones}). La verificación rigurosa de que la integración reducida es segura para este elemento se obtiene, en cambio, por el argumento de conteo de restricciones y por el análisis de rango de la sección siguiente.
+\end{observacion}
+
+\section{Por qué la integración reducida no hace trampa: conteo de restricciones}
+\label{sec:cap14-conteo-restricciones}
+
+La \cref{sec:cap13-bloqueo-corte} mostró que la integración exacta de $\bm K_\gamma$ produce bloqueo; la \cref{sec:cap13-integracion-reducida} mostró que reducir el orden de esa cuadratura lo cura. Falta una explicación de \emph{por qué} este procedimiento --- que a primera vista parece simplemente introducir un error de integración deliberado --- es, en realidad, una técnica numéricamente justificada y no un ajuste \emph{ad hoc} sin fundamento.
+
+\begin{observacion}[El argumento de conteo de restricciones]
+Considérese una malla de $N$ elementos de Timoshenko de igual longitud $h=L_{\text{total}}/N$, con un total de $2(N+1)$ grados de libertad nodales ($U_i,\Theta_{yi}$ en cada uno de los $N+1$ nodos). En el límite de una viga muy esbelta ($\phi\to0$, es decir $\kappa GA\gg EI_y/h^2$), la energía de deformación por corte, $\sum_e \tfrac12\int_e\kappa GA\,\gamma_{xz}^2\,dz$, domina completamente sobre la energía de flexión, de modo que --- para que la energía total permanezca acotada, como exige la solución física --- el sistema se ve forzado a satisfacer $\gamma_{xz}\approx0$ en \emph{cada punto de integración} de cada elemento: cada punto de Gauss usado para $\bm K_\gamma$ impone, en la práctica, una restricción cinemática aproximada sobre los grados de libertad del elemento que lo contiene.
+
+Con \textbf{integración exacta} ($m=2$ puntos de Gauss por elemento), se imponen aproximadamente $2N$ restricciones de este tipo sobre un total de $2(N+1)\approx2N$ grados de libertad: el sistema queda \emph{casi enteramente restringido} por la condición de corte nulo, dejando muy pocos grados de libertad efectivamente libres para representar flexión --- la manifestación, en términos de conteo, del bloqueo por corte.
+
+Con \textbf{integración reducida} ($m=1$ punto por elemento), se imponen solo $N$ restricciones sobre esos mismos $2N$ grados de libertad: queda, aproximadamente, la mitad de los grados de libertad genuinamente disponible para representar flexión, una proporción suficiente para que el elemento converja de manera saludable al refinar la malla, sin degenerar en el límite esbelto.
+\end{observacion}
+
+Este argumento --- estándar en la literatura del MEF desde los trabajos de Zienkiewicz, Hughes y otros a comienzos de la década de 1970 --- es de naturaleza \emph{heurística} (un conteo aproximado de restricciones activas, no una demostración formal de existencia y unicidad de la solución discreta, que pertenece a la teoría más avanzada de métodos mixtos y a las condiciones de estabilidad de Babuška-Brezzi), pero explica correctamente, y de manera cuantitativamente precisa en casos simples como el del Capítulo 13, tanto el origen del bloqueo como la razón por la cual reducir deliberadamente el orden de cuadratura --- lejos de empeorar la aproximación --- la mejora drásticamente en el régimen esbelto.
+
+\section{Estabilidad: rango y positividad de la matriz de rigidez reducida}
+\label{sec:cap14-estabilidad}
+
+Queda por verificar que la integración reducida, al relajar las restricciones de corte, no las relaje \emph{en exceso}: como se advirtió en la observación de cierre de la \cref{sec:cap13-integracion-reducida}, una integración de \emph{cero} puntos eliminaría toda rigidez al corte, introduciendo modos de energía nula espurios. Se verifica a continuación que la integración de \emph{un} punto --- la usada en este libro --- no incurre en ese defecto.
+
+\begin{ejemplo}{Rango de \texorpdfstring{$\bm K^{(e)}_{xz,\text{red}}$}{K\_xz,red} para todo \texorpdfstring{$\phi>0$}{phi>0}}{cap14-rango-reducida}
+Adimensionalizando como en el \cref{ej:cap11-autovalores-hermite} (con $\hat\Theta_{yi}=L^{(e)}\Theta_{yi}$) y factorizando $\kappa GA/L^{(e)}$, la matriz congruente $\hat{\bm K}^{(e)}_{xz,\text{red}}$ se escribe, en términos del parámetro de esbeltez al corte $\phi=12EI_y/(\kappa GA(L^{(e)})^2)$ de la \cref{sec:cap13-bloqueo-corte},
+\[
+\hat{\bm K}^{(e)}_{xz,\text{red}} = \frac{\kappa GA}{L^{(e)}}
+\begin{bmatrix}
+1 & \tfrac12 & -1 & \tfrac12 \\
+\tfrac12 & \tfrac14+\tfrac{\phi}{12} & -\tfrac12 & \tfrac14-\tfrac{\phi}{12} \\
+-1 & -\tfrac12 & 1 & -\tfrac12 \\
+\tfrac12 & \tfrac14-\tfrac{\phi}{12} & -\tfrac12 & \tfrac14+\tfrac{\phi}{12}
+\end{bmatrix} \doteq \frac{\kappa GA}{L^{(e)}}\,\bm M(\phi) .
+\]
+La fila 3 de $\bm M(\phi)$ es el negativo de la fila 1 (rango $\leq3$); además, la fila 1 es exactamente la suma de las filas 2 y 4 (rango $\leq2$). Las filas 2 y 4 son proporcionales entre sí únicamente si $\phi/12=0$, es decir, solo en el caso degenerado $EI_y=0$ (una viga sin rigidez a flexión alguna, excluido físicamente). Para todo $\phi>0$, entonces, $\operatorname{rango}\bm M(\phi)=2$ \textbf{exactamente} --- el valor correcto, ya identificado en la \cref{sec:cap11-estabilidad} para el elemento de Hermite ($n_{\text{gdl}}-n_{\text{sr}}=4-2=2$) --- para \emph{cualquier} razón de esbeltez, sin excepción.
+
+Como $\bm M(\phi)$ se construye como suma de dos formas cuadráticas de energía --- la de flexión, $\propto\bm B_\kappa^{\mathsf T}\bm B_\kappa$, y la de corte reducida, $\propto\bm B_\gamma(\tfrac12)^{\mathsf T}\bm B_\gamma(\tfrac12)$ ---, ambas positivas semidefinidas por construcción, $\bm M(\phi)$ es en sí misma positiva semidefinida: sus autovalores son todos $\geq0$. Combinado con el resultado de rango, esto implica que los dos autovalores nulos son exactamente los dos modos de sólido rígido de la \cref{teo:cap14-solido-rigido}, y que los \textbf{dos autovalores restantes son estrictamente positivos}, para todo $\phi>0$.
+\end{ejemplo}
+
+\begin{observacion}[Conclusión: la integración reducida de un punto es segura para este elemento]
+El resultado anterior confirma, de manera rigurosa y no solo heurística, que la integración reducida de un solo punto para $\bm K_\gamma$ --- a diferencia de la integración de cero puntos, que eliminaría por completo la fila y columna correspondientes al corte --- preserva exactamente el rango correcto de $\bm K^{(e)}_{xz}$ en todo el rango físico de esbeltez. Esta es una propiedad específica del elemento lineal de dos nodos aquí estudiado; elementos de mayor orden (con más nodos, o en dos y tres dimensiones) requieren un análisis de rango específico para cada caso, ya que la integración reducida --- aplicada sin cuidado --- puede, en efecto, introducir modos de energía nula espurios (conocidos en la literatura como modos de \emph{hourglass} o de \emph{reloj de arena}), un fenómeno que queda fuera del alcance de este libro pero que es importante tener presente al extender estas ideas a elementos más complejos.
+\end{observacion}
+
+\section{Comparación de convergencia: Euler-Bernoulli frente a Timoshenko}
+\label{sec:cap14-comparacion}
+
+Los resultados del voladizo de un solo elemento (\cref{eq:cap13-razon-bloqueo,eq:cap13-razon-sin-bloqueo}) ya cuantifican, en el caso más simple posible, la diferencia esencial entre ambas formulaciones frente a la esbeltez. La \cref{tab:cap14-comparacion-eb-timoshenko} resume la comparación completa entre los dos elementos desarrollados en esta parte del libro.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparación entre el elemento de Euler-Bernoulli (Capítulos 9--11) y el elemento de Timoshenko con integración reducida selectiva (Capítulos 12--14).}
+\label{tab:cap14-comparacion-eb-timoshenko}
+\begin{tabular}{@{}p{3.6cm}p{4.4cm}p{4.6cm}@{}}
+\toprule
+& \textbf{Euler-Bernoulli} & \textbf{Timoshenko (SRI)} \\
+\midrule
+Hipótesis cinemática & Sección normal al eje deformado ($\theta_y=u_0'$) & Sección plana, giro independiente ($\theta_y\neq u_0'$ en general) \\
+Distorsión de corte & Idénticamente nula (inconsistencia interna, \cref{sec:cap09-corte-jouravski}) & Grado de libertad cinemático explícito \\
+Deformación generalizada & Curvatura $-u_0''$ (segundas derivadas) & Curvatura $-\theta_y'$ y corte $\gamma_{xz}=u_0'-\theta_y$ (solo primeras derivadas) \\
+Continuidad exigida & $C^1$ (Capítulo 11) & $C^0$ (esta parte) \\
+Interpolación & Hermite cúbica (4 funciones acopladas) & Lagrange lineal, $u_0$ y $\theta_y$ independientes \\
+GDL por nodo (plano) & 2 ($U_i,\Theta_{yi}$, con $\Theta_{yi}=U_i'$) & 2 ($U_i,\Theta_{yi}$, independientes) \\
+Patología numérica & Ninguna propia de la formulación & Bloqueo por corte si se integra $\bm K_\gamma$ exactamente \\
+Remedio numérico & No aplica & Integración reducida selectiva (Capítulo 13) \\
+Régimen de validez física & Vigas esbeltas, $L/h\gtrsim10$ & Válida en todo el rango de esbeltez (incluye a Euler-Bernoulli como límite, \cref{sec:cap12-hipotesis}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{observacion}[¿Por qué no usar siempre Timoshenko, entonces?]
+Si la teoría de Timoshenko generaliza a Euler-Bernoulli y su elemento --- con la corrección SRI --- no presenta patologías numéricas propias, cabría preguntarse por qué este libro (y buena parte de la práctica de la ingeniería estructural) sigue enseñando y usando ambas. La respuesta es doble. Primero, pedagógica e históricamente: Euler-Bernoulli es más simple de introducir y basta para la inmensa mayoría de las aplicaciones de vigas esbeltas, que son las más frecuentes en la práctica. Segundo, y más relevante para el MEF: el elemento de Timoshenko con SRI, precisamente \emph{porque} es válido en todo el rango de esbeltez sin necesidad de conocer de antemano si una viga es ``esbelta'' o ``corta'', es la elección por defecto en la gran mayoría del software comercial y de investigación de elementos finitos --- incluyendo, en dos y tres dimensiones, sus generalizaciones a placas (Reissner-Mindlin) y láminas, mencionadas en la observación de la \cref{sec:cap11-condiciones-basicas}. La teoría de Euler-Bernoulli, con su exigencia de continuidad $C^1$, es en cambio la excepción --- útil precisamente porque su simplicidad analítica la hace insustituible para la enseñanza y para soluciones de referencia cerradas, pero rara vez la que efectivamente ejecuta un programa de elementos finitos de propósito general.
+\end{observacion}
+
+\section{Síntesis de la Parte III}
+
+Este capítulo cerró la Parte III verificando que el elemento de Timoshenko con integración reducida selectiva satisface los requisitos de convergencia del MEF: continuidad $C^0$ (más simple que la $C^1$ de Euler-Bernoulli), reproducción exacta de los movimientos de sólido rígido (independiente del esquema de integración), y --- el resultado central de este capítulo --- rango correcto y positividad de $\bm K^{(e)}$ para \emph{todo} valor del parámetro de esbeltez $\phi$, confirmando que la cura del bloqueo por corte no introduce, a cambio, ningún modo de energía nula espurio. El argumento de conteo de restricciones explicó, de manera cuantitativa y no solo intuitiva, por qué reducir deliberadamente el orden de la cuadratura de $\bm K_\gamma$ es una técnica numéricamente justificada.
+
+Con esto se completa el programa iniciado en el Capítulo 9: dos teorías estructurales de viga --- Euler-Bernoulli, esbelta y de continuidad $C^1$; Timoshenko, general y de continuidad $C^0$, con su patología numérica propia y su cura --- desarrolladas con el mismo rigor sistemático (cinemática, equilibrio, PTV, formulación FEM, convergencia) ya aplicado a la barra en la Parte II. El libro deja así completo el tratamiento de los elementos estructurales unidimensionales fundamentales del MEF; las partes futuras de este documento, según lo anunciado en el prólogo, extenderán estas mismas ideas --- interpolación, PTV, matrices elementales, convergencia, integración numérica --- a la elasticidad plana y tridimensional, a placas y láminas, y a la dinámica estructural.
